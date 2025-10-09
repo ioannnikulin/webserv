@@ -30,14 +30,22 @@ MAIN_ENDPOINT_SRC = $(SOURCE_F)/$(MAIN_ENDPOINT_SRC_NAME)
 MAIN_ENDPOINT_OBJ = $(OBJ_F)/$(MAIN_ENDPOINT_SRC:.cpp=.o)
 MAIN_FNAME = webserv
 
+MAIN_DIRS = $(SOURCE_F) $(SOURCE_F)/$(RESPONSE_GENERATOR_F)
+
+MAIN_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(MAIN_DIRS))
+
+# ------------------------------------------------------------
+
 TEST_ENDPOINT_SRC_NAME = main_test.cpp
 TEST_ENDPOINT_SRC = $(TEST_F)/$(TEST_ENDPOINT_SRC_NAME)
 TEST_ENDPOINT_OBJ = $(OBJ_F)/$(TEST_ENDPOINT_SRC:.cpp=.o)
 TEST_FNAME = $(TEST_F)/main_test
 
-MAIN_DIRS = $(SOURCE_F) $(SOURCE_F)/$(RESPONSE_GENERATOR_F)
+TEST_SRC_NAMES = unit/unit_tests.cpp e2e/e2e_tests.cpp
+TEST_SRCS = $(addprefix $(TEST_F)/,$(TEST_SRC_NAMES))
+TEST_OBJS = $(addprefix $(OBJ_F)/,$(TEST_SRCS:.cpp=.o))
 
-MAIN_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(MAIN_DIRS))
+# ------------------------------------------------------------
 
 vpath %.cpp $(SOURCE_F) $(TEST_F)
 
@@ -54,10 +62,6 @@ $(OBJ_F): #ensure it exists
 
 $(MAIN_OBJ_DIRS): | $(OBJ_F)
 	mkdir -p $@
-# ------------------------------------------------------------
-
-$(TEST_FNAME): $(TEST_ENDPOINT_OBJ) $(MAIN_NONENDPOINT_OBJS)| $(OBJ_F) $(TEST_OBJ_F) $(MAIN_OBJ_DIRS)
-	$(CPP) $(LINK_FLAGS) $^ -o $@
 
 # ------------------------------------------------------------
 
