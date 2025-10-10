@@ -1,0 +1,10 @@
+Checks: '-*,readability-function-size'
+CheckOptions:
+  - key: readability-function-size.LineThreshold
+    value: '80'           # max lines in a function
+  - key: readability-function-size.StatementThreshold
+    value: '200'          # max statements (optional)
+  - key: readability-function-size.ParameterThreshold
+    value: '6'            # max parameters
+  - key: readability-function-size.VariableThreshold
+    value: '30'           # max local variables

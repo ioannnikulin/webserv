@@ -1,0 +1,19 @@
+BasedOnStyle: Google
+
+UseTab: Never
+IndentWidth: 4
+TabWidth: 4
+
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Empty
+
+BinPackParameters: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+PointerAlignment: Left
+
+ReflowComments: false
+
+SortIncludes: true
+
+ColumnLimit: 100

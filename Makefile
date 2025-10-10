@@ -1,4 +1,5 @@
 CPP = c++
+CXX = ${CPP}
 COMPILE_FLAGS = -Wall -Wextra -Werror -std=c++98 -g -pedantic -c
 LINK_FLAGS = 
 PREPROC_DEFINES = 
@@ -91,6 +92,26 @@ external_calls:
 		exit 1; \
 	fi
 	@rm -f allowed.txt all_calls.txt forbidden_calls.txt
+
+# ------------------------------------------------------------
+
+format:
+	find . -name '*.cpp' -o -name '*.hpp' -print0 | xargs -0 clang-format -style=file -i
+
+format-check:
+	@changed=0; \
+	for f in $(shell find . -name '*.cpp' -o -name '*.hpp'); do \
+		tmp=$$f.formatted.tmp; \
+		clang-format -style=file "$$f" > "$$tmp"; \
+		if ! cmp -s "$$f" "$$tmp"; then \
+			echo "$$f would change"; changed=1; fi; \
+		rm -f "$$tmp"; \
+	done; \
+	exit $$changed
+
+cppcheck:
+	@echo "Running cppcheck..."
+	@cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem sources tests || true
 
 # ------------------------------------------------------------
 
