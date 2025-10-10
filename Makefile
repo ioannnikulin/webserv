@@ -1,6 +1,6 @@
 CPP = c++
 CXX = ${CPP}
-COMPILE_FLAGS = -Wall -Wextra -Werror -std=c++98 -g -pedantic -c
+COMPILE_FLAGS = -Wall -Wextra -Werror -std=c++98 -g -pedantic
 LINK_FLAGS = 
 PREPROC_DEFINES = 
 
@@ -56,7 +56,10 @@ $(MAIN_FNAME): $(MAIN_ENDPOINT_OBJ) | $(OBJ_F) $(MAIN_OBJ_DIRS)
 	$(CPP) $(LINK_FLAGS) $^ -o $@
 
 $(MAIN_ENDPOINT_OBJ): $(MAIN_ENDPOINT_SRC) | $(OBJ_F) $(MAIN_OBJ_DIRS)
-	$(CPP) $(COMPILE_FLAGS) $(PREPROC_DEFINES) $< -o $@
+	$(CPP) $(COMPILE_FLAGS) -c $(PREPROC_DEFINES) $< -o $@
+
+$(MAIN_NONENDPOINT_OBJS): | $(OBJ_F) $(MAIN_OBJ_DIRS)
+	$(CPP) $(COMPILE_FLAGS) -c $(PREPROC_DEFINES) $< -o $@
 
 $(OBJ_F): #ensure it exists
 	mkdir -p $@
@@ -96,7 +99,7 @@ external_calls:
 # ------------------------------------------------------------
 
 format:
-	find . -name '*.cpp' -o -name '*.hpp' -print0 | xargs -0 clang-format -style=file -i
+	find . -type f \( -name '*.cpp' -o -name '*.hpp' \) -print0 | xargs -0 -n1 clang-format -style=file -i
 
 format-check:
 	@changed=0; \
@@ -115,4 +118,28 @@ cppcheck:
 
 # ------------------------------------------------------------
 
-.PHONY: all clean fclean re external_calls
+CLANG_TIDY ?= clang-tidy
+
+TUS := $(shell find $(SOURCE_F) $(TEST_F) -type f -name '*.cpp' | sort)
+
+tidy-check:
+	for f in $(TUS); do \
+		$(CLANG_TIDY) $$f -- $(COMPILE_FLAGS) || true; \
+	done
+
+tidy-fix:
+	for f in $(TUS); do \
+		$(CLANG_TIDY) -fix -format-style=file $$f -- $(COMPILE_FLAGS) || true; \
+	done
+
+# ------------------------------------------------------------
+
+test_campus: external_calls format-check
+	@echo "CLEAN"
+
+test_github: external_calls format-check cppcheck tidy-check
+	@echo "CLEAN"
+
+# ------------------------------------------------------------
+
+.PHONY: all clean fclean re external_calls format format-check cppcheck tidy-check tidy-fix
