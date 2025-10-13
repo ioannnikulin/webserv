@@ -8,7 +8,6 @@ WarningsAsErrors: ''
 CheckOptions:
   - key: modernize-use-nullptr.NullMacros
     value: 'NULL'
-CheckOptions:
   - key: readability-function-size.LineThreshold
     value: '80'           # max lines in a function
   - key: readability-function-size.StatementThreshold
