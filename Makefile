@@ -162,4 +162,4 @@ test-github: external-calls format-check cppcheck tidy-check run-tests
 
 # ------------------------------------------------------------
 
-.PHONY: all clean fclean re external-calls format format-check cppcheck tidy-check tidy-fix test-campus test-github
+.PHONY: all clean fclean re run-tests external-calls format format-check cppcheck tidy-check tidy-fix test-campus test-github
