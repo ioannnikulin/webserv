@@ -40,11 +40,14 @@ MAIN_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(MAIN_DIRS))
 TEST_ENDPOINT_SRC_NAME = main_test.cpp
 TEST_ENDPOINT_SRC = $(TEST_F)/$(TEST_ENDPOINT_SRC_NAME)
 TEST_ENDPOINT_OBJ = $(OBJ_F)/$(TEST_ENDPOINT_SRC:.cpp=.o)
-TEST_FNAME = $(TEST_F)/main_test
+TEST_FNAME = main_test
 
 TEST_SRC_NAMES = unit/unit_tests.cpp e2e/e2e_tests.cpp
 TEST_SRCS = $(addprefix $(TEST_F)/,$(TEST_SRC_NAMES))
 TEST_OBJS = $(addprefix $(OBJ_F)/,$(TEST_SRCS:.cpp=.o))
+
+TEST_DIRS = $(TEST_F) $(TEST_F)/unit $(TEST_F)/e2e
+TEST_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(TEST_DIRS))
 
 # ------------------------------------------------------------
 
@@ -55,13 +58,24 @@ all: $(MAIN_FNAME)
 $(MAIN_FNAME): $(MAIN_ENDPOINT_OBJ) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS)
 	$(CPP) $(LINK_FLAGS) $^ -o $@
 
-$(OBJ_F)/%.o: %.cpp | $(OBJ_F) $(MAIN_OBJ_DIRS)
+$(OBJ_F)/%.o: %.cpp | $(OBJ_F) $(MAIN_OBJ_DIRS) $(TEST_OBJ_DIRS)
 	$(CPP) $(COMPILE_FLAGS) $(LINK_FLAGS) -c $(PREPROC_DEFINES) $< -o $@
 
 $(OBJ_F): #ensure it exists
 	mkdir -p $@
 
 $(MAIN_OBJ_DIRS): | $(OBJ_F)
+	mkdir -p $@
+
+# ------------------------------------------------------------
+
+run-tests: $(TEST_FNAME)
+	./$(TEST_FNAME)
+
+$(TEST_FNAME): $(TEST_ENDPOINT_OBJ) $(TEST_OBJS) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS) $(TEST_OBJ_DIRS)
+	$(CPP) $(LINK_FLAGS) $^ -o $@
+
+$(TEST_OBJ_DIRS): #ensure it exists
 	mkdir -p $@
 
 # ------------------------------------------------------------
@@ -97,7 +111,7 @@ external-calls:
 	@if [ -s forbidden_calls.txt ]; then \
 		echo "Error: Forbidden external calls detected:"; \
 		cat forbidden_calls.txt; \
-		#rm -f allowed.txt all_calls.txt forbidden_calls.txt; \
+		rm -f allowed.txt all_calls.txt forbidden_calls.txt; \
 		exit 1; \
 	fi
 	@rm -f allowed.txt all_calls.txt forbidden_calls.txt
@@ -140,10 +154,10 @@ tidy-fix:
 
 # ------------------------------------------------------------
 
-test-campus: external-calls format-check
+test-campus: external-calls format-check run-tests
 	@echo "CLEAN"
 
-test-github: external-calls format-check cppcheck tidy-check
+test-github: external-calls format-check cppcheck tidy-check run-tests
 	@echo "CLEAN"
 
 # ------------------------------------------------------------
