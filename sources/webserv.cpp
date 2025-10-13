@@ -14,7 +14,7 @@ int main(int argc, char **argv, char **envp) {
 
     cout << "Hello, World!\n";
     cerr << "This is an error message.\n";
-    //cout << "The square root of 16 is " << std::sqrt(16) << endl;
+    cout << "The square root of 16 is " << std::sqrt(16) << "\n";
 
     return (0);
 }
