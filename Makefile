@@ -111,7 +111,7 @@ external-calls:
 	@if [ -s forbidden_calls.txt ]; then \
 		echo "Error: Forbidden external calls detected:"; \
 		cat forbidden_calls.txt; \
-		#rm -f allowed.txt all_calls.txt forbidden_calls.txt; \
+		rm -f allowed.txt all_calls.txt forbidden_calls.txt; \
 		exit 1; \
 	fi
 	@rm -f allowed.txt all_calls.txt forbidden_calls.txt
