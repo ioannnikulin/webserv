@@ -3,8 +3,6 @@
 #include <cmath>
 #include <iostream>
 
-#include "webserv.hpp"
-
 using std::cerr;
 using std::cout;
 
