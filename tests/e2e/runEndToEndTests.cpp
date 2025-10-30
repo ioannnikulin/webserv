@@ -1,6 +1,6 @@
 #include "tests.hpp"
 
-int e2e_tests() {
+int runEndToEndTests() {
     assert(true);
     return (0);
 }

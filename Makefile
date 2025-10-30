@@ -42,7 +42,7 @@ TEST_ENDPOINT_SRC = $(TEST_F)/$(TEST_ENDPOINT_SRC_NAME)
 TEST_ENDPOINT_OBJ = $(OBJ_F)/$(TEST_ENDPOINT_SRC:.cpp=.o)
 TEST_FNAME = main_test
 
-TEST_SRC_NAMES = unit/unit_tests.cpp e2e/e2e_tests.cpp
+TEST_SRC_NAMES = unit/runUnitTests.cpp e2e/runEndToEndTests.cpp
 TEST_SRCS = $(addprefix $(TEST_F)/,$(TEST_SRC_NAMES))
 TEST_OBJS = $(addprefix $(OBJ_F)/,$(TEST_SRCS:.cpp=.o))
 
@@ -105,7 +105,7 @@ external-calls:
 	@printf "%s\n" $(ALLOWED_EXTERNAL_FUNCTIONS) > allowed.txt
 	@make >/dev/null
 	@# collect undefined symbol names (last field from nm -u)
-	@find $(OBJ_F) -name "*.o" -exec nm -u {} + | sed -n 's/.* U //p' | sort -u > all_calls.txt
+	@find $(OBJ_F)/$(SOURCE_F) -name "*.o" -exec nm -u {} + | sed -n 's/.* U //p' | sort -u > all_calls.txt
 	@# filter out allowed
 	@grep -v '^_Z' all_calls.txt | grep -vFf allowed.txt > forbidden_calls.txt || true
 	@if [ -s forbidden_calls.txt ]; then \
