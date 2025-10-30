@@ -1,6 +1,6 @@
 CPP = c++
 CXX = ${CPP}
-COMPILE_FLAGS = -Wall -Wextra -Werror -std=c++98 -g -pedantic
+COMPILE_FLAGS = -Wall -Wextra -Werror -std=c++98 -g -pedantic -Wold-style-cast -Wdeprecated-declarations
 LINK_FLAGS = -I$(SOURCE_F) -I$(TEST_F)
 PREPROC_DEFINES = 
 
@@ -55,6 +55,9 @@ vpath %.cpp $(SOURCE_F) $(TEST_F)
 
 all: $(MAIN_FNAME)
 
+# MAIN_ENDPOINT - main function of webserv, MAIN_NONENDPOINT - all other components except main
+# compare this to $(TEST_fname) rule below
+# this rule builds webserv executable
 $(MAIN_FNAME): $(MAIN_ENDPOINT_OBJ) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS)
 	$(CPP) $(LINK_FLAGS) $^ -o $@
 
@@ -72,6 +75,8 @@ $(MAIN_OBJ_DIRS): | $(OBJ_F)
 run-tests: $(TEST_FNAME)
 	./$(TEST_FNAME)
 
+# this rule takes main function defined in tests (not webserv's main), all test objects
+# and builds test executable, making all components of webserv available for instantiation
 $(TEST_FNAME): $(TEST_ENDPOINT_OBJ) $(TEST_OBJS) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS) $(TEST_OBJ_DIRS)
 	$(CPP) $(LINK_FLAGS) $^ -o $@
 
@@ -90,13 +95,20 @@ re: fclean all
 
 # ------------------------------------------------------------
 
+# allowed functions from the subject
+# if this check fails, and you are absolutely sure 
+# this function is allowed by the subject, 
+# feel free to add it in a separate block
 ALLOWED_EXTERNAL_FUNCTIONS = execve pipe strerror gai_strerror \
 errno dup dup2 fork socketpair htons htonl ntohs ntohl select \
 poll epoll epoll_create epoll_ctl epoll_wait kqueue kqueue \
 kevent socket accept listen send recv chdir bind connect \
 getaddrinfo freeaddrinfo setsockopt getsockname getprotobyname \
 fcntl close read write waitpid kill signal access stat \
-open opendir readdir closedir __cxa_atexit __dso_handle \
+open opendir readdir closedir
+
+# allowed C++ implicit stuff
+ALLOWED_EXTERNAL_FUNCTIONS += __cxa_atexit __dso_handle \
 _GLOBAL_OFFSET_TABLE_ __gxx_personality_v0 __stack_chk_fail \
 _Unwind_Resume
 
@@ -121,6 +133,7 @@ external-calls:
 format:
 	find . -type f \( -name '*.cpp' -o -name '*.hpp' \) -print0 | xargs -0 -n1 clang-format -style=file -i
 
+# 
 format-check:
 	@changed=0; \
 	for f in $(shell find . -name '*.cpp' -o -name '*.hpp'); do \
@@ -159,6 +172,11 @@ test-campus: external-calls format-check run-tests
 
 test-github: external-calls format-check cppcheck tidy-check run-tests
 	@echo "CLEAN"
+
+# ------------------------------------------------------------
+
+%:
+	@echo "What do you mean, '$@'?"
 
 # ------------------------------------------------------------
 
