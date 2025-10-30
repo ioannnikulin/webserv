@@ -7,8 +7,8 @@ int main(int argc, char **argv, char **envp) {
     (void)argv;
     (void)envp;
 
-    unit_tests();
-    e2e_tests();
+    runUnitTests();
+    runEndToEndTests();
 
     cout << "All tests passed!\n";
     return (0);
