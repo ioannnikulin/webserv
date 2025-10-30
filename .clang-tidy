@@ -15,4 +15,4 @@ CheckOptions:
   - key: readability-function-size.ParameterThreshold
     value: '6'            # max parameters
   - key: readability-function-size.VariableThreshold
-    value: '30'           # max local variables
+    value: '10'           # max local variables
