@@ -147,7 +147,7 @@ format-check:
 
 cppcheck:
 	@echo "Running cppcheck..."
-	@cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem $(LINK_FLAGS) $(TEST_F) $(SOURCE_F) || true
+	@cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem $(LINK_FLAGS) $(TEST_F) $(SOURCE_F)
 
 # ------------------------------------------------------------
 
