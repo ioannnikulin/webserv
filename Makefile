@@ -147,7 +147,17 @@ format-check:
 
 cppcheck:
 	@echo "Running cppcheck..."
-	@cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem $(LINK_FLAGS) $(TEST_F) $(SOURCE_F)
+	@out=$$(mktemp); \
+	cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem $(LINK_FLAGS) $(TEST_F) $(SOURCE_F) --template='{file}:{line}:{column}:{severity}:{id}:{message}' 2>$$out || true; \
+	if grep -q -E ':(error|warning|style):' $$out; then \
+		echo "cppcheck found issues:"; \
+		grep -n -E ':(error|warning|style):' $$out; \
+		rm -f $$out; \
+		exit 1; \
+	else \
+		echo "cppcheck: no issues"; \
+		rm -f $$out; \
+	fi
 
 # ------------------------------------------------------------
 
