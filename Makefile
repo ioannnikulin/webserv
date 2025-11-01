@@ -145,7 +145,7 @@ format-fix:
 format-check:
 	@echo "Running clang-format check..."
 	@changed=0; \
-	for f in $(shell find . -name '*.cpp' -o -name '*.hpp'); do \
+	@for f in $(shell find . -name '*.cpp' -o -name '*.hpp'); do \
 		tmp=$$f.formatted.tmp; \
 		$(CLANG_FORMAT) -style=file "$$f" > "$$tmp"; \
 		if ! cmp -s "$$f" "$$tmp"; then \
@@ -162,7 +162,7 @@ cppcheck:
 	@echo "Running cppcheck..."
 	@command -v cppcheck >/dev/null 2>&1 || { echo "cppcheck: not found"; exit 1; }
 	@out=$$(mktemp); \
-	cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem $(LINK_FLAGS) $(TEST_F) $(SOURCE_F) --template='{file}:{line}:{column}:{severity}:{id}:{message}' >$$out 2>&1 || true; \
+	@cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem $(LINK_FLAGS) $(TEST_F) $(SOURCE_F) --template='{file}:{line}:{column}:{severity}:{id}:{message}' >$$out 2>&1 || true; \
 	if grep -q -E ':(error|warning|style):' $$out; then \
 		echo "cppcheck found issues:"; \
 		grep -n -E ':(error|warning|style):' $$out; \
