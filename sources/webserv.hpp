@@ -2,4 +2,4 @@
 
 using std::string;
 
-string generateResponse(const string &request);
+string generateResponse(const string& request);

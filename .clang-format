@@ -16,6 +16,7 @@ AllowAllParametersOfDeclarationOnNextLine: false
 # int* ptr; // not int *ptr
 # int& ref; // not int &ref;
 PointerAlignment: Left
+DerivePointerAlignment: false 
 
 ReflowComments: false
 
