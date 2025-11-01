@@ -61,29 +61,29 @@ all: $(MAIN_FNAME)
 # compare this to $(TEST_fname) rule below
 # this rule builds webserv executable
 $(MAIN_FNAME): $(MAIN_ENDPOINT_OBJ) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS)
-	$(CPP) $(LINK_FLAGS) $^ -o $@
+	@$(CPP) $(LINK_FLAGS) $^ -o $@
 
 $(OBJ_F)/%.o: %.cpp | $(OBJ_F) $(MAIN_OBJ_DIRS) $(TEST_OBJ_DIRS)
-	$(CPP) $(COMPILE_FLAGS) $(LINK_FLAGS) -c $(PREPROC_DEFINES) $< -o $@
+	@$(CPP) $(COMPILE_FLAGS) $(LINK_FLAGS) -c $(PREPROC_DEFINES) $< -o $@
 
 $(OBJ_F): #ensure it exists
-	mkdir -p $@
+	@mkdir -p $@
 
 $(MAIN_OBJ_DIRS): | $(OBJ_F)
-	mkdir -p $@
+	@mkdir -p $@
 
 # ------------------------------------------------------------
 
 run-tests: $(TEST_FNAME)
-	./$(TEST_FNAME)
+	@./$(TEST_FNAME)
 
 # this rule takes main function defined in tests (not webserv's main), all test objects
 # and builds test executable, making all components of webserv available for instantiation
 $(TEST_FNAME): $(TEST_ENDPOINT_OBJ) $(TEST_OBJS) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS) $(TEST_OBJ_DIRS)
-	$(CPP) $(LINK_FLAGS) $^ -o $@
+	@$(CPP) $(LINK_FLAGS) $^ -o $@
 
 $(TEST_OBJ_DIRS): #ensure it exists
-	mkdir -p $@
+	@mkdir -p $@
 
 # ------------------------------------------------------------
 
@@ -183,9 +183,19 @@ TUS := $(shell find $(SOURCE_F) $(TEST_F) -type f -name '*.cpp' | sort)
 
 tidy-check:
 	@echo "Running clang-tidy check..."
-	@for f in $(TUS); do \
-		$(CLANG_TIDY) $$f -- $(COMPILE_FLAGS) $(LINK_FLAGS); \
-	done
+	@command -v $(CLANG_TIDY) >/dev/null 2>&1 || { echo "clang-tidy: not found"; exit 1; }
+	@errs=0; \
+	for f in $(TUS); do \
+		out=$$(mktemp); \
+		$(CLANG_TIDY) $$f -- $(COMPILE_FLAGS) $(LINK_FLAGS) >$$out 2>&1 || true; \
+		if grep -q -E 'warning:|error:' $$out; then \
+			printf "clang-tidy issues in %s:\n" "$$f"; \
+			grep -n -E 'warning:|error:' $$out; \
+			errs=1; \
+		fi; \
+		rm -f $$out; \
+	done; \
+	if [ $$errs -ne 0 ]; then exit 1; fi
 
 # will fix something, but not everything
 # e.g. if you have too many local variables, will not split the function automatically
