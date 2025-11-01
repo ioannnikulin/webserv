@@ -145,7 +145,7 @@ format-fix:
 format-check:
 	@echo "Running clang-format check..."
 	@changed=0; \
-	@for f in $(shell find . -name '*.cpp' -o -name '*.hpp'); do \
+	for f in $(shell find . -name '*.cpp' -o -name '*.hpp'); do \
 		tmp=$$f.formatted.tmp; \
 		$(CLANG_FORMAT) -style=file "$$f" > "$$tmp"; \
 		if ! cmp -s "$$f" "$$tmp"; then \
