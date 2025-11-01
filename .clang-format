@@ -20,7 +20,7 @@ DerivePointerAlignment: false
 
 ReflowComments: false
 
-# first system includes, then project includes
+# first project includes, then system includes
 # both blocks sorted alphabetically within themselves
 SortIncludes: true
 
