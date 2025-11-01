@@ -166,6 +166,7 @@ CLANG_TIDY ?= clang-tidy
 TUS := $(shell find $(SOURCE_F) $(TEST_F) -type f -name '*.cpp' | sort)
 
 tidy-check:
+	@echo "Running clang-tidy..."
 	@for f in $(TUS); do \
 		$(CLANG_TIDY) $$f -- $(COMPILE_FLAGS) $(LINK_FLAGS) || true; \
 	done
