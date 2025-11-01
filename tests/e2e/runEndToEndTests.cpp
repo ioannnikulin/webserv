@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "tests.hpp"
 
 int runEndToEndTests() {

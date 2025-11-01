@@ -1,3 +1,5 @@
+#include <string>
+
 #include "webserv.hpp"
 
 using std::string;

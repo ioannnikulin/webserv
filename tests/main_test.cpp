@@ -1,11 +1,12 @@
+#include <iostream>
+
 #include "tests.hpp"
 
 using std::cout;
 
-int main(int argc, char** argv, char** envp) {
+int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
-    (void)envp;
 
     runUnitTests();
     runEndToEndTests();
