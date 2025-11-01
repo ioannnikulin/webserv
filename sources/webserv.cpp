@@ -1,3 +1,6 @@
+#include <cmath>
+#include <iostream>
+
 #include "webserv.hpp"
 
 #include <cmath>
