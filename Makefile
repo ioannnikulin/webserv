@@ -162,7 +162,7 @@ cppcheck:
 	@echo "Running cppcheck..."
 	@command -v cppcheck >/dev/null 2>&1 || { echo "cppcheck: not found"; exit 1; }
 	@out=$$(mktemp); \
-	@cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem $(LINK_FLAGS) $(TEST_F) $(SOURCE_F) --template='{file}:{line}:{column}:{severity}:{id}:{message}' 2>$$out || true; \
+	cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem $(LINK_FLAGS) $(TEST_F) $(SOURCE_F) --template='{file}:{line}:{column}:{severity}:{id}:{message}' >$$out 2>&1 || true; \
 	if grep -q -E ':(error|warning|style):' $$out; then \
 		echo "cppcheck found issues:"; \
 		grep -n -E ':(error|warning|style):' $$out; \
