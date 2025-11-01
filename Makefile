@@ -1,4 +1,5 @@
 CPP = c++
+# sometimes gets used implicitly, so safer to define
 CXX = ${CPP}
 COMPILE_FLAGS = -Wall -Wextra -Werror -std=c++98 -g -pedantic -Wold-style-cast -Wdeprecated-declarations
 LINK_FLAGS = -I$(SOURCE_F) -I$(TEST_F)
@@ -51,6 +52,7 @@ TEST_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(TEST_DIRS))
 
 # ------------------------------------------------------------
 
+# where to look for cpp files when managing makefile rules
 vpath %.cpp $(SOURCE_F) $(TEST_F)
 
 all: $(MAIN_FNAME)
@@ -115,6 +117,7 @@ _Unwind_Resume
 external-calls:
 	@rm -f allowed.txt all_calls.txt forbidden_calls.txt
 	@printf "%s\n" $(ALLOWED_EXTERNAL_FUNCTIONS) > allowed.txt
+	@# build all objects, suppress output
 	@make >/dev/null
 	@# collect undefined symbol names (last field from nm -u)
 	@find $(OBJ_F)/$(SOURCE_F) -name "*.o" -exec nm -u {} + | sed -n 's/.* U //p' | sort -u > all_calls.txt
@@ -130,25 +133,35 @@ external-calls:
 
 # ------------------------------------------------------------
 
-format:
-	find . -type f \( -name '*.cpp' -o -name '*.hpp' \) -print0 | xargs -0 -n1 clang-format -style=file -i
+CLANG_FORMAT ?= clang-format
 
-# 
+# run to fix simple formatting issues
+# see .clang-format for settings
+format-fix:
+	find . -type f \( -name '*.cpp' -o -name '*.hpp' \) -print0 | xargs -0 -n1 $(CLANG_FORMAT) -style=file -i
+
+# runs fixer and compares with original,
+# exits with 1 if any file would change
 format-check:
+	@echo "Running clang-format check..."
 	@changed=0; \
-	for f in $(shell find . -name '*.cpp' -o -name '*.hpp'); do \
+	@for f in $(shell find . -name '*.cpp' -o -name '*.hpp'); do \
 		tmp=$$f.formatted.tmp; \
-		clang-format -style=file "$$f" > "$$tmp"; \
+		$(CLANG_FORMAT) -style=file "$$f" > "$$tmp"; \
 		if ! cmp -s "$$f" "$$tmp"; then \
-			echo "$$f would change"; changed=1; fi; \
+			echo "$$f is malformatted"; changed=1; fi; \
 		rm -f "$$tmp"; \
 	done; \
 	exit $$changed
 
+# ------------------------------------------------------------
+
+# smarter analysis: bugs, potential undefined behavior
+# no autofixes
 cppcheck:
 	@echo "Running cppcheck..."
 	@out=$$(mktemp); \
-	cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem $(LINK_FLAGS) $(TEST_F) $(SOURCE_F) --template='{file}:{line}:{column}:{severity}:{id}:{message}' 2>$$out || true; \
+	@cppcheck --std=c++98 --enable=all --inconclusive --suppress=missingIncludeSystem $(LINK_FLAGS) $(TEST_F) $(SOURCE_F) --template='{file}:{line}:{column}:{severity}:{id}:{message}' 2>$$out || true; \
 	if grep -q -E ':(error|warning|style):' $$out; then \
 		echo "cppcheck found issues:"; \
 		grep -n -E ':(error|warning|style):' $$out; \
@@ -161,16 +174,20 @@ cppcheck:
 
 # ------------------------------------------------------------
 
+# smartest analysis, see .clang-tidy file for settings
 CLANG_TIDY ?= clang-tidy
 
+# translation units
 TUS := $(shell find $(SOURCE_F) $(TEST_F) -type f -name '*.cpp' | sort)
 
 tidy-check:
-	@echo "Running clang-tidy..."
+	@echo "Running clang-tidy check..."
 	@for f in $(TUS); do \
 		$(CLANG_TIDY) $$f -- $(COMPILE_FLAGS) $(LINK_FLAGS) || true; \
 	done
 
+# will fix something, but not everything
+# e.g. if you have too many local variables, will not split the function automatically
 tidy-fix:
 	@for f in $(TUS); do \
 		$(CLANG_TIDY) -fix -format-style=file $$f -- $(COMPILE_FLAGS) $(LINK_FLAGS) || true; \
@@ -178,9 +195,13 @@ tidy-fix:
 
 # ------------------------------------------------------------
 
+# run in 42 campus
+# skips some checks whose prerequisites cannot be installed
+# since we don't have root access
 test-campus: external-calls format-check run-tests
 	@echo "CLEAN"
 
+# runs in GitHub Actions environment, use on personal machine too
 test-github: external-calls format-check cppcheck tidy-check run-tests
 	@echo "CLEAN"
 
@@ -191,4 +212,4 @@ test-github: external-calls format-check cppcheck tidy-check run-tests
 
 # ------------------------------------------------------------
 
-.PHONY: all clean fclean re run-tests external-calls format format-check cppcheck tidy-check tidy-fix test-campus test-github
+.PHONY: all clean fclean re run-tests external-calls format-fix format-check cppcheck tidy-check tidy-fix test-campus test-github
