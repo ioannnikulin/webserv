@@ -1,16 +1,14 @@
+#include <cmath>
+#include <iostream>
+
 #include "webserv.hpp"
 
-#include <cmath>
-
 using std::cerr;
-using std::cin;
 using std::cout;
-using std::endl;
 
-int main(int argc, char** argv, char** envp) {
+int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
-    (void)envp;
 
     cout << "Hello, World!\n";
     cerr << "This is an error message.\n";

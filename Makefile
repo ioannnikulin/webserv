@@ -184,7 +184,7 @@ TUS := $(shell find $(SOURCE_F) $(TEST_F) -type f -name '*.cpp' | sort)
 tidy-check:
 	@echo "Running clang-tidy check..."
 	@for f in $(TUS); do \
-		$(CLANG_TIDY) $$f -- $(COMPILE_FLAGS) $(LINK_FLAGS) || true; \
+		$(CLANG_TIDY) $$f -- $(COMPILE_FLAGS) $(LINK_FLAGS); \
 	done
 
 # will fix something, but not everything
