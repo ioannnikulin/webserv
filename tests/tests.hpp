@@ -1,6 +1,6 @@
 #include <cassert>  // include last
 
-#include "../sources/webserv.hpp"
+#include "webserv.hpp"
 
-int unit_tests();
-int e2e_tests();
+int runUnitTests();
+int runEndToEndTests();
