@@ -1,12 +1,16 @@
+#include <iostream>
+
 #include "tests.hpp"
 
-int main(int argc, char **argv, char **envp) {
+using std::cout;
+
+int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
-    (void)envp;
 
-    unit_tests();
-    e2e_tests();
+    runUnitTests();
+    runEndToEndTests();
 
+    cout << "All tests passed!\n";
     return (0);
 }
