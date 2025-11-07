@@ -1,19 +1,28 @@
 BasedOnStyle: Google
 
+# four spaces for one indent level
 UseTab: Never
 IndentWidth: 4
 TabWidth: 4
 
+# int main() { // < this curly brace attached
+# }
 BreakBeforeBraces: Attach
 AllowShortFunctionsOnASingleLine: Empty
 
 BinPackParameters: false
 AllowAllParametersOfDeclarationOnNextLine: false
 
+# int* ptr; // not int *ptr
+# int& ref; // not int &ref;
 PointerAlignment: Left
+DerivePointerAlignment: false 
 
 ReflowComments: false
 
+# first project includes, then system includes
+# both blocks sorted alphabetically within themselves
 SortIncludes: true
 
+# max line length
 ColumnLimit: 100
