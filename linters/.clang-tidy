@@ -1,0 +1,43 @@
+Checks: >-
+  -*,
+  -modernize-*, # disable, since it mostly targets c++11 and later
+  performance-*,
+  readability-*,
+  misc-*,
+  -cppcoreguidelines-pro-type-vararg, # doesn't allow to call C vararg functions, including fcntl
+  -cppcoreguidelines-special-member-functions, # requires move and move assign, 
+    # so checking Canonical Orthodox Form only with custom header_checker.py
+  cppcoreguidelines-*,
+  bugprone-*,
+  clang-analyzer-*,
+  llvm-header-guide
+
+HeaderFilterRegex: '.*'
+WarningsAsErrors: ''
+CheckOptions:
+  - key: readability-function-size.LineThreshold
+    value: '80'           # max lines in a function
+  - key: readability-function-size.StatementThreshold
+    value: '200'          # max statements
+  - key: readability-function-size.ParameterThreshold
+    value: '6'            # max parameters
+  - key: readability-function-size.VariableThreshold
+    value: '10'           # max local variables
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+# turned off: clang-tidy doesn't distinguish constant fields and constant local variables
+# first should be UPPER_SNAKE, second camelBack
+#  - key: readability-identifier-naming.VariableCase
+#    value: camelBack
+#  - key: readability-identifier-naming.ConstantCase
+#    value: UPPER_CASE
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: "_"
+  - key: readability-identifier-naming.ParameterCase
+    value: camelBack
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+  - key: llvm-header-guard.HeaderFileExtensions
+    value: 'h,hpp'
