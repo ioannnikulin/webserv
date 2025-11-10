@@ -1,4 +1,6 @@
-#include <cassert>  // include last
+#pragma once
+
+#include <cassert>
 
 #include "webserv.hpp"
 
