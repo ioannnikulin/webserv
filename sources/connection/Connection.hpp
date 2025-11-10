@@ -1,5 +1,7 @@
-#include <map>
+#include <poll.h>
 
+#include <map>
+#include <string>
 using std::map;
 
 namespace webserver {
@@ -9,16 +11,20 @@ private:
     Connection(const Connection& other);
     Connection& operator=(const Connection& other);
 
+    ::pollfd* _clientSocket;  // NOTE: do not delete it here! it's managed by MasterListener
     int _clientSocketFd;
+    std::string _responseBuffer;
 
-    string receiveRequestContent();
-    void sendResponse(std::string response) const;
+    std::string receiveRequestContent();
+    void markResponseReadyForReturn();
 
 public:
     Connection(int listeningSocketFd);
     ~Connection();
 
     int getClientSocketFd() const;
+    void setClientSocket(::pollfd* clientSocket);
     void handleRequest();
+    void sendResponse();
 };
 }  // namespace webserver

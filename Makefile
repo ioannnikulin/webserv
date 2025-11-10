@@ -30,7 +30,7 @@ CONNECTION_SRCS = $(addprefix $(SOURCE_F)/$(CONNECTION_F)/,$(CONNECTION_SRC_NAME
 # ------------------------------------------------------------
 
 REQUEST_HANDLER_F = request_handler
-REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp
+REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp
 REQUEST_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_HANDLER_F)/,$(REQUEST_HANDLER_SRC_NAMES))
 
 # ------------------------------------------------------------

@@ -12,5 +12,5 @@ private:
 public:
     static std::string handle(std::string requestBody);
     ~GetHandler();
-}
+};
 }  // namespace webserver

@@ -2,6 +2,7 @@
 
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -77,6 +78,10 @@ Listener::Listener(const std::string& interface, int port)
          << endl;
 }
 
+void Listener::setClientSocket(::pollfd* clientSocket) {
+    _clientConnections.at(clientSocket->fd)->setClientSocket(clientSocket);
+}
+
 int Listener::getListeningSocketFd() const {
     return _listeningSocketFd;
 }
@@ -87,11 +92,21 @@ bool Listener::hasActiveClientSocket(int clientSocketFd) const {
 
 int Listener::acceptConnection() {
     Connection* nconn = new Connection(_listeningSocketFd);
-    _clientConnections.at(nconn->getClientSocketFd()) = nconn;
+    _clientConnections[nconn->getClientSocketFd()] = nconn;
     return (nconn->getClientSocketFd());
 }
 
-void Listener::receiveRequest(int clientSocketFd) {}
+void Listener::receiveRequest(::pollfd& clientSocketFd) {
+    _clientConnections.at(clientSocketFd.fd)->handleRequest();
+}
+
+void Listener::sendResponse(int clientSocketFd) {
+    _clientConnections.at(clientSocketFd)->sendResponse();
+}
+
+void Listener::killConnection(int clientSocketFd) {
+    _clientConnections.erase(_clientConnections.find(clientSocketFd));
+}
 
 Listener::~Listener() {
     if (_listeningSocketFd != -1) {

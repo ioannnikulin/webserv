@@ -1,3 +1,6 @@
+#ifndef REQUEST_HANDLER_HPP
+#define REQUEST_HANDLER_HPP
+#include <string>
 namespace webserver {
 class RequestHandler {
 private:
@@ -10,3 +13,4 @@ public:
     ~RequestHandler();
 };
 }  // namespace webserver
+#endif

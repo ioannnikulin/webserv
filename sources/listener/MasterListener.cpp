@@ -3,6 +3,7 @@
 #include <poll.h>
 #include <string.h>
 
+#include <algorithm>
 #include <cerrno>
 #include <iostream>
 #include <map>
@@ -35,6 +36,7 @@ int registerNewConnection(
     clientPfd.events = POLLIN;
     clientPfd.revents = 0;
     pollFds.push_back(clientPfd);
+    listener->setClientSocket(&pollFds.back());
     clog << "Connection accepted, client socket " << clientPfd.fd << " assigned to this client"
          << endl;
     return (clientPfd.fd);
@@ -71,55 +73,75 @@ MasterListener::MasterListener(const set<pair<string, int> >& interfacePortPairs
          it != interfacePortPairs.end();
          ++it) {
         Listener* newListener = new Listener(it->first, it->second);
-        _listeners.at(newListener->getListeningSocketFd()) = newListener;
+        _listeners[newListener->getListeningSocketFd()] = newListener;
     }
 }
 
-void MasterListener::handleIncomingConnection(vector<struct ::pollfd>& pollFds, int activeFd) {
-    Listener* listener = findListener(_listeners, activeFd);
-    // is it a request on a LISTENING socket? so a request for a new connection?
+void MasterListener::handleIncomingConnection(::pollfd& activeFd) {
+    Listener* listener = findListener(_listeners, activeFd.fd);
+    // NOTE: is it a request on a LISTENING socket? so a request for a new connection?
     if (listener != NULL) {
-        const int clientSocket = registerNewConnection(pollFds, activeFd, listener);
-        _clientListeners.at(clientSocket) = listener;
+        const int clientSocket = registerNewConnection(_pollFds, activeFd.fd, listener);
+        _clientListeners[clientSocket] = listener;
         return;
     }
-    // if not, maybe this is a request on an existing connection,
-    // so on a CLIENT socket?
-    listener = findListener(_clientListeners, activeFd);
+    // NOTE: if not, maybe this is a request on an existing connection,
+    // NOTE: so on a CLIENT socket?
+    listener = findListener(_clientListeners, activeFd.fd);
     if (listener != NULL) {
-        clog << "Existing client on socket fd " << activeFd << " has sent data." << endl;
+        clog << "Existing client on socket fd " << activeFd.fd << " has sent data." << endl;
         listener->receiveRequest(activeFd);
-        if (!listener->hasActiveClientSocket(activeFd)) {
-            // client disconnected so we remove him from existing sessions list
-            _clientListeners.erase(_clientListeners.find(activeFd));
+        if (!listener->hasActiveClientSocket(activeFd.fd)) {
+            // NOTE: client disconnected so we remove him from existing sessions list
+            _clientListeners.erase(_clientListeners.find(activeFd.fd));
         }
         return;
     }
-    // this should never happen in theory, since all sockets come from listening or client lists
-    // maybe sending data after a timeout, when the connection was closed already or smth
-    cerr << "Unknown socket fd " << activeFd << " has sent data, ignoring." << endl;
+    // NOTE: this should never happen in theory, since all sockets come from listening or client lists
+    // NOTE: maybe sending data after a timeout, when the connection was closed already or smth
+    cerr << "Unknown socket fd " << activeFd.fd << " has sent data, ignoring." << endl;
+}
+
+void MasterListener::handleOutgoingConnection(::pollfd& activeFd) {
+    Listener* listener = findListener(_clientListeners, activeFd.fd);
+    if (listener != NULL) {
+        listener->sendResponse(activeFd.fd);
+        // NOTE: no keep-alive, so killing right away
+        // NOTE: if he wants to go on, he'd have to go to listening socket again
+        listener->killConnection(activeFd.fd);
+        clog << "Sent response to socket fd " << activeFd.fd << endl;
+    }
+    cerr << "Tried to send data to an unknown socket fd " << activeFd.fd << ", ignoring." << endl;
 }
 
 void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
-    vector<struct ::pollfd> pollFds;
-    populateFdsFromListeners(pollFds, _listeners);
+    populateFdsFromListeners(_pollFds, _listeners);
 
     while (isRunning == 1) {
-        const int ret = poll(pollFds.data(), pollFds.size(), -1);  // POLL! the one and only!
+        const int ret =
+            poll(_pollFds.data(), _pollFds.size(), -1);  // NOTE: POLL! the one and only!
         if (ret == -1) {
             if (errno == EINTR) {
-                continue;  // interrupted by signal, retry
+                continue;  // NOTE: interrupted by signal, retry
             }
             throw runtime_error(string("poll() failed: ") + strerror(errno));
         }
-        for (size_t i = 0; i < pollFds.size(); ++i) {
-            if ((pollFds[i].revents & POLLIN) > 0) {
-                // something happened on that listening socket, let's dive in
-                handleIncomingConnection(pollFds, pollFds[i].fd);
+        for (size_t i = 0; i < _pollFds.size();) {
+            if ((_pollFds[i].revents & POLLIN) > 0) {
+                // NOTE: something happened on that listening socket, let's dive in
+                handleIncomingConnection(_pollFds[i]);
+                i++;
             }
-            if ((pollFds[i].revents & POLLOUT) > 0) {
-                // the response is ready to be sent back
-                handleOutgoingConnection(pollFds, pollFds[i].fd);
+            else if ((_pollFds[i].revents & POLLOUT) > 0) {
+                // NOTE: the response is ready to be sent back
+                handleOutgoingConnection(_pollFds[i]);
+                _pollFds.erase(_pollFds.begin() + i);
+                /* TODO: something is wrong here, the socket isn't deleted from the poll,
+                * there is a second attempt to send data there,
+                * something to do with correct deletion while iterating on a container,
+                * fix it */
+            } else {
+                i ++;
             }
         }
     }
@@ -129,8 +151,8 @@ MasterListener::~MasterListener() {
     for (map<int, Listener*>::const_iterator it = _listeners.begin(); it != _listeners.end();
          ++it) {
         delete it->second;
-    }  // deleting from listeners only, clientListeners contains pointers to the same Listener objects
-    // should probably set them to nullptr there though
-    // check with valgrind
+    }  // NOTE: deleting from listeners only, clientListeners contains pointers to the same Listener objects
+    // TODO: should probably set them to nullptr there though
+    // TODO: check with valgrind
 }
 }  // namespace webserver
