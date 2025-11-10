@@ -11,14 +11,47 @@ TEST_OBJ_F = $(OBJ_F)/$(TEST_F)
 
 # ------------------------------------------------------------
 
+APP_CONFIG_F = configuration
+APP_CONFIG_SRC_NAMES = AppConfig.cpp
+APP_CONFIG_SRCS = $(addprefix $(SOURCE_F)/$(APP_CONFIG_F)/,$(APP_CONFIG_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+LISTENER_F = listener
+LISTENER_SRC_NAMES = Listener.cpp MasterListener.cpp
+LISTENER_SRCS = $(addprefix $(SOURCE_F)/$(LISTENER_F)/,$(LISTENER_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+CONNECTION_F = connection
+CONNECTION_SRC_NAMES = Connection.cpp
+CONNECTION_SRCS = $(addprefix $(SOURCE_F)/$(CONNECTION_F)/,$(CONNECTION_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+REQUEST_HANDLER_F = request_handler
+REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp
+REQUEST_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_HANDLER_F)/,$(REQUEST_HANDLER_SRC_NAMES))
+
+# ------------------------------------------------------------
+
 RESPONSE_GENERATOR_F = response_generator
 RESPONSE_GENERATOR_SRC_NAMES = response_generator.cpp
 RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RESPONSE_GENERATOR_SRC_NAMES))
 
 # ------------------------------------------------------------
 
+WEBSERV_SRC_NAMES = WebServer.cpp
+WEBSERV_SRCS = $(addprefix $(SOURCE_F)/,$(WEBSERV_SRC_NAMES))
+
+
 MAIN_NONENDPOINT_SRCS = \
+	$(APP_CONFIG_SRCS) \
+	$(LISTENER_SRCS) \
+	$(CONNECTION_SRCS) \
+	$(REQUEST_HANDLER_SRCS) \
 	$(RESPONSE_GENERATOR_SRCS) \
+	$(WEBSERV_SRCS) \
 
 
 MAIN_NONENDPOINT_OBJS = $(addprefix $(OBJ_F)/,$(MAIN_NONENDPOINT_SRCS:.cpp=.o))
@@ -32,6 +65,10 @@ MAIN_FNAME = webserv
 
 MAIN_DIRS = \
 	$(SOURCE_F) \
+	$(SOURCE_F)/$(APP_CONFIG_F) \
+	$(SOURCE_F)/$(LISTENER_F) \
+	$(SOURCE_F)/$(CONNECTION_F) \
+	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
 
 
@@ -56,10 +93,22 @@ TEST_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(TEST_DIRS))
 LINK_FLAGS = \
 	-I$(SOURCE_F) \
 	-I$(TEST_F) \
+	-I$(SOURCE_F)/$(APP_CONFIG_F) \
+	-I$(SOURCE_F)/$(LISTENER_F) \
+	-I$(SOURCE_F)/$(CONNECTION_F) \
+	-I$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	-I$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
 
 
-vpath %.cpp $(SOURCE_F) $(RESPONSE_GENERATOR_F) $(TEST_F)
+vpath %.cpp \
+	$(SOURCE_F) \
+	$(APP_CONFIG_F) \
+	$(LISTENER_F) \
+	$(CONNECTION_F) \
+	$(REQUEST_HANDLER_F) \
+	$(RESPONSE_GENERATOR_F) \
+	$(TEST_F) \
+
 
 all: $(MAIN_FNAME)
 
@@ -123,14 +172,12 @@ format-fix:
 # exits with 1 if any file would change
 format-check:
 	@bash ${LINTERS_F}/clang_format.sh check ${SOURCE_F} ${TEST_F}
-
 # ------------------------------------------------------------
 
 # smarter analysis: bugs, potential undefined behavior
 # no autofixes
 cppcheck:
 	@bash ${LINTERS_F}/cppcheck.sh c++98 "$(LINK_FLAGS)" $(SOURCE_F) $(TEST_F)
-
 # ------------------------------------------------------------
 
 # smartest analysis, see .clang-tidy file for settings
