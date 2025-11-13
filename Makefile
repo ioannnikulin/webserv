@@ -17,9 +17,27 @@ RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RES
 
 # ------------------------------------------------------------
 
+CONFIG_F = configuration
+CONFIG_SRC_NAMES = \
+	AppConfig.cpp \
+	Endpoint.cpp \
+#	RouteConfig.cpp \
+	FolderConfig.cpp \
+	CgiHandlerConfig.cpp \
+	UploadConfig.cpp
+
+CONFIG_SRCS = $(addprefix $(SOURCE_F)/$(CONFIG_F)/,$(CONFIG_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+HTTP_METHODS_F = http_methods
+HTTP_METHODS_SRC_NAMES =
+HTTP_METHODS_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_METHODS_F)/,$(HTTP_METHODS_SRC_NAMES))
+
+# ------------------------------------------------------------
 MAIN_NONENDPOINT_SRCS = \
 	$(RESPONSE_GENERATOR_SRCS) \
-
+	$(CONFIG_SRCS) \
 
 MAIN_NONENDPOINT_OBJS = $(addprefix $(OBJ_F)/,$(MAIN_NONENDPOINT_SRCS:.cpp=.o))
 
@@ -33,7 +51,8 @@ MAIN_FNAME = webserv
 MAIN_DIRS = \
 	$(SOURCE_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
-
+	$(SOURCE_F)/$(CONFIG_F) \
+	$(SOURCE_F)/$(HTTP_METHODS_F)
 
 MAIN_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(MAIN_DIRS))
 
@@ -56,10 +75,18 @@ TEST_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(TEST_DIRS))
 LINK_FLAGS = \
 	-I$(SOURCE_F) \
 	-I$(TEST_F) \
+	-I$(SOURCE_F)/$(HTTP_METHODS_F) \
 	-I$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
-
-
-vpath %.cpp $(SOURCE_F) $(RESPONSE_GENERATOR_F) $(TEST_F)
+	-I$(SOURCE_F)/$(CONFIG_F)
+	
+vpath %.cpp \
+	$(SOURCE_F) \
+	$(SOURCE_F)/$(HTTP_METHODS_F) \
+	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
+	$(SOURCE_F)/$(CONFIG_F) \
+	$(TEST_F) \
+	$(TEST_F)/unit \
+	$(TEST_F)/e2e
 
 all: $(MAIN_FNAME)
 

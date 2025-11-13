@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "webserv.hpp"
+#include "WebServer.hpp"
 
 int runUnitTests();
 int runEndToEndTests();

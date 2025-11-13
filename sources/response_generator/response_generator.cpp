@@ -1,7 +1,5 @@
 #include <string>
 
-#include "../webserv.hpp"
-
 using std::string;
 
 // TODO: issue 8
