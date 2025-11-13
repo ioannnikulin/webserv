@@ -1,5 +1,5 @@
 webserv
 build
-*.txt
 .vscode
+*.txt
 main_test

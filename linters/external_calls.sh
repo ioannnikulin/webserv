@@ -17,7 +17,7 @@ ALLOWED_EXTERNAL_FUNCTIONS=(
 
 	# standard implicit C++ stuff
 	__cxa_.* __dso_handle
-	_GLOBAL_OFFSET_TABLE_ __gxx_personality_v0 __stack_chk_fail
+	_GLOBAL_OFFSET_TABLE_ __gxx_personality_v0 __stack_chk_fail _stack_chk_guard
 	_Unwind_Resume 
 
 	# memmove and strlen leak from STL optimizations,
