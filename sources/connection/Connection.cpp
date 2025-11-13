@@ -85,7 +85,7 @@ void Connection::markResponseReadyForReturn() {
 
 void Connection::handleRequest() {
     const string request = receiveRequestContent();
-    clog << "Received request on socket fd " << _clientSocketFd << ":\n" << request << endl;
+    clog << "Received request on socket fd " << _clientSocketFd << ":\n---\n" << request << "---" << endl;
     _responseBuffer = RequestHandler::handle(request);
     markResponseReadyForReturn();
     // NOTE: doesn't send directly, have to get approval from MasterListener's poll first

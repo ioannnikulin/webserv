@@ -5,6 +5,7 @@
 
 namespace webserver {
 class WebServer {
+	
 private:
     WebServer();
     explicit WebServer(const std::string& configFilePath);

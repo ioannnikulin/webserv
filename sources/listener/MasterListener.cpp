@@ -32,15 +32,15 @@ int registerNewConnection(
     webserver::Listener* listener
 ) {
     clog << B_YELLOW
-		 << "A new connection on socket fd " << listeningFd << endl << RESET;
+		 << "A new connection on listening socket fd " << listeningFd << endl << RESET;
     struct ::pollfd clientPfd;
     clientPfd.fd = listener->acceptConnection();
     clientPfd.events = POLLIN;
     clientPfd.revents = 0;
     pollFds.push_back(clientPfd);
     listener->setClientSocket(&pollFds.back());
-    clog << "Connection accepted, client socket " << clientPfd.fd << " assigned to this client."
-         << endl;
+    clog << "✅" << B_GREEN << " Connection accepted, client socket " << clientPfd.fd << " assigned to this client."
+         << endl << RESET;
     return (clientPfd.fd);
 }
 
