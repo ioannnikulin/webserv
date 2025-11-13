@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "Listener.hpp"
+#include "utils.hpp"
 
 using std::cerr;
 using std::clog;
@@ -30,14 +31,15 @@ int registerNewConnection(
     int listeningFd,
     webserver::Listener* listener
 ) {
-    clog << "A new connection on socket fd " << listeningFd << endl;
+    clog << B_YELLOW
+		 << "A new connection on socket fd " << listeningFd << endl << RESET;
     struct ::pollfd clientPfd;
     clientPfd.fd = listener->acceptConnection();
     clientPfd.events = POLLIN;
     clientPfd.revents = 0;
     pollFds.push_back(clientPfd);
     listener->setClientSocket(&pollFds.back());
-    clog << "Connection accepted, client socket " << clientPfd.fd << " assigned to this client"
+    clog << "Connection accepted, client socket " << clientPfd.fd << " assigned to this client."
          << endl;
     return (clientPfd.fd);
 }
@@ -103,15 +105,20 @@ void MasterListener::handleIncomingConnection(::pollfd& activeFd) {
 }
 
 void MasterListener::handleOutgoingConnection(::pollfd& activeFd) {
+
     Listener* listener = findListener(_clientListeners, activeFd.fd);
-    if (listener != NULL) {
+
+	if (listener != NULL) {
         listener->sendResponse(activeFd.fd);
+
         // NOTE: no keep-alive, so killing right away
         // NOTE: if he wants to go on, he'd have to go to listening socket again
         listener->killConnection(activeFd.fd);
-        clog << "Sent response to socket fd " << activeFd.fd << endl;
-    }
-    cerr << "Tried to send data to an unknown socket fd " << activeFd.fd << ", ignoring." << endl;
+        clog << "✅ "<< B_GREEN << "Sent response to socket fd " << activeFd.fd << endl << RESET;
+		printSeparator();
+    } else {
+   		cerr << B_RED << "Tried to send data to an unknown socket fd " << activeFd.fd << ", ignoring." << endl << RESET;
+	}
 }
 
 void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {

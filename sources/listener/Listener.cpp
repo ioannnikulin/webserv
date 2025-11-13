@@ -13,6 +13,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <utils/utils.hpp>
+
 using std::cerr;
 using std::clog;
 using std::endl;
@@ -74,8 +76,12 @@ Listener::Listener(const std::string& interface, int port)
         throw runtime_error(string("listen() failed: ") + strerror(errno));
     }
 
-    clog << "Listening on " << _interface << ":" << _port << " via socket " << _listeningSocketFd
+	printSeparator();
+    clog << "Listening on "
+		 << B_GREEN << "http://" << _interface << ":" << _port << RESET
+		 << " via socket " << _listeningSocketFd
          << endl;
+	printSeparator();
 }
 
 void Listener::setClientSocket(::pollfd* clientSocket) {

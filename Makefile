@@ -1,8 +1,11 @@
 CPP = c++
 # sometimes gets used implicitly, so safer to define
 CXX = ${CPP}
-COMPILE_FLAGS = -Wall -Wextra -Werror -std=c++98 -g -pedantic -Wold-style-cast -Wdeprecated-declarations
-PREPROC_DEFINES = 
+COMPILE_FLAGS = -Wall -Wextra -Werror	\
+				-std=c++98	\
+				-g	\
+				-pedantic -Wold-style-cast -Wdeprecated-declarations
+PREPROC_DEFINES =
 
 SOURCE_F = sources
 TEST_F = tests
@@ -41,6 +44,12 @@ RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RES
 
 # ------------------------------------------------------------
 
+UTILS_F = utils
+UTILS_SRC_NAMES = utils.cpp
+UTILS_SRCS = $(addprefix $(SOURCE_F)/$(UTILS_F)/,$(UTILS_SRC_NAMES))
+
+# ------------------------------------------------------------
+
 WEBSERV_SRC_NAMES = WebServer.cpp
 WEBSERV_SRCS = $(addprefix $(SOURCE_F)/,$(WEBSERV_SRC_NAMES))
 
@@ -52,6 +61,7 @@ MAIN_NONENDPOINT_SRCS = \
 	$(REQUEST_HANDLER_SRCS) \
 	$(RESPONSE_GENERATOR_SRCS) \
 	$(WEBSERV_SRCS) \
+	$(UTILS_SRCS)
 
 
 MAIN_NONENDPOINT_OBJS = $(addprefix $(OBJ_F)/,$(MAIN_NONENDPOINT_SRCS:.cpp=.o))
@@ -70,6 +80,7 @@ MAIN_DIRS = \
 	$(SOURCE_F)/$(CONNECTION_F) \
 	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
+	$(SOURCE_F)/$(UTILS_F)
 
 
 MAIN_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(MAIN_DIRS))
@@ -98,6 +109,7 @@ LINK_FLAGS = \
 	-I$(SOURCE_F)/$(CONNECTION_F) \
 	-I$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	-I$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
+	-I$(SOURCE_F)/$(UTILS_F)
 
 
 vpath %.cpp \
@@ -108,6 +120,7 @@ vpath %.cpp \
 	$(REQUEST_HANDLER_F) \
 	$(RESPONSE_GENERATOR_F) \
 	$(TEST_F) \
+	$(UTILS_F)
 
 
 all: $(MAIN_FNAME)
