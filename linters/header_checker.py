@@ -11,7 +11,7 @@ headerSuffixes = {".h", ".hpp", ".hh", ".hxx"}
 regexpUsing = re.compile(r"^\s*using\s", re.M)
 regexpCommentOneLine = re.compile(r'//(.*)')
 regexpCommentMultiline = re.compile(r'/\*([^*]|\*(?!/))*\*/')
-regexpCommentValidContentPrefix = re.compile(r'^(( TODO [0-9]*:)|( NOTE: )|( namespace))')
+regexpCommentValidContentPrefix = re.compile(r'^(( TODO [0-9]+:)|( NOTE: )|( namespace))')
 
 def collectFiles(roots):
     files = []
