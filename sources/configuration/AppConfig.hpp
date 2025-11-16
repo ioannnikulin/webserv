@@ -7,6 +7,7 @@
 #include "Endpoint.hpp"
 #include "RouteConfig.hpp"
 
+namespace webserver {
 class AppConfig {
 private:
     static const int DEFAULT_MAX_BODY_SIZE;
@@ -16,11 +17,11 @@ private:
 
     std::vector<Endpoint> _endpoints;
     int _maxRequestBodySizeBytes;
-    //    std::vector<RouteConfig> _routes;
+    std::vector<RouteConfig> _routes;
 
 public:
     AppConfig();
     ~AppConfig();
 };
-
+}  // namespace webserver
 #endif

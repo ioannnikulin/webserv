@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 
+namespace webserver {
 class HttpError {
 private:
     HttpError();
@@ -13,20 +14,25 @@ private:
     HttpError(int code, const std::string& message, const std::string& page);
 
     const std::string _message;
-    const std::string _defaultPageFileLocation;  // hardcoded in initializeErrors; no accessors
-    const std::string _pageFileLocation;  // actually used; take from config, else pickup default
+    const std::string
+        _defaultPageFileLocation;  // NOTE: hardcoded in initializeErrors; no accessors
+    const std::string
+        _pageFileLocation;  // NOTE: actually used; take from config, else pickup default
 
-    // subject suggests we have same pages for all endpoints, so static for now
+    // NOTE: subject suggests we have same pages for all endpoints, so static for now
     static std::map<int, HttpError> _errors;
 
 public:
-    void initializeErrors();  // fills map; called once at server start
+    void initializeErrors();  // NOTE: fills map; called once at server start
     ~HttpError();
 
-    // next three throw different exceptions if code not found or map empty
+    // NOTE: next three throw different exceptions if code not found or map empty
     std::string getMessage(int code) const;
-    void setPage(int code, const std::string& pageFileLocation);  // used in configuration parser
-    std::string getPageContent(int code) const;                   // read file, return its content
+    void setPage(
+        int code,
+        const std::string& pageFileLocation
+    );                                           // TODO 15: used in configuration parser
+    std::string getPageContent(int code) const;  // TODO 18: read file, return its content
 
     enum CODE {
         OK = 200,
@@ -46,5 +52,6 @@ public:
         HTTP_VERSION_NOT_SUPPORTED = 505
     };
 };
+}  // namespace webserver
 
 #endif

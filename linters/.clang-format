@@ -5,6 +5,7 @@ UseTab: Never
 IndentWidth: 4
 TabWidth: 4
 AccessModifierOffset: -4 # spaces before 'private' keyword, -1 by default in Google
+InsertNewlineAtEOF: true
 
 # int main() { // < this curly brace attached
 # }

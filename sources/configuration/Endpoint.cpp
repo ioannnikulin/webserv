@@ -4,6 +4,7 @@
 
 using std::string;
 
+namespace webserver {
 const string Endpoint::DEFAULT_INTERFACE = "127.0.0.1";
 const int Endpoint::DEFAULT_PORT = 888;
 
@@ -25,3 +26,4 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
 }
 
 Endpoint::~Endpoint() {}
+}  // namespace webserver

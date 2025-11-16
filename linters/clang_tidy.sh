@@ -59,9 +59,11 @@ check() {
 }
 
 fix() {
+	echo "Running clang-tidy autoformatting..."
 	for f in "${TUS[@]}"; do
 		"$CLANG_TIDY" -fix "$SETTINGS_FILE_FLAG" $f -- "$COMPILE_FLAGS" "$LINK_FLAGS" || true; \
 	done
+	echo "clang-tidy autoformat applied"
 }
 
 case "$1" in
