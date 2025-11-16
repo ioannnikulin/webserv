@@ -4,5 +4,7 @@
 
 #include "WebServer.hpp"
 
+namespace webserver {
 int runUnitTests();
 int runEndToEndTests();
+}  // namespace webserver

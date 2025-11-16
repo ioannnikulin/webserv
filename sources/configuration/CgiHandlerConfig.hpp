@@ -3,6 +3,7 @@
 
 #include <string>
 
+namespace webserver {
 class CgiHandlerConfig {
 private:
     CgiHandlerConfig();
@@ -12,7 +13,7 @@ private:
     std::string _executablePath;
     std::string _rootPath;
     int _timeoutSeconds;
-    // much more here
+    // TODO 16: much more here
 
 public:
     CgiHandlerConfig(
@@ -22,5 +23,6 @@ public:
     );
     ~CgiHandlerConfig();
 };
+}  // namespace webserver
 
 #endif

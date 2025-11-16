@@ -22,7 +22,10 @@ jobs:
           valgrind \
           clang-format \
           clang-tidy \
-          cppcheck
+          cppcheck \
+          libclang-18-dev \
+          python3-clang-18 \
+
 
       - name: Build and test the project
         run: make test-github

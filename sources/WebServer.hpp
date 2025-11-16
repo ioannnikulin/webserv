@@ -5,6 +5,7 @@
 
 #include "AppConfig.hpp"
 
+namespace webserver {
 class WebServer {
 private:
     WebServer();
@@ -22,5 +23,5 @@ public:
 };
 
 std::string generateResponse(const std::string& request);
-
+}  // namespace webserver
 #endif

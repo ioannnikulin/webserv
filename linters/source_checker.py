@@ -3,6 +3,8 @@
 import sys
 import re
 from pathlib import Path
+from header_checker import checkCommentPrefixes
+from header_checker import checkAST
 
 roots = sys.argv[1:] if len(sys.argv) > 1 else ["sources", "include", "tests"]
 headerSuffixes = {".cpp", ".c"}
@@ -19,6 +21,7 @@ def collectFiles(roots):
 
 regexpUsingNamespace = re.compile(r"^\s*using\snamespace\s", re.M)
 regexpReturnNoSpaceOrParens = re.compile(r"^\s*return(([^ ])|( [^\\(]))", re.M)
+regexpPoll = re.compile(f"^bpoll\\(")
 
 files = collectFiles(roots)
 if not files:
@@ -26,6 +29,8 @@ if not files:
     sys.exit(0)
 
 failed = False
+pollCalls = 0
+
 for f in files:
     s = f.read_text()
 
@@ -37,9 +42,22 @@ for f in files:
     if regexpUsingNamespace.search(s):
         issues.append("contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
 
+    checkCommentPrefixes(s, issues)
+
+    if regexpPoll.search(s):
+        pollCalls += 1
+
+    issues += checkAST(f)
+
     if issues:
         failed = True
         print(f"{f}: " + "; ".join(issues))
 
+if pollCalls > 1:
+    failed = True
+    print("too many poll() calls detected")
+
 if failed:
     sys.exit(1)
+else:
+    print("source checker didn't find any issues")

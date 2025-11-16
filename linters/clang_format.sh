@@ -26,9 +26,11 @@ SETTINGS_FILE_FLAG="-style=file:linters/.clang-format"
 # run to fix simple formatting issues
 # see .clang-format for settings
 fix() {
+	echo "Running clang-format autoformatting..."
 	for f in "${FILES[@]}"; do
 		"$CLANG_FORMAT" "$SETTINGS_FILE_FLAG" -i "$f"
 	done
+	echo "clang-format autoformat applied"
 }
 
 # runs fixer and compares with original,

@@ -3,6 +3,7 @@
 
 #include <string>
 
+namespace webserver {
 class FolderConfig {
 private:
     FolderConfig();
@@ -10,7 +11,7 @@ private:
     FolderConfig& operator=(const FolderConfig& other);
 
     std::string _rootPath;
-    bool _enableListing;  // default false
+    bool _enableListing;  // TODO 15: default false
     std::string _indexPageFileLocation;
 
 public:
@@ -21,5 +22,6 @@ public:
     );
     ~FolderConfig();
 };
+}  // namespace webserver
 
 #endif

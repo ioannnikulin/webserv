@@ -8,8 +8,8 @@ int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
 
-    runUnitTests();
-    runEndToEndTests();
+    webserver::runUnitTests();
+    webserver::runEndToEndTests();
 
     cout << "All tests passed!\n";
     return (0);

@@ -3,6 +3,7 @@
 
 #include <string>
 
+namespace webserver {
 class Endpoint {
 private:
     static const std::string DEFAULT_INTERFACE;
@@ -18,5 +19,6 @@ public:
     Endpoint& operator=(const Endpoint& other);
     ~Endpoint();
 };
+}  // namespace webserver
 
 #endif

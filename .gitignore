@@ -3,3 +3,4 @@ build
 .vscode
 *.txt
 main_test
+*.pyc

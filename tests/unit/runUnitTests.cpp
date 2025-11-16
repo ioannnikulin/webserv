@@ -5,6 +5,7 @@
 
 using std::string;
 
+namespace webserver {
 int runUnitTests() {
     const string request = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
     const string expectedResponse = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!";
@@ -13,3 +14,4 @@ int runUnitTests() {
     assert(actualResponse == expectedResponse);
     return (0);
 }
+}  // namespace webserver

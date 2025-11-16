@@ -21,10 +21,11 @@ CONFIG_F = configuration
 CONFIG_SRC_NAMES = \
 	AppConfig.cpp \
 	Endpoint.cpp \
-#	RouteConfig.cpp \
+	RouteConfig.cpp \
 	FolderConfig.cpp \
 	CgiHandlerConfig.cpp \
-	UploadConfig.cpp
+	UploadConfig.cpp \
+
 
 CONFIG_SRCS = $(addprefix $(SOURCE_F)/$(CONFIG_F)/,$(CONFIG_SRC_NAMES))
 
@@ -178,6 +179,8 @@ header-check:
 source-check:
 	@python3 ${LINTERS_F}/source_checker.py sources include tests
 
+makefile-check:
+	@python3 ${LINTERS_F}/makefile_checker.py . Makefile
 # ------------------------------------------------------------
 
 # run in 42 campus
@@ -197,4 +200,10 @@ test-github: external-calls format-check cppcheck tidy-check header-check source
 
 # ------------------------------------------------------------
 
-.PHONY: all clean fclean re run-tests test external-calls format-fix format-check cppcheck tidy-check tidy-fix header-check source-check test-campus test-github
+.PHONY: all clean fclean re run-tests test \
+	external-calls \
+	format-fix format-check \
+	cppcheck \
+	tidy-check tidy-fix \
+	header-check source-check makefile-check \
+	test-campus test-github
