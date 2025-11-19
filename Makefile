@@ -78,7 +78,7 @@ LINK_FLAGS = \
 	-I$(TEST_F) \
 	-I$(SOURCE_F)/$(HTTP_METHODS_F) \
 	-I$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
-	-I$(SOURCE_F)/$(CONFIG_F)
+
 	
 vpath %.cpp \
 	$(SOURCE_F) \
@@ -186,11 +186,11 @@ makefile-check:
 # run in 42 campus
 # skips some checks whose prerequisites cannot be installed
 # since we don't have root access
-test-campus: external-calls format-check header-check source-check run-tests
+test-campus: external-calls format-check header-check source-check makefile-check run-tests
 	@echo "CLEAN"
 
 # runs in GitHub Actions environment, use on personal machine too
-test-github: external-calls format-check cppcheck tidy-check header-check source-check run-tests
+test-github: external-calls format-check cppcheck tidy-check header-check source-check makefile-check run-tests
 	@echo "CLEAN"
 
 # ------------------------------------------------------------
