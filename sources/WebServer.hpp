@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "AppConfig.hpp"
+#include "configuration/AppConfig.hpp"
 
 namespace webserver {
 class WebServer {
