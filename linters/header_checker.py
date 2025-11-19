@@ -91,7 +91,7 @@ def checkAST(file):
                 if c.kind == cindex.CursorKind.CONSTRUCTOR:
                     has_ctor = True
                     # copy ctor
-                    if any(p.type.spelling.startswith("const " + cls_name + " &") for p in c.get_arguments()): 
+                    if any(p.type.spelling.startswith(("const " + "::".join(ns_stack) + "::" + cls_name + " &", "const " + cls_name + " &")) for p in c.get_arguments()): 
                         # yes, that space before the ampersand is intentional, even though there is no space in our actual code
                         has_copy_ctor = True
                 elif c.kind == cindex.CursorKind.DESTRUCTOR:
