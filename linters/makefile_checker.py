@@ -8,6 +8,8 @@ import sys
 exit_code = 0
 
 def cppPresence(root, makefileText):
+    global exit_code
+
     all_cpp = {
         str(p.name) # could have been relative path with folders, but we don't write them in makefile in that form anyway
         # so no filename collisions checked
@@ -38,6 +40,8 @@ def cppPresence(root, makefileText):
 
 
 def foldersInVpathAndLinkFlags(text):
+    global exit_code
+
     allFolders = set(re.findall(r'\$?\((\w+_F)\)', text))
 
     ignoredFolders = set({"OBJ_F"})
@@ -63,6 +67,8 @@ def foldersInVpathAndLinkFlags(text):
 
 
 def main():
+    global exit_code
+
     parser = argparse.ArgumentParser(
         description="Check that all .cpp files in a directory are listed in a Makefile (and vice versa)."
     )
