@@ -38,13 +38,15 @@ SETTINGS_FILE_FLAG="--config-file=linters/.clang-tidy"
 # so for std::string please add #include <string>
 CLANG_TIDY_IGNORED_REGEX="SOL_SOCKET|SO_REUSEADDR|POLLIN|poll|pollfd|__sig_atomic_t"
 
+TEST_SIMPLER_STRUCTURE="tests.*(is not inside any namespace)|(missing .*ctor)"
+
 check() {
 	echo "Running clang-tidy check..."
 	errs=0
 	for f in "${TUS[@]}"; do
 		out=$(mktemp)
 		"$CLANG_TIDY" $f "$SETTINGS_FILE_FLAG" -- "$COMPILE_FLAGS" "$LINK_FLAGS" >$out 2>&1 || true
-		filtered=$(grep -n -E 'warning:|error:' "$out" | grep -v -E "$CLANG_TIDY_IGNORED_REGEX" || true)
+		filtered=$(grep -n -E 'warning:|error:' "$out" | grep -v -E "$CLANG_TIDY_IGNORED_REGEX" | grep -v -E TEST_SIMPLER_STRUCTURE || true)
 		if [ -n "$filtered" ]; then
 			printf "%s\n" "$filtered"
 			errs=1

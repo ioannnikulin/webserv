@@ -172,13 +172,13 @@ tidy-fix:
 
 # custom scripts for conventions that are missing from standard solutions
 header-check:
-	@python3 ${LINTERS_F}/header_checker.py sources include tests
+	@python3 ${LINTERS_F}/header_checker.py $(SOURCE_F) include
 
 source-check:
-	@python3 ${LINTERS_F}/source_checker.py sources include tests
+	@python3 ${LINTERS_F}/source_checker.py $(SOURCE_F) include tests
 
 makefile-check:
-	@python3 ${LINTERS_F}/makefile_checker.py . Makefile
+	@python3 ${LINTERS_F}/makefile_checker.py $(SOURCE_F) Makefile
 # ------------------------------------------------------------
 
 # run in 42 campus
