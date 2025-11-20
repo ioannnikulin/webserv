@@ -59,20 +59,6 @@ MAIN_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(MAIN_DIRS))
 
 # ------------------------------------------------------------
 
-TEST_ENDPOINT_SRC_NAME = main_test.cpp
-TEST_ENDPOINT_SRC = $(TEST_F)/$(TEST_ENDPOINT_SRC_NAME)
-TEST_ENDPOINT_OBJ = $(OBJ_F)/$(TEST_ENDPOINT_SRC:.cpp=.o)
-TEST_FNAME = main_test
-
-TEST_SRC_NAMES = unit/runUnitTests.cpp e2e/runEndToEndTests.cpp
-TEST_SRCS = $(addprefix $(TEST_F)/,$(TEST_SRC_NAMES))
-TEST_OBJS = $(addprefix $(OBJ_F)/,$(TEST_SRCS:.cpp=.o))
-
-TEST_DIRS = $(TEST_F) $(TEST_F)/unit $(TEST_F)/e2e
-TEST_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(TEST_DIRS))
-
-# ------------------------------------------------------------
-
 LINK_FLAGS = \
 	-I$(SOURCE_F) \
 	-I$(TEST_F) \
@@ -111,23 +97,32 @@ $(MAIN_OBJ_DIRS): | $(OBJ_F)
 
 # ------------------------------------------------------------
 
-run-tests: $(TEST_FNAME)
-	@./$(TEST_FNAME)
+CXXTEST_F=cxxtest
+CXXTEST_ZIP=$(CXXTEST_F)/master.zip
+TEST_EXECUTABLE=test
 
-test: run-tests
+install-cxxtest:
+	@if [ ! -d "$(CXXTEST_F)" ]; then \
+		mkdir -p $(CXXTEST_F); \
+		wget -O "$(CXXTEST_ZIP)" https://github.com/CxxTest/cxxtest/archive/refs/heads/master.zip; \
+		unzip -qq "$(CXXTEST_ZIP)" -d "$(CXXTEST_F)"; \
+		mv $(CXXTEST_F)/cxxtest-master/* $(CXXTEST_F); \
+		rm -rf $(CXXTEST_F)/cxxtest-master $(CXXTEST_F)/master.zip;\
+	fi
 
-# this rule takes main function defined in tests (not webserv's main), all test objects
-# and builds test executable, making all components of webserv available for instantiation
-$(TEST_FNAME): $(TEST_ENDPOINT_OBJ) $(TEST_OBJS) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS) $(TEST_OBJ_DIRS)
-	@$(CPP) $(LINK_FLAGS) $^ -o $@
+generate-cxxtest-tests: | $(OBJ_F)
+	@python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp `find tests -name "*.hpp"`
 
-$(TEST_OBJ_DIRS): #ensure it exists
-	@mkdir -p $@
+build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
+	@$(CPP) -std=c++98 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $<
+
+test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
+	@./$(TEST_EXECUTABLE)
 
 # ------------------------------------------------------------
 
 clean:
-	rm -rf $(OBJ_F) $(TEST_FNAME)
+	rm -rf $(OBJ_F) $(TEST_FNAME) $(CXXTEST_F)
 
 fclean: clean
 	rm -f $(MAIN_FNAME)
@@ -189,11 +184,11 @@ makefile-check:
 # run in 42 campus
 # skips some checks whose prerequisites cannot be installed
 # since we don't have root access
-test-campus: external-calls format-check header-check source-check makefile-check run-tests
+test-campus: external-calls format-check header-check source-check makefile-check test
 	@echo "CLEAN"
 
 # runs in GitHub Actions environment, use on personal machine too
-test-github: external-calls format-check cppcheck tidy-check header-check source-check makefile-check run-tests
+test-github: external-calls format-check cppcheck tidy-check header-check source-check makefile-check test
 	@echo "CLEAN"
 
 # ------------------------------------------------------------
@@ -209,4 +204,6 @@ test-github: external-calls format-check cppcheck tidy-check header-check source
 	cppcheck \
 	tidy-check tidy-fix \
 	header-check source-check makefile-check \
-	test-campus test-github
+	install-cxxtest generate-cxxtest-tests build-cxx-tests \
+	test-campus test-github \
+

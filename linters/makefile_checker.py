@@ -44,7 +44,7 @@ def foldersInVpathAndLinkFlags(text):
 
     allFolders = set(re.findall(r'\$?\((\w+_F)\)', text))
 
-    ignoredFolders = set({"OBJ_F"})
+    ignoredFolders = set({"OBJ_F", "CXXTEST_F"})
 
     allFolders = allFolders - ignoredFolders
 

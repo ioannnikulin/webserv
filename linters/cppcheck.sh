@@ -31,7 +31,7 @@ collect() {
 
 # without this it complains about every field in a class declaration 
 # that is not used immediately in the same header
-NO_UNUSED_FIELDS_IN_HEADERS="--suppress=unusedStructMember:*.hpp" 
+NO_UNUSED_FIELDS_IN_HEADERS="--suppress=unusedStructMember:*.hpp"
 
 check() {
 	echo "Running cppcheck..."
@@ -39,15 +39,19 @@ check() {
 	"$CPPCHECK" --std="$LANG_STD" --enable=all --inconclusive \
 		"$NO_UNUSED_FIELDS_IN_HEADERS" \
 		"$INCLUDES" "${FILES[@]}" \
-		--template='{file}:{line}:{column}:{severity}:{id}:{message}' >$out 2>&1 || true
-	if grep -q -E ':(error|warning|style):' $out; then
+		--template='{file}:{line}:{column}:{severity}:{id}:{message}' >"$out" 2>&1 || true
+	
+	# functions in test folder are not necessarily unused, they are picked up by cxxtest generator later
+	grep -E ':(error|warning|style):' "$out" | grep -v -E 'tests/.*:.*:.*:.*:unusedFunction:' > "$out.filtered" || true
+
+	if [ -s "$out.filtered" ]; then
 		echo "cppcheck found issues:"
-		grep -n -E ':(error|warning|style):' $out
-		rm -f $out
+		echo "$out.filtered"
+		rm -f "$out" "$out.filtered" 
 		exit 1
 	else
 		echo "cppcheck: no issues"
-		rm -f $out
+		rm -f "$out" "$out.filtered" 
 	fi
 }
 
