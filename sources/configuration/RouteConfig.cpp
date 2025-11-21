@@ -1,5 +1,6 @@
 #include "RouteConfig.hpp"
 
 namespace webserver {
-RouteConfig::~RouteConfig() {}
+RouteConfig::~RouteConfig() {
+}
 }  // namespace webserver

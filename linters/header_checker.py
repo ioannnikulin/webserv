@@ -10,7 +10,7 @@ headerSuffixes = {".h", ".hpp", ".hh", ".hxx"}
 
 regexpUsing = re.compile(r"^\s*using\s", re.M)
 regexpCommentOneLine = re.compile(r'//(.*)')
-regexpCommentMultiline = re.compile(r'/\*([^*]|\*(?!/))*\*/')
+regexpCommentMultiline = re.compile(r'/\*(.*?)\*/', re.DOTALL)
 regexpCommentValidContentPrefix = re.compile(r'^(( TODO [0-9]+:)|( NOTE: )|( namespace))')
 
 def collectFiles(roots):
@@ -120,7 +120,7 @@ def main():
         issues += checkAST(f)
         if issues:
             failed = True
-            print(f"{f}: " + "; ".join(issues))
+            print(f"{f}: " + "\n\t".join(issues))
     if failed:
         sys.exit(1)
     else:

@@ -1,5 +1,6 @@
 #include "CgiHandlerConfig.hpp"
 
 namespace webserver {
-CgiHandlerConfig::~CgiHandlerConfig() {}
+CgiHandlerConfig::~CgiHandlerConfig() {
+}
 }  // namespace webserver

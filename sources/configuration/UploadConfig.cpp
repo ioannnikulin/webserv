@@ -1,5 +1,6 @@
 #include "UploadConfig.hpp"
 
 namespace webserver {
-UploadConfig::~UploadConfig() {}
+UploadConfig::~UploadConfig() {
+}
 }  // namespace webserver

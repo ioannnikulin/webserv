@@ -1,5 +1,6 @@
 #include "FolderConfig.hpp"
 
 namespace webserver {
-FolderConfig::~FolderConfig() {}
+FolderConfig::~FolderConfig() {
+}
 }  // namespace webserver
