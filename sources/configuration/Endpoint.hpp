@@ -18,6 +18,9 @@ public:
     Endpoint(const Endpoint& other);
     Endpoint& operator=(const Endpoint& other);
     ~Endpoint();
+
+    int getPort(void) const;
+    std::string getInterface(void) const;
 };
 }  // namespace webserver
 

@@ -17,10 +17,16 @@ def collectFiles(roots):
             files.append(p)
         elif p.is_dir():
             files += [f for f in p.rglob("*") if f.suffix in headerSuffixes]
-    return sorted(files)
+    return (sorted(files))
 
 regexpUsingNamespace = re.compile(r"^\s*using\snamespace\s", re.M)
-regexpReturnNoSpaceOrParens = re.compile(r"^\s*return(([^ ])|( [^\\(]))", re.M)
+regexpBad_ReturnNoSpaceOrParens = re.compile(
+    # fail for `return;` 	(first part; only space after return),
+	# `return(` 			(same),
+	# `return x` 			(second part: after a space only `;` or `)` allowed).
+    # allowed: `return ;` `return (x);`
+    r"^\s*return(([^ ])|( [^\\(;]))", re.M
+)
 regexpPoll = re.compile(f"^bpoll\\(")
 
 files = collectFiles(roots)

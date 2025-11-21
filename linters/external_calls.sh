@@ -51,6 +51,7 @@ failIfForbiddenCallsDetected() {
 		exit 1;
 	fi
 	echo "No forbidden external calls detected"
+	echo "-------------------------------------------------"
 }
 
 external_calls() {

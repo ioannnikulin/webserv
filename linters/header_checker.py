@@ -21,7 +21,7 @@ def collectFiles(roots):
             files.append(p)
         elif p.is_dir():
             files += [f for f in p.rglob("*") if f.suffix in headerSuffixes]
-    return sorted(files)
+    return (sorted(files))
 
 def checkCommentPrefixes(s, issues):
     for match in regexpCommentOneLine.finditer(s):
