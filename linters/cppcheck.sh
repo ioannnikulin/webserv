@@ -29,8 +29,9 @@ collect() {
     mapfile -d '' FILES < <(find "${SRC_DIRS[@]}" -type f \( -name '*.cpp' -o -name '*.hpp' \) -print0)
 }
 
-# without this it complains about every field in a class declaration 
+# without this it complains about every field in a class declaration
 # that is not used immediately in the same header
+NO_UNUSED_FIELDS_IN_HEADERS="--suppress=unusedStructMember:*.hpp"
 NO_UNUSED_FIELDS_IN_HEADERS="--suppress=unusedStructMember:*.hpp"
 
 check() {
@@ -40,18 +41,20 @@ check() {
 		"$NO_UNUSED_FIELDS_IN_HEADERS" \
 		"$INCLUDES" "${FILES[@]}" \
 		--template='{file}:{line}:{column}:{severity}:{id}:{message}' >"$out" 2>&1 || true
-	
+
 	# functions in test folder are not necessarily unused, they are picked up by cxxtest generator later
 	grep -E ':(error|warning|style):' "$out" | grep -v -E 'tests/.*:.*:.*:.*:unusedFunction:' > "$out.filtered" || true
 
 	if [ -s "$out.filtered" ]; then
 		echo "cppcheck found issues:"
 		echo "$out.filtered"
-		rm -f "$out" "$out.filtered" 
+		rm -f "$out" "$out.filtered"
+		echo "-------------------------------------------------"
 		exit 1
 	else
 		echo "cppcheck: no issues"
-		rm -f "$out" "$out.filtered" 
+		rm -f "$out" "$out.filtered"
+		echo "-------------------------------------------------"
 	fi
 }
 

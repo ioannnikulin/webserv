@@ -49,6 +49,7 @@ check() {
 	done
 	if [ "$changed" -eq 0 ]; then
 		echo "clang-format: no issues"
+		echo "-------------------------------------------------"
 	fi
 	exit $changed
 }

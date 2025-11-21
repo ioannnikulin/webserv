@@ -1,13 +1,48 @@
 CPP = c++
 # sometimes gets used implicitly, so safer to define
 CXX = ${CPP}
-COMPILE_FLAGS = -Wall -Wextra -Werror -std=c++98 -g -pedantic -Wold-style-cast -Wdeprecated-declarations
-PREPROC_DEFINES = 
+COMPILE_FLAGS = -Wall -Wextra -Werror	\
+				-std=c++98	\
+				-g	\
+				-pedantic -Wold-style-cast -Wdeprecated-declarations
+PREPROC_DEFINES =
 
 SOURCE_F = sources
 TEST_F = tests
 OBJ_F = build
 TEST_OBJ_F = $(OBJ_F)/$(TEST_F)
+
+# ------------------------------------------------------------
+
+APP_CONFIG_F = configuration
+APP_CONFIG_SRC_NAMES = \
+	AppConfig.cpp \
+	Endpoint.cpp \
+	RouteConfig.cpp \
+	FolderConfig.cpp \
+	CgiHandlerConfig.cpp \
+	UploadConfig.cpp \
+
+
+APP_CONFIG_SRCS = $(addprefix $(SOURCE_F)/$(APP_CONFIG_F)/,$(APP_CONFIG_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+LISTENER_F = listener
+LISTENER_SRC_NAMES = Listener.cpp MasterListener.cpp
+LISTENER_SRCS = $(addprefix $(SOURCE_F)/$(LISTENER_F)/,$(LISTENER_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+CONNECTION_F = connection
+CONNECTION_SRC_NAMES = Connection.cpp
+CONNECTION_SRCS = $(addprefix $(SOURCE_F)/$(CONNECTION_F)/,$(CONNECTION_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+REQUEST_HANDLER_F = request_handler
+REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp
+REQUEST_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_HANDLER_F)/,$(REQUEST_HANDLER_SRC_NAMES))
 
 # ------------------------------------------------------------
 
@@ -17,17 +52,42 @@ RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RES
 
 # ------------------------------------------------------------
 
-CONFIG_F = configuration
-CONFIG_SRC_NAMES = \
+APP_CONFIG_FCONFIG_F = configuration
+APP_CONFIG_SRC_NAMES = \
 	AppConfig.cpp \
 	Endpoint.cpp \
+	RouteConfig.cpp \
 	RouteConfig.cpp \
 	FolderConfig.cpp \
 	CgiHandlerConfig.cpp \
 	UploadConfig.cpp \
 
 
-CONFIG_SRCS = $(addprefix $(SOURCE_F)/$(CONFIG_F)/,$(CONFIG_SRC_NAMES))
+APP_CONFIG_SRCS = $(addprefix $(SOURCE_F)/$(APP_CONFIG_F)/,$(APP_CONFIG_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+LISTENER_F = listener
+LISTENER_SRC_NAMES = Listener.cpp MasterListener.cpp
+LISTENER_SRCS = $(addprefix $(SOURCE_F)/$(LISTENER_F)/,$(LISTENER_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+CONNECTION_F = connection
+CONNECTION_SRC_NAMES = Connection.cpp
+CONNECTION_SRCS = $(addprefix $(SOURCE_F)/$(CONNECTION_F)/,$(CONNECTION_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+REQUEST_HANDLER_F = request_handler
+REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp
+REQUEST_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_HANDLER_F)/,$(REQUEST_HANDLER_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+RESPONSE_GENERATOR_F = response_generator
+RESPONSE_GENERATOR_SRC_NAMES = response_generator.cpp
+RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RESPONSE_GENERATOR_SRC_NAMES))
 
 # ------------------------------------------------------------
 
@@ -36,9 +96,27 @@ HTTP_METHODS_SRC_NAMES =
 HTTP_METHODS_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_METHODS_F)/,$(HTTP_METHODS_SRC_NAMES))
 
 # ------------------------------------------------------------
+
+UTILS_F = utils
+UTILS_SRC_NAMES = utils.cpp
+UTILS_SRCS = $(addprefix $(SOURCE_F)/$(UTILS_F)/,$(UTILS_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+WEBSERV_SRC_NAMES = WebServer.cpp
+WEBSERV_SRCS = $(addprefix $(SOURCE_F)/,$(WEBSERV_SRC_NAMES))
+
+# ------------------------------------------------------------
+
 MAIN_NONENDPOINT_SRCS = \
+	$(APP_CONFIG_SRCS) \
+	$(LISTENER_SRCS) \
+	$(CONNECTION_SRCS) \
+	$(REQUEST_HANDLER_SRCS) \
 	$(RESPONSE_GENERATOR_SRCS) \
-	$(CONFIG_SRCS) \
+	$(WEBSERV_SRCS) \
+	$(UTILS_SRCS) \
+
 
 MAIN_NONENDPOINT_OBJS = $(addprefix $(OBJ_F)/,$(MAIN_NONENDPOINT_SRCS:.cpp=.o))
 
@@ -51,9 +129,15 @@ MAIN_FNAME = webserv
 
 MAIN_DIRS = \
 	$(SOURCE_F) \
+	$(SOURCE_F)/$(APP_CONFIG_F) \
+	$(SOURCE_F)/$(LISTENER_F) \
+	$(SOURCE_F)/$(CONNECTION_F) \
+	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
 	$(SOURCE_F)/$(CONFIG_F) \
-	$(SOURCE_F)/$(HTTP_METHODS_F)
+	$(SOURCE_F)/$(HTTP_METHODS_F) \
+	$(SOURCE_F)/$(UTILS_F) \
+
 
 MAIN_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(MAIN_DIRS))
 
@@ -62,20 +146,25 @@ MAIN_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(MAIN_DIRS))
 LINK_FLAGS = \
 	-I$(SOURCE_F) \
 	-I$(TEST_F) \
-	-I$(CONFIG_F) \
-	-I$(SOURCE_F)/$(HTTP_METHODS_F) \
+	-I$(SOURCE_F)/$(APP_CONFIG_F) \
+	-I$(SOURCE_F)/$(LISTENER_F) \
+	-I$(SOURCE_F)/$(CONNECTION_F) \
+	-I$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	-I$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
+	-I$(SOURCE_F)/$(CONFIG_F)
 
-	
 vpath %.cpp \
 	$(SOURCE_F) \
-	$(CONFIG_F) \
+	$(SOURCE_F)/$(APP_CONFIG_F) \
+	$(LISTENER_F) \
+	$(CONNECTION_F) \
+	$(REQUEST_HANDLER_F) \
 	$(SOURCE_F)/$(HTTP_METHODS_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
-	$(SOURCE_F)/$(CONFIG_F) \
 	$(TEST_F) \
 	$(TEST_F)/unit \
 	$(TEST_F)/e2e \
+	$(UTILS_F) \
 
 
 all: $(MAIN_FNAME)
@@ -97,6 +186,27 @@ $(MAIN_OBJ_DIRS): | $(OBJ_F)
 
 # ------------------------------------------------------------
 
+CXXTEST_F=cxxtest
+CXXTEST_ZIP=$(CXXTEST_F)/master.zip
+TEST_EXECUTABLE=test
+
+install-cxxtest:
+	@if [ ! -d "$(CXXTEST_F)" ]; then \
+		mkdir -p $(CXXTEST_F); \
+		wget -O "$(CXXTEST_ZIP)" https://github.com/CxxTest/cxxtest/archive/refs/heads/master.zip; \
+		unzip -qq "$(CXXTEST_ZIP)" -d "$(CXXTEST_F)"; \
+		mv $(CXXTEST_F)/cxxtest-master/* $(CXXTEST_F); \
+		rm -rf $(CXXTEST_F)/cxxtest-master $(CXXTEST_F)/master.zip;\
+	fi
+
+generate-cxxtest-tests: | $(OBJ_F)
+	@python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp `find tests -name "*.hpp"`
+
+build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
+	@$(CPP) -std=c++98 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $<
+
+test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
+	@./$(TEST_EXECUTABLE)
 CXXTEST_F=cxxtest
 CXXTEST_ZIP=$(CXXTEST_F)/master.zip
 TEST_EXECUTABLE=test
@@ -149,14 +259,12 @@ format-fix:
 # exits with 1 if any file would change
 format-check:
 	@bash ${LINTERS_F}/clang_format.sh check ${SOURCE_F} ${TEST_F}
-
 # ------------------------------------------------------------
 
 # smarter analysis: bugs, potential undefined behavior
 # no autofixes
 cppcheck:
 	@bash ${LINTERS_F}/cppcheck.sh c++98 "$(LINK_FLAGS)" $(SOURCE_F) $(TEST_F)
-
 # ------------------------------------------------------------
 
 # smartest analysis, see .clang-tidy file for settings

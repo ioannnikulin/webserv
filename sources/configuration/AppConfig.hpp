@@ -1,6 +1,7 @@
 #ifndef APPCONFIG_HPP
 #define APPCONFIG_HPP
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -22,6 +23,9 @@ private:
 public:
     AppConfig();
     ~AppConfig();
+
+    std::set<std::pair<std::string, int> > getAllInterfacePortPairs(void) const;
 };
 }  // namespace webserver
+
 #endif
