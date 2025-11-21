@@ -52,7 +52,7 @@ RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RES
 
 # ------------------------------------------------------------
 
-APP_CONFIG_FCONFIG_F = configuration
+APP_CONFIG_F = configuration
 APP_CONFIG_SRC_NAMES = \
 	AppConfig.cpp \
 	Endpoint.cpp \
@@ -134,7 +134,6 @@ MAIN_DIRS = \
 	$(SOURCE_F)/$(CONNECTION_F) \
 	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
-	$(SOURCE_F)/$(CONFIG_F) \
 	$(SOURCE_F)/$(HTTP_METHODS_F) \
 	$(SOURCE_F)/$(UTILS_F) \
 
@@ -151,20 +150,23 @@ LINK_FLAGS = \
 	-I$(SOURCE_F)/$(CONNECTION_F) \
 	-I$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	-I$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
-	-I$(SOURCE_F)/$(CONFIG_F)
+	-I$(SOURCE_F)/$(HTTP_METHODS_F) \
+	-I$(SOURCE_F)/$(UTILS_F) \
 
+
+# for makefile only: where to look for cpps mentioned in rules
 vpath %.cpp \
 	$(SOURCE_F) \
 	$(SOURCE_F)/$(APP_CONFIG_F) \
-	$(LISTENER_F) \
-	$(CONNECTION_F) \
-	$(REQUEST_HANDLER_F) \
+	$(SOURCE_F)/$(LISTENER_F) \
+	$(SOURCE_F)/$(CONNECTION_F) \
+	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	$(SOURCE_F)/$(HTTP_METHODS_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
+	$(SOURCE_F)/$(UTILS_F) \
 	$(TEST_F) \
 	$(TEST_F)/unit \
 	$(TEST_F)/e2e \
-	$(UTILS_F) \
 
 
 all: $(MAIN_FNAME)
@@ -186,27 +188,6 @@ $(MAIN_OBJ_DIRS): | $(OBJ_F)
 
 # ------------------------------------------------------------
 
-CXXTEST_F=cxxtest
-CXXTEST_ZIP=$(CXXTEST_F)/master.zip
-TEST_EXECUTABLE=test
-
-install-cxxtest:
-	@if [ ! -d "$(CXXTEST_F)" ]; then \
-		mkdir -p $(CXXTEST_F); \
-		wget -O "$(CXXTEST_ZIP)" https://github.com/CxxTest/cxxtest/archive/refs/heads/master.zip; \
-		unzip -qq "$(CXXTEST_ZIP)" -d "$(CXXTEST_F)"; \
-		mv $(CXXTEST_F)/cxxtest-master/* $(CXXTEST_F); \
-		rm -rf $(CXXTEST_F)/cxxtest-master $(CXXTEST_F)/master.zip;\
-	fi
-
-generate-cxxtest-tests: | $(OBJ_F)
-	@python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp `find tests -name "*.hpp"`
-
-build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
-	@$(CPP) -std=c++98 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $<
-
-test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
-	@./$(TEST_EXECUTABLE)
 CXXTEST_F=cxxtest
 CXXTEST_ZIP=$(CXXTEST_F)/master.zip
 TEST_EXECUTABLE=test
@@ -292,7 +273,7 @@ makefile-check:
 # run in 42 campus
 # skips some checks whose prerequisites cannot be installed
 # since we don't have root access
-test-campus: external-calls format-check header-check source-check makefile-check test
+test-campus: external-calls makefile-check test
 	@echo "CLEAN"
 
 # runs in GitHub Actions environment, use on personal machine too
