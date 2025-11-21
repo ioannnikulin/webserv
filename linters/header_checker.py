@@ -47,16 +47,16 @@ def getNamespaces(node, ns_stack=None):
     if ns_stack is None:
         ns_stack = [] # we're currently at level zero of possible namespace enclosures
     result = []
-    
+
     if node.kind == cindex.CursorKind.NAMESPACE:
         ns_stack = ns_stack + [node.spelling] # if we're on a namespace declaration, increase the level
-    
+
     if node.kind in (cindex.CursorKind.FUNCTION_DECL,
                      cindex.CursorKind.VAR_DECL,
                      cindex.CursorKind.CLASS_DECL,
                      cindex.CursorKind.STRUCT_DECL):
         result.append((node, ns_stack))
-    
+
     # recursive call, e.g. we're in a namespace already, let's study its children
     for c in node.get_children():
         result += getNamespaces(c, ns_stack)
@@ -91,7 +91,7 @@ def checkAST(file):
                 if c.kind == cindex.CursorKind.CONSTRUCTOR:
                     has_ctor = True
                     # copy ctor
-                    if any(p.type.spelling.startswith(("const " + "::".join(ns_stack) + "::" + cls_name + " &", "const " + cls_name + " &")) for p in c.get_arguments()): 
+                    if any(p.type.spelling.startswith(("const " + "::".join(ns_stack) + "::" + cls_name + " &", "const " + cls_name + " &")) for p in c.get_arguments()):
                         # yes, that space before the ampersand is intentional, even though there is no space in our actual code
                         has_copy_ctor = True
                 elif c.kind == cindex.CursorKind.DESTRUCTOR:
@@ -108,6 +108,7 @@ def checkAST(file):
     return issues
 
 def main():
+    print("Running header-checker...")
     files = collectFiles(roots)
     if not files:
         print("No header files found.")
