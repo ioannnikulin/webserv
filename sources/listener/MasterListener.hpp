@@ -18,7 +18,7 @@ private:
     MasterListener& operator=(const MasterListener& other);
 
     std::vector<struct ::pollfd> _pollFds;
-    /*
+    /* NOTE: 
 	* every Listener is created for a specific interface:port pair,
 	* gets a LISTENING socket file descriptor.
 	* when a new connection comes in on that socket,
@@ -26,8 +26,8 @@ private:
 	* both file descriptors are stored in Listener,
 	* and also in these maps for easier navigation
 	*/
-    std::map<int, Listener*> _listeners;        // listening socket fd: Listener
-    std::map<int, Listener*> _clientListeners;  // client socket fd: Listener
+    std::map<int, Listener*> _listeners;        // NOTE: listening socket fd: Listener
+    std::map<int, Listener*> _clientListeners;  // NOTE: client socket fd: Listener
 
     void handleIncomingConnection(::pollfd& activeFd);
     void handleOutgoingConnection(const ::pollfd& activeFd) const;

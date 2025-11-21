@@ -42,7 +42,7 @@ for f in files:
 
     issues = []
 
-    if regexpReturnNoSpaceOrParens.search(s):
+    if regexpBad_ReturnNoSpaceOrParens.search(s):
         issues.append("please wrap returned values in parenthesis, preceeded by a space")
 
     if regexpUsingNamespace.search(s):
@@ -57,7 +57,7 @@ for f in files:
 
     if issues:
         failed = True
-        print(f"{f}: " + "; ".join(issues))
+        print(f"{f}: " + "\n\t".join(issues))
 
 if pollCalls > 1:
     failed = True
