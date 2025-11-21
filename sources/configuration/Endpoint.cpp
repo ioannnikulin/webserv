@@ -10,22 +10,26 @@ const int Endpoint::DEFAULT_PORT = 8888;
 
 Endpoint::Endpoint()
     : _interface(DEFAULT_INTERFACE)
-    , _port(DEFAULT_PORT) {}
+    , _port(DEFAULT_PORT) {
+}
 
 Endpoint::Endpoint(const std::string& interface, int port)
     : _interface(interface)
-    , _port(port) {}
+    , _port(port) {
+}
 
 Endpoint::Endpoint(const Endpoint& other)
     : _interface(other._interface)
-    , _port(other._port) {}
+    , _port(other._port) {
+}
 
 Endpoint& Endpoint::operator=(const Endpoint& other) {
     (void)other;
     return (*this);
 }
 
-Endpoint::~Endpoint() {}
+Endpoint::~Endpoint() {
+}
 
 int Endpoint::getPort(void) const {
     return (_port);

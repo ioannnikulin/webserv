@@ -18,7 +18,8 @@ AppConfig::AppConfig()
     _endpoints.push_back(Endpoint());
 }
 
-AppConfig::~AppConfig() {}
+AppConfig::~AppConfig() {
+}
 
 set<pair<string, int> > AppConfig::getAllInterfacePortPairs(void) const {
     set<pair<string, int> > result;

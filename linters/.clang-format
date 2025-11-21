@@ -10,10 +10,17 @@ InsertNewlineAtEOF: true
 # int main() { // < this curly brace attached
 # }
 BreakBeforeBraces: Attach
-AllowShortFunctionsOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
 BraceWrapping:
-  AfterFunction: false
-  SplitEmptyFunction: false
+  AfterControlStatement: true
+  AfterFunction: true
+  AfterClass: true
+  AfterNamespace: true
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
 # trying to spread long lists onto multiple lines wherever possible
 AlwaysBreakBeforeMultilineStrings: true
 BinPackArguments: false
