@@ -17,6 +17,8 @@ public:
     Endpoint(const std::string& interface, int port);
     Endpoint(const Endpoint& other);
     Endpoint& operator=(const Endpoint& other);
+    bool operator<(const Endpoint& other) const;
+    bool operator==(const Endpoint& other) const;
     ~Endpoint();
 };
 }  // namespace webserver

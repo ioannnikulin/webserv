@@ -1,7 +1,9 @@
 CPP = c++
 # sometimes gets used implicitly, so safer to define
 CXX = ${CPP}
-COMPILE_FLAGS = -Wall -Wextra -Werror -std=c++98 -g -pedantic -Wold-style-cast -Wdeprecated-declarations
+COMPILE_FLAGS = -Wall -Wextra -Werror -pedantic -Wold-style-cast -Wdeprecated-declarations \
+-std=c++98 -g -D_GLIBCXX_USE_CXX11_ABI=0
+
 PREPROC_DEFINES = 
 
 SOURCE_F = sources
@@ -36,9 +38,11 @@ HTTP_METHODS_SRC_NAMES =
 HTTP_METHODS_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_METHODS_F)/,$(HTTP_METHODS_SRC_NAMES))
 
 # ------------------------------------------------------------
-MAIN_NONENDPOINT_SRCS = \
+
+MAIN_NONENDPOINT_SRCS = WebServer.cpp \
 	$(RESPONSE_GENERATOR_SRCS) \
 	$(CONFIG_SRCS) \
+
 
 MAIN_NONENDPOINT_OBJS = $(addprefix $(OBJ_F)/,$(MAIN_NONENDPOINT_SRCS:.cpp=.o))
 
@@ -69,7 +73,6 @@ LINK_FLAGS = \
 	
 vpath %.cpp \
 	$(SOURCE_F) \
-	$(CONFIG_F) \
 	$(SOURCE_F)/$(HTTP_METHODS_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
 	$(SOURCE_F)/$(CONFIG_F) \
@@ -104,17 +107,20 @@ TEST_EXECUTABLE=test
 install-cxxtest:
 	@if [ ! -d "$(CXXTEST_F)" ]; then \
 		mkdir -p $(CXXTEST_F); \
-		wget -O "$(CXXTEST_ZIP)" https://github.com/CxxTest/cxxtest/archive/refs/heads/master.zip; \
+		wget -qO "$(CXXTEST_ZIP)" https://github.com/CxxTest/cxxtest/archive/refs/heads/master.zip; \
 		unzip -qq "$(CXXTEST_ZIP)" -d "$(CXXTEST_F)"; \
 		mv $(CXXTEST_F)/cxxtest-master/* $(CXXTEST_F); \
 		rm -rf $(CXXTEST_F)/cxxtest-master $(CXXTEST_F)/master.zip;\
 	fi
 
+TEST_HEADERS := $(shell find tests -name "*.hpp")
+
 generate-cxxtest-tests: | $(OBJ_F)
-	@python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp `find tests -name "*.hpp"`
+	@echo "Generating tests from $(TEST_HEADERS)"
+	@python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp $(TEST_HEADERS)
 
 build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
-	@$(CPP) -std=c++98 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $<
+	@$(CPP) -std=c++98 -D_GLIBCXX_USE_CXX11_ABI=0 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
 
 test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
 	@./$(TEST_EXECUTABLE)

@@ -18,6 +18,8 @@ public:
     explicit WebServer(const std::string& configFilePath);
     ~WebServer();
 
+    AppConfig getAppConfig() const;
+
     void start();
     void stop();
 };

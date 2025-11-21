@@ -46,7 +46,7 @@ check() {
 
 	if [ -s "$out.filtered" ]; then
 		echo "cppcheck found issues:"
-		echo "$out.filtered"
+		cat "$out.filtered"
 		rm -f "$out" "$out.filtered" 
 		exit 1
 	else

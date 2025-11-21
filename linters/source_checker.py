@@ -47,7 +47,9 @@ for f in files:
     if regexpPoll.search(s):
         pollCalls += 1
 
-    issues += checkAST(f)
+	# analyzing namespaces and classes unless it's main()
+    if f.name != "webserv.cpp":
+        issues += checkAST(f)
 
     if issues:
         failed = True
