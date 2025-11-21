@@ -118,7 +118,7 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) const {
     // NOTE: if he wants to go on, he'd have to go to listening socket again
     listener->killConnection(activeFd.fd);
     clog << "✅ " << B_GREEN << "Sent response to socket fd " << activeFd.fd << endl << RESET;
-    printSeparator();
+    output_formatting::printSeparator();
 }
 
 void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {

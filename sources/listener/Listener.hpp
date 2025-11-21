@@ -28,7 +28,7 @@ public:
     * and transfer the pointer to that pollfd down to Connection again,
     * so that the Connection can change the events if needed
     */
-    /* TODO: maybe can simplify this?
+    /* NOTE: maybe can simplify this?
     * MasterListener's queue cannot consist of references,
     * so the pollfd object will be created upstairs in MasterListener,
     * not in Connection alongside the file descriptor.

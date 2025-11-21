@@ -23,8 +23,7 @@ private:
     AppConfig* getAppConfig() const;
 
 public:
-    /*
-	* we're not allowed to use sigaction function, only signal.
+    /* NOTE: we're not allowed to use sigaction function, only signal.
 	* signal requires a static handler,
 	* so we have to use a static variable,
 	* so it's either one flag for all instances or a singleton.
