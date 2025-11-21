@@ -7,19 +7,20 @@
 
 #define SEPARATOR_WIDTH 80
 #define SEPARATOR_CHAR '='
+#define SEPARATOR_COLOR CYAN
 
-void setColor(std::string color) {
+void output_formatting::setColor(std::string color) {
     std::cout << color;
 }
 
-void resetColor(void) {
+void output_formatting::resetColor(void) {
     std::cout << RESET;
 }
 
-void printSeparator(void) {
-    setColor(CYAN);
+void output_formatting::printSeparator(void) {
+    output_formatting::setColor(SEPARATOR_COLOR);
     std::cout << std::string(SEPARATOR_WIDTH, SEPARATOR_CHAR);
-    resetColor();
+    output_formatting::resetColor();
     std::cout << std::endl;
 }
 

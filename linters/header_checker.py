@@ -79,7 +79,7 @@ def checkAST(file):
             continue
 
         if not ns_stack and not isMain(node):
-            issues.append(f"{file}: {node.spelling} is not inside any namespace")
+            issues.append(f"{file}: {node.spelling} is not inside any namespace\n")
 
         if node.kind == cindex.CursorKind.CLASS_DECL:
             cls_name = node.spelling

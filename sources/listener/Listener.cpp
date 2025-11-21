@@ -77,10 +77,10 @@ Listener::Listener(const std::string& interface, int port)
         throw runtime_error(string("listen() failed: ") + strerror(errno));
     }
 
-    printSeparator();
+    output_formatting::printSeparator();
     clog << "Listening on " << B_GREEN << "http://" << _interface << ":" << _port << RESET
          << " via socket " << _listeningSocketFd << endl;
-    printSeparator();
+    output_formatting::printSeparator();
 }
 
 void Listener::setClientSocket(::pollfd* clientSocket) {

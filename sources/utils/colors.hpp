@@ -1,7 +1,7 @@
 #ifndef COLORS_H
 #define COLORS_H
 
-// terminal Colors (ANSI Escape Codes)
+// NOTE: terminal Colors (ANSI Escape Codes)
 #define BLACK "\033[30m"
 #define GREY "\033[90m"
 #define RED "\033[31m"
