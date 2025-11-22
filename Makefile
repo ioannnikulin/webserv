@@ -2,7 +2,7 @@ CPP = c++
 # sometimes gets used implicitly, so safer to define
 CXX = ${CPP}
 COMPILE_FLAGS = -Wall -Wextra -Werror -pedantic -Wold-style-cast -Wdeprecated-declarations \
--std=c++98 -g -D_GLIBCXX_USE_CXX11_ABI=0
+-std=c++98 -g
 
 PREPROC_DEFINES = 
 
@@ -117,10 +117,11 @@ TEST_HEADERS := $(shell find tests -name "*.hpp")
 
 generate-cxxtest-tests: | $(OBJ_F)
 	@echo "Generating tests from $(TEST_HEADERS)"
-	@python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp $(TEST_HEADERS)
+# syntax warnings come from internal cxxtest generator code problems, hiding
+	@PYTHONWARNINGS="ignore::SyntaxWarning" python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp $(TEST_HEADERS)
 
 build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
-	@$(CPP) -std=c++98 -D_GLIBCXX_USE_CXX11_ABI=0 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
+	@$(CPP) -std=c++98 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
 
 test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
 	@./$(TEST_EXECUTABLE)
