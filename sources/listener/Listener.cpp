@@ -81,9 +81,10 @@ Listener::Listener(const std::string& interface, int port)
     }
 
     output_formatting::printSeparator();
-    clog << "Listening on " << B_GREEN << "http:/"
-         << "/" << _interface << ":" << _port << RESET << " via socket " << _listeningSocketFd
-         << endl;
+    // clang-format off
+    clog << "Listening on " << B_GREEN << "http:/" << "/" << _interface << ":" << _port << RESET
+         << " via socket " << _listeningSocketFd << endl;
+    // clang-format on
     output_formatting::printSeparator();
 }
 
