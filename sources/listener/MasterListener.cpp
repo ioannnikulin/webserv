@@ -84,7 +84,7 @@ void MasterListener::handleIncomingConnection(::pollfd& activeFd) {
     if (listener != NULL) {
         const int clientSocket = registerNewConnection(_pollFds, activeFd.fd, listener);
         _clientListeners[clientSocket] = listener;
-        return ;
+        return;
     }
     // NOTE: if not, maybe this is a request on an existing connection,
     // NOTE: so on a CLIENT socket?
@@ -96,7 +96,7 @@ void MasterListener::handleIncomingConnection(::pollfd& activeFd) {
             // NOTE: client disconnected so we remove him from existing sessions list
             _clientListeners.erase(_clientListeners.find(activeFd.fd));
         }
-        return ;
+        return;
     }
     // NOTE: this should never happen in theory, since all sockets come from listening or client lists
     // NOTE: maybe sending data after a timeout, when the connection was closed already or smth
@@ -110,7 +110,7 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) const {
         cerr << B_RED << "Tried to send data to an unknown socket fd " << activeFd.fd
              << ", ignoring." << endl
              << RESET;
-        return ;
+        return;
     }
     listener->sendResponse(activeFd.fd);
     // NOTE: no keep-alive, so killing right away
