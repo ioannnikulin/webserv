@@ -20,13 +20,8 @@ def collectFiles(roots):
     return (sorted(files))
 
 regexpUsingNamespace = re.compile(r"^\s*using\snamespace\s", re.M)
-regexpBad_ReturnNoSpaceOrParens = re.compile(
-    # fail for `return;` 	(first part; only space after return),
-	# `return(` 			(same),
-	# `return x` 			(second part: after a space only `;` or `)` allowed).
-    # allowed: `return ;` `return (x);`
-    r"^\s*return(([^ ])|( [^\\(;]))", re.M
-)
+regexpReturn = re.compile(r"^\s*return(.*)")
+regexpValidReturnContent = re.compile(r"((;)|( \(.*\);))")
 regexpPoll = re.compile(f"^bpoll\\(")
 
 files = collectFiles(roots)
@@ -42,11 +37,12 @@ for f in files:
 
     issues = []
 
-    if regexpBad_ReturnNoSpaceOrParens.search(s):
-        issues.append("please wrap returned values in parenthesis, preceeded by a spacey")
+    for match in regexpReturn.finditer(s):
+        if regexpValidReturnContent.match(match.group(1)):
+            issues.append(lineNum(match, s) + "please wrap returned values in parenthesis, preceeded by a space; for void use `return;`")
 
-    if regexpUsingNamespace.search(s):
-        issues.append("contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
+    for match in regexpUsingNamespace.finditer(s):
+        issues.append(lineNum(match, s) + "contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
 
     checkCommentPrefixes(s, issues)
 
