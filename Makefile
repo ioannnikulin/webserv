@@ -268,7 +268,7 @@ makefile-check:
 # run in 42 campus
 # skips some checks whose prerequisites cannot be installed
 # since we don't have root access
-test-campus: external-calls header-check source-check makefile-check test
+test-campus: external-calls format-check header-check source-check makefile-check test
 	@echo "CLEAN"
 
 # runs in GitHub Actions environment, use on personal machine too
