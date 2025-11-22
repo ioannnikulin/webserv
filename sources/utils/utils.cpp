@@ -24,12 +24,14 @@ void output_formatting::printSeparator(void) {
     std::cout << std::endl;
 }
 
-// void waitForInput() {
-//     std::string input;
-//     std::cout << "Press ENTER to continue...";
-//     std::getline(std::cin, input);
-// }
+/* NOTE: unused functions
+ void waitForInput() {
+     std::string input;
+     std::cout << "Press ENTER to continue...";
+     std::getline(std::cin, input);
+ }
 
-// void clearTerminal() {
-//     std::cout << "\033[2J\033[H";
-// }
+ void clearTerminal() {
+     std::cout << "\033[2J\033[H";
+ }
+*/
