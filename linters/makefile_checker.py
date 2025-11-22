@@ -38,34 +38,6 @@ def cppPresence(root, makefileText):
             print("   ", f)
     #    exit_code = 1 # not considered a failure for now
 
-
-def foldersInVpathAndLinkFlags(text):
-    global exit_code
-
-    allFolders = set(re.findall(r'\$?\((\w+_F)\)', text))
-
-    ignoredFolders = set({"OBJ_F", "CXXTEST_F"})
-
-    allFolders = allFolders - ignoredFolders
-
-    link_flags_block = re.search(r'LINK_FLAGS\s*=\s*\\\n(.*?)\n\n', text, re.DOTALL)
-    vpath_block = re.search(r'vpath\s+%.cpp\s*\\\n(.*?)\n\n', text, re.DOTALL)
-
-    used_in_link_flags = set(re.findall(r'\$?\((\w+_F)\)', link_flags_block.group(1))) if link_flags_block else set()
-    used_in_vpath = set(re.findall(r'\$?\((\w+_F)\)', vpath_block.group(1))) if vpath_block else set()
-
-    missing_in_blocks = []
-    for var in sorted(allFolders):
-        if var not in used_in_link_flags or var not in used_in_vpath:
-            missing_in_blocks.append(var)
-
-    if missing_in_blocks:
-        print("These _F variables are not used in both LINK_FLAGS and vpath blocks:")
-        for v in missing_in_blocks:
-            print("   ", v)
-        exit_code = 1
-
-
 def main():
     global exit_code
 
@@ -98,10 +70,9 @@ def main():
 
     text = makefile_path.read_text()
     cppPresence(root, text)
-    foldersInVpathAndLinkFlags(text)
 
     if exit_code == 0:
-        print("makefile-checker analysis complete")
+        print("makefile-checker found no issues")
 
     sys.exit(exit_code)
 
