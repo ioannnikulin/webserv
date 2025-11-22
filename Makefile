@@ -191,7 +191,7 @@ generate-cxxtest-tests: | $(OBJ_F)
 	@python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp `find tests -name "*.hpp"`
 
 build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
-	@$(CPP) -std=c++98 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $<
+	@$(CPP) -std=c++98 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
 
 test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
 	@./$(TEST_EXECUTABLE)
