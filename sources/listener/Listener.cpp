@@ -33,7 +33,8 @@ int setupSocket() {
         close(socketFd);
         throw runtime_error(string("setsockopt() failed: ") + strerror(errno));
     }
-    const int flags = fcntl(socketFd, F_GETFL, 0);  // NOTE: not sure, subject forbids this flag for MacOS
+    const int flags =
+        fcntl(socketFd, F_GETFL, 0);  // NOTE: not sure, subject forbids this flag for MacOS
     if (flags == -1) {
         throw runtime_error(string("fcntl(F_GETFL) failed: ") + strerror(errno));
     }
@@ -64,7 +65,7 @@ Listener::Listener(const std::string& interface, int port)
     addr.sin_family = AF_INET;
     addr.sin_port = htons(_port);
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	/* NOTE:
+    /* NOTE:
     probably this is wrong - we're taking the socket before the server actually starts up,
     and report about listening on this socket before calling start().
     should separate preparation from actual binding to sockets
@@ -80,7 +81,7 @@ Listener::Listener(const std::string& interface, int port)
     }
 
     output_formatting::printSeparator();
-    clog << "Listening on " << B_GREEN << "http://" << _interface << ":" << _port << RESET
+    clog << "Listening on " << B_GREEN << "http:/" << "/" << _interface << ":" << _port << RESET
          << " via socket " << _listeningSocketFd << endl;
     output_formatting::printSeparator();
 }

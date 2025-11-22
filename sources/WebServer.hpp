@@ -35,6 +35,8 @@ public:
     void start();
     void stop();
 };
+
+std::string generateResponse(const std::string& request);
 }  // namespace webserver
 
 #endif

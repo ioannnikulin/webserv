@@ -3,7 +3,6 @@
 #include <poll.h>
 #include <string.h>
 
-// #include <algorithm>
 #include <cerrno>
 #include <iostream>
 #include <map>
@@ -158,7 +157,7 @@ MasterListener::~MasterListener() {
          ++it) {
         delete it->second;
     }  // NOTE: deleting from listeners only, clientListeners contains pointers to the same Listener objects
-    // TODO: should probably set them to nullptr there though
-    // TODO: check with valgrind
+    // NOTE: should probably set them to nullptr there though
+    // TODO 56: check with valgrind
 }
 }  // namespace webserver
