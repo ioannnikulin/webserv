@@ -42,7 +42,7 @@ for f in files:
     issues = []
 
     if regexpBad_ReturnNoSpaceOrParens.search(s):
-        issues.append("please wrap returned values in parenthesis, preceeded by a space")
+        issues.append("please wrap returned values in parenthesis, preceeded by a spacey")
 
     if regexpUsingNamespace.search(s):
         issues.append("contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
@@ -64,6 +64,6 @@ if failed:
     sys.exit(1)
 else:
     print("source checker didn't find any issues")
-        print("WARNING!")
-        print("This is a limited source-checker with only whatever checks are available in campus")
-        print("A full source-checker can be more picky")
+    print("WARNING!")
+    print("This is a limited source-checker with only whatever checks are available in campus")
+    print("A full source-checker can be more picky")
