@@ -9,21 +9,23 @@
 #define SEPARATOR_CHAR '='
 #define SEPARATOR_COLOR CYAN
 
-void output_formatting::setColor(std::string color) {
+namespace output_formatting {
+void setColor(std::string color) {
     std::cout << color;
 }
 
-void output_formatting::resetColor(void) {
+void resetColor(void) {
     std::cout << RESET;
 }
 
-void output_formatting::printSeparator(void) {
-    output_formatting::setColor(SEPARATOR_COLOR);
+void printSeparator(void) {
+    setColor(SEPARATOR_COLOR);
     std::cout << std::string(SEPARATOR_WIDTH, SEPARATOR_CHAR);
-    output_formatting::resetColor();
+    resetColor();
     std::cout << std::endl;
 }
 
+}  // namespace output_formatting
 /* NOTE: unused functions
  void waitForInput() {
      std::string input;
