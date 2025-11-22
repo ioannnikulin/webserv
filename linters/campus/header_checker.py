@@ -54,7 +54,7 @@ def main():
         issues = textChecks(f)
         if issues:
             failed = True
-            print(f"{f}: " + "\n\t".join(issues))
+            print(f"{f}:\n" + "\n\t".join(issues))
     if failed:
         sys.exit(1)
     else:
