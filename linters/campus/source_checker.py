@@ -64,3 +64,6 @@ if failed:
     sys.exit(1)
 else:
     print("source checker didn't find any issues")
+        print("WARNING!")
+        print("This is a limited source-checker with only whatever checks are available in campus")
+        print("A full source-checker can be more picky")
