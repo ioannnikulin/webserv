@@ -33,7 +33,7 @@ int setupSocket() {
         close(socketFd);
         throw runtime_error(string("setsockopt() failed: ") + strerror(errno));
     }
-    const int flags = fcntl(socketFd, F_GETFL, 0);  // not sure, subject forbids this flag for MacOS
+    const int flags = fcntl(socketFd, F_GETFL, 0);  // NOTE: not sure, subject forbids this flag for MacOS
     if (flags == -1) {
         throw runtime_error(string("fcntl(F_GETFL) failed: ") + strerror(errno));
     }
@@ -64,9 +64,11 @@ Listener::Listener(const std::string& interface, int port)
     addr.sin_family = AF_INET;
     addr.sin_port = htons(_port);
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    // probably this is wrong - we're taking the socket before the server actually starts up,
-    // and report about listening on this socket before calling start().
-    // should separate preparation from actual binding to sockets
+	/* NOTE:
+    probably this is wrong - we're taking the socket before the server actually starts up,
+    and report about listening on this socket before calling start().
+    should separate preparation from actual binding to sockets
+	*/
     if (bind(_listeningSocketFd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) == -1) {
         close(_listeningSocketFd);
         throw runtime_error(string("bind() failed: ") + strerror(errno));

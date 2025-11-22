@@ -1,6 +1,5 @@
 #include "Connection.hpp"
 
-// #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
 #include <sys/socket.h>
@@ -26,10 +25,10 @@ Connection::Connection(int listeningSocketFd)
     socklen_t clientAddrLen = sizeof(clientAddr);
     _clientSocketFd =
         accept(listeningSocketFd, reinterpret_cast<struct sockaddr*>(&clientAddr), &clientAddrLen);
-    // TODO: maybe should store some client address info from here
+    // TODO 53: store some client address info from here
     if (_clientSocketFd == -1) {
         throw runtime_error(string("accept() failed"));  // NOTE: errno here forbidden
-        // TODO: probably should retry, not throw
+        // TODO 48: probably should retry, not throw
     }
 }
 
@@ -44,12 +43,12 @@ int Connection::getClientSocketFd() const {
 string Connection::receiveRequestContent() {
     const int BUFFER_SIZE = 4096;
     char buffer
-        [BUFFER_SIZE];  // TODO: probably this should be looped in case there's more than 4096 bytes
-    // TODO: check what poll actually does in these cases, maybe the rest will be just picked up on next iteration
+        [BUFFER_SIZE];  // TODO 54: probably this should be looped in case there's more than 4096 bytes
+    // TODO 55: check what poll actually does in these cases, maybe the rest will be just picked up on next iteration
     const ssize_t bytesRead = recv(_clientSocketFd, buffer, sizeof(buffer) - 1, 0);
     if (bytesRead == -1) {
         throw runtime_error(string("recv() failed"));  // NOTE: errno here forbidden
-        // TODO: probably should retry, not throw
+        // TODO 48: probably should retry, not throw
     }
     if (bytesRead == 0) {  // NOTE: we don't support keep-alive connections
         clog << "Client disconnected on socket fd " << _clientSocketFd << endl;
@@ -70,7 +69,7 @@ void Connection::sendResponse() {
             send(_clientSocketFd, _responseBuffer.data() + totalSent, toSend - totalSent, 0);
         if (sent == -1) {
             throw runtime_error(string("send() failed"));  // NOTE: errno forbidden here
-            // TODO: probably should retry, not throw
+            // TODO 48: probably should retry, not throw
         }
         totalSent += sent;
     }
