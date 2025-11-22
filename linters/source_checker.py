@@ -43,7 +43,7 @@ for f in files:
     issues = []
 
     if regexpBad_ReturnNoSpaceOrParens.search(s):
-        issues.append("please wrap returned values in parenthesis, preceeded by a space")
+        issues.append("please wrap returned values in parenthesis, preceeded by a space. On returning void use `return ;`")
 
     if regexpUsingNamespace.search(s):
         issues.append("contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
@@ -57,7 +57,7 @@ for f in files:
 
     if issues:
         failed = True
-        print(f"{f}: " + "\n\t".join(issues))
+        print(f"{f}:\n" + "\n\t".join(issues))
 
 if pollCalls > 1:
     failed = True
