@@ -17,11 +17,16 @@ SOURCES=("${@:2}")
 
 CLANG_FORMAT=clang-format
 
+VERSION=$($CLANG_FORMAT --version | sed 's/.*version //;s/\..*//')
+if [ "$VERSION" -lt 15 ]; then
+	SETTINGS_FILE_FLAG="-style=file:linters/campus/.clang-format"
+else
+	SETTINGS_FILE_FLAG="-style=file:linters/.clang-format"
+fi
+
 collect() {
 	mapfile -d '' FILES < <(find "${SOURCES[@]}" -type f \( -name '*.cpp' -o -name '*.hpp' \) -print0)
 }
-
-SETTINGS_FILE_FLAG="-style=file:linters/.clang-format"
 
 # run to fix simple formatting issues
 # see .clang-format for settings

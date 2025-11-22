@@ -143,27 +143,13 @@ MAIN_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(MAIN_DIRS))
 # ------------------------------------------------------------
 
 LINK_FLAGS = \
-	-I$(SOURCE_F) \
 	-I$(TEST_F) \
-	-I$(SOURCE_F)/$(APP_CONFIG_F) \
-	-I$(SOURCE_F)/$(LISTENER_F) \
-	-I$(SOURCE_F)/$(CONNECTION_F) \
-	-I$(SOURCE_F)/$(REQUEST_HANDLER_F) \
-	-I$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
-	-I$(SOURCE_F)/$(HTTP_METHODS_F) \
-	-I$(SOURCE_F)/$(UTILS_F) \
+	$(addprefix	-I, $(MAIN_DIRS))
 
 
 # for makefile only: where to look for cpps mentioned in rules
 vpath %.cpp \
-	$(SOURCE_F) \
-	$(SOURCE_F)/$(APP_CONFIG_F) \
-	$(SOURCE_F)/$(LISTENER_F) \
-	$(SOURCE_F)/$(CONNECTION_F) \
-	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
-	$(SOURCE_F)/$(HTTP_METHODS_F) \
-	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
-	$(SOURCE_F)/$(UTILS_F) \
+	$(MAIN_DIRS) \
 	$(TEST_F) \
 	$(TEST_F)/unit \
 	$(TEST_F)/e2e \
@@ -261,10 +247,18 @@ tidy-fix:
 
 # custom scripts for conventions that are missing from standard solutions
 header-check:
-	@python3 ${LINTERS_F}/header_checker.py $(SOURCE_F) include
+	@if python3 linters/is_clang_available_in_python.py; then \
+		python3 ${LINTERS_F}/header_checker.py $(SOURCE_F) include; \
+	else \
+		python3 ${LINTERS_F}/campus/header_checker.py $(SOURCE_F) include; \
+	fi
 
 source-check:
-	@python3 ${LINTERS_F}/source_checker.py $(SOURCE_F) include tests
+	@if python3 linters/is_clang_available_in_python.py; then \
+		python3 ${LINTERS_F}/source_checker.py $(SOURCE_F) include tests; \
+	else \
+		python3 ${LINTERS_F}/campus/source_checker.py $(SOURCE_F) include tests; \
+	fi
 
 makefile-check:
 	@python3 ${LINTERS_F}/makefile_checker.py $(SOURCE_F) Makefile
@@ -273,7 +267,7 @@ makefile-check:
 # run in 42 campus
 # skips some checks whose prerequisites cannot be installed
 # since we don't have root access
-test-campus: external-calls makefile-check test
+test-campus: external-calls header-check source-check makefile-check test
 	@echo "CLEAN"
 
 # runs in GitHub Actions environment, use on personal machine too
