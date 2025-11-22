@@ -226,12 +226,14 @@ format-fix:
 # exits with 1 if any file would change
 format-check:
 	@bash ${LINTERS_F}/clang_format.sh check ${SOURCE_F} ${TEST_F}
+	
 # ------------------------------------------------------------
 
 # smarter analysis: bugs, potential undefined behavior
 # no autofixes
 cppcheck:
 	@bash ${LINTERS_F}/cppcheck.sh c++98 "$(LINK_FLAGS)" $(SOURCE_F) $(TEST_F)
+
 # ------------------------------------------------------------
 
 # smartest analysis, see .clang-tidy file for settings
