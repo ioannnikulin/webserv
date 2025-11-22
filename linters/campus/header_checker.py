@@ -12,6 +12,10 @@ regexpCommentOneLine = re.compile(r'//(.*)')
 regexpCommentMultiline = re.compile(r'/\*(.*?)\*/', re.DOTALL)
 regexpCommentValidContentPrefix = re.compile(r'^(( TODO [0-9]+:)|( NOTE: )|( namespace))')
 
+def lineNum(match, s):
+    start_pos = match.start()
+    return "line " + str(s.count('\n', 0, start_pos + 1)) + ": "
+
 def collectFiles(roots):
     files = []
     for r in roots:
@@ -26,19 +30,19 @@ def checkCommentPrefixes(s, issues):
     for match in regexpCommentOneLine.finditer(s):
         comment = match.group(1)
         if not regexpCommentValidContentPrefix.match(comment):
-            issues.append("contains an unclassified oneline comment, please mark as TODO or NOTE")
+            issues.append(lineNum(match, s) + "contains an unclassified oneline comment, please mark as TODO or NOTE")
             break
     for match in regexpCommentMultiline.finditer(s):
         comment = match.group(1)
         if not regexpCommentValidContentPrefix.match(comment):
-            issues.append("contains an unclassified multiline comment, please mark as TODO or NOTE")
+            issues.append(lineNum(match, s) + "contains an unclassified multiline comment, please mark as TODO or NOTE")
             break
 
 def textChecks(f):
     s = f.read_text()
     issues = []
-    if regexpUsing.search(s):
-        issues.append("contains 'using' directive (forbidden in headers)")
+    for match in regexpUsing.finditer(s):
+        issues.append(lineNum(match, s) + "contains 'using' directive (forbidden in headers)")
     checkCommentPrefixes(s, issues)
     return issues
 

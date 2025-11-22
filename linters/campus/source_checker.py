@@ -4,6 +4,7 @@ import sys
 import re
 from pathlib import Path
 from header_checker import checkCommentPrefixes
+from header_checker import lineNum
 
 roots = sys.argv[1:] if len(sys.argv) > 1 else ["sources", "include", "tests"]
 headerSuffixes = {".cpp", ".c"}

@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from header_checker import checkCommentPrefixes
 from header_checker import checkAST
+from header_checker import lineNum
 
 roots = sys.argv[1:] if len(sys.argv) > 1 else ["sources", "include", "tests"]
 headerSuffixes = {".cpp", ".c"}
@@ -42,11 +43,11 @@ for f in files:
 
     issues = []
 
-    if regexpBad_ReturnNoSpaceOrParens.search(s):
-        issues.append("please wrap returned values in parenthesis, preceeded by a space. On returning void use `return ;`")
+    for match in regexpBad_ReturnNoSpaceOrParens.finditer(s):
+        issues.append(lineNum(match, s) + "please wrap returned values in parenthesis, preceeded by a space. On returning void use `return ;`")
 
     if regexpUsingNamespace.search(s):
-        issues.append("contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
+        issues.append(lineNum(match, s) + "contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
 
     checkCommentPrefixes(s, issues)
 
