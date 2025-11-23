@@ -16,7 +16,9 @@ public:
     Endpoint();
     Endpoint(const std::string& interface, int port);
     Endpoint(const Endpoint& other);
+    // NOTE: DL: operator= should be deleted because the class is immutable
     Endpoint& operator=(const Endpoint& other);
+    // NOTE: DL: operator< is REQUIRED for storing in std::set
     bool operator<(const Endpoint& other) const;
     bool operator==(const Endpoint& other) const;
     ~Endpoint();

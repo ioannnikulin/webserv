@@ -2,6 +2,8 @@
 #ifndef LISTENER_HPP
 #define LISTENER_HPP
 
+#include <netinet/in.h>
+
 #include <map>
 #include <string>
 
@@ -18,6 +20,8 @@ private:
     int _port;
     int _listeningSocketFd;
     std::map<int, Connection*> _clientConnections;  // NOTE: client socket: connection
+
+    struct ::sockaddr_in resolveAddress() const;
 
 public:
     Listener(const std::string& interface, int port);
