@@ -28,9 +28,6 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
     return (*this);
 }
 
-Endpoint::~Endpoint() {
-}
-
 int Endpoint::getPort(void) const {
     return (_port);
 }
@@ -39,4 +36,17 @@ string Endpoint::getInterface(void) const {
     return (_interface);
 }
 
+bool Endpoint::operator<(const Endpoint& other) const {
+    if (_interface != other._interface) {
+        return (_interface < other._interface);
+    }
+    return (_port < other._port);
+}
+
+bool Endpoint::operator==(const Endpoint& other) const {
+    return (_interface == other._interface && _port == other._port);
+}
+
+Endpoint::~Endpoint() {
+}
 }  // namespace webserver

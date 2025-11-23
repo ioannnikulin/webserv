@@ -3,7 +3,6 @@
 
 #include <set>
 #include <string>
-#include <vector>
 
 #include "Endpoint.hpp"
 #include "RouteConfig.hpp"
@@ -13,18 +12,22 @@ class AppConfig {
 private:
     static const int DEFAULT_MAX_BODY_SIZE;
 
-    AppConfig(const AppConfig& other);
     AppConfig& operator=(const AppConfig& other);
 
-    std::vector<Endpoint> _endpoints;
+    std::set<Endpoint> _endpoints;
     int _maxRequestBodySizeBytes;
-    std::vector<RouteConfig> _routes;
+    std::map<std::string, RouteConfig> _routes;  // NOTE: route as key (e.g. /)
 
 public:
     AppConfig();
+    AppConfig(const AppConfig& other);
     ~AppConfig();
 
     std::set<std::pair<std::string, int> > getAllInterfacePortPairs(void) const;
+    AppConfig& addEndpoint(const Endpoint& tgt);
+    AppConfig& addRoute(std::string route, const RouteConfig& tgt);
+
+    bool operator==(const AppConfig& other) const;
 };
 }  // namespace webserver
 

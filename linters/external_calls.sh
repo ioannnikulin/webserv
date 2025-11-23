@@ -20,9 +20,9 @@ ALLOWED_EXTERNAL_FUNCTIONS=(
 	_GLOBAL_OFFSET_TABLE_ __gxx_personality_v0 __stack_chk_fail _stack_chk_guard
 	_Unwind_Resume 
 
-	# memmove and strlen leak from STL optimizations,
+	# memmove, memcmp, strlen leak from STL optimizations,
 	# so we allow them here, but better chek raw sources to forbid direct usage
-	memmove strlen
+	memmove strlen memcmp
 )
 
 allowed_regex="$(printf "%s\n" "${ALLOWED_EXTERNAL_FUNCTIONS[@]}" | paste -sd'|' -)"

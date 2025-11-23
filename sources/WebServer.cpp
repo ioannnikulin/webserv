@@ -3,10 +3,11 @@
 #include <csignal>
 #include <cstddef>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
-#include "./configuration/AppConfig.hpp"
-#include "./listener/MasterListener.hpp"
+#include "configuration/AppConfig.hpp"
+#include "listener/MasterListener.hpp"
 
 using std::cerr;
 using std::endl;
@@ -18,7 +19,7 @@ WebServer& WebServer::operator=(const WebServer& other) {
         return (*this);
     }
     cerr << "Unexpected stub assignment operator called for WebServer." << endl;
-    _appConfig = other.getAppConfig();
+    _appConfig = new AppConfig(other.getAppConfig());
     _isRunning = 0;
     _masterListener = NULL;
     return (*this);
@@ -34,8 +35,11 @@ void WebServer::handleSignals() {
     signal(SIGINT, handleSigint);
 }
 
-AppConfig* WebServer::getAppConfig() const {
-    return (_appConfig);
+AppConfig WebServer::getAppConfig() const {
+    if (_appConfig == NULL) {
+        throw std::runtime_error("Configuration uninitialized");
+    }
+    return (*_appConfig);
 }
 
 WebServer::WebServer(const std::string& configFilePath)

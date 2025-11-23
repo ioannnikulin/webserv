@@ -3,6 +3,7 @@
 #define ROUTE_HPP
 
 #include <map>
+#include <set>
 #include <vector>
 
 #include "../http_methods/HttpMethodType.hpp"
@@ -13,10 +14,7 @@
 namespace webserver {
 class RouteConfig {
 private:
-    RouteConfig(const RouteConfig& other);
-    RouteConfig& operator=(const RouteConfig& other);
-
-    std::vector<HttpMethodType> _allowedMethods;
+    std::set<HttpMethodType> _allowedMethods;
     std::map<std::string, std::string> _redirections;  // NOTE: from:to
     FolderConfig* _folderConfigSection;
     UploadConfig* _uploadConfigSection;
@@ -24,6 +22,12 @@ private:
 
 public:
     RouteConfig();
+    RouteConfig& operator=(const RouteConfig& other);
+    RouteConfig(const RouteConfig& other);
+
+    RouteConfig& setFolderConfig(const FolderConfig& tgt);
+
+    bool operator==(const RouteConfig& other) const;
     ~RouteConfig();
 };
 }  // namespace webserver
