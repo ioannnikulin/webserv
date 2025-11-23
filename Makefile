@@ -52,45 +52,6 @@ RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RES
 
 # ------------------------------------------------------------
 
-APP_CONFIG_F = configuration
-APP_CONFIG_SRC_NAMES = \
-	AppConfig.cpp \
-	Endpoint.cpp \
-	RouteConfig.cpp \
-	RouteConfig.cpp \
-	FolderConfig.cpp \
-	CgiHandlerConfig.cpp \
-	UploadConfig.cpp \
-
-
-APP_CONFIG_SRCS = $(addprefix $(SOURCE_F)/$(APP_CONFIG_F)/,$(APP_CONFIG_SRC_NAMES))
-
-# ------------------------------------------------------------
-
-LISTENER_F = listener
-LISTENER_SRC_NAMES = Listener.cpp MasterListener.cpp
-LISTENER_SRCS = $(addprefix $(SOURCE_F)/$(LISTENER_F)/,$(LISTENER_SRC_NAMES))
-
-# ------------------------------------------------------------
-
-CONNECTION_F = connection
-CONNECTION_SRC_NAMES = Connection.cpp
-CONNECTION_SRCS = $(addprefix $(SOURCE_F)/$(CONNECTION_F)/,$(CONNECTION_SRC_NAMES))
-
-# ------------------------------------------------------------
-
-REQUEST_HANDLER_F = request_handler
-REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp
-REQUEST_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_HANDLER_F)/,$(REQUEST_HANDLER_SRC_NAMES))
-
-# ------------------------------------------------------------
-
-RESPONSE_GENERATOR_F = response_generator
-RESPONSE_GENERATOR_SRC_NAMES = response_generator.cpp
-RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RESPONSE_GENERATOR_SRC_NAMES))
-
-# ------------------------------------------------------------
-
 HTTP_METHODS_F = http_methods
 HTTP_METHODS_SRC_NAMES =
 HTTP_METHODS_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_METHODS_F)/,$(HTTP_METHODS_SRC_NAMES))
@@ -181,14 +142,18 @@ TEST_EXECUTABLE=test
 install-cxxtest:
 	@if [ ! -d "$(CXXTEST_F)" ]; then \
 		mkdir -p $(CXXTEST_F); \
-		wget -O "$(CXXTEST_ZIP)" https://github.com/CxxTest/cxxtest/archive/refs/heads/master.zip; \
+		wget -qO "$(CXXTEST_ZIP)" https://github.com/CxxTest/cxxtest/archive/refs/heads/master.zip; \
 		unzip -qq "$(CXXTEST_ZIP)" -d "$(CXXTEST_F)"; \
 		mv $(CXXTEST_F)/cxxtest-master/* $(CXXTEST_F); \
 		rm -rf $(CXXTEST_F)/cxxtest-master $(CXXTEST_F)/master.zip;\
 	fi
 
+TEST_HEADERS := $(shell find tests -name "*.hpp")
+
 generate-cxxtest-tests: | $(OBJ_F)
-	@python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp `find tests -name "*.hpp"`
+	@echo "Generating tests from $(TEST_HEADERS)"
+# syntax warnings come from internal cxxtest generator code problems, hiding
+	@PYTHONWARNINGS="ignore::SyntaxWarning" python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp $(TEST_HEADERS)
 
 build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
 	@$(CPP) -std=c++98 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^

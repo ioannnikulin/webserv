@@ -20,8 +20,6 @@ private:
 
     static void handleSignals();
 
-    AppConfig* getAppConfig() const;
-
 public:
     /* NOTE: we're not allowed to use sigaction function, only signal.
 	* signal requires a static handler,
@@ -31,6 +29,8 @@ public:
 	*/
     static WebServer& getInstance(const std::string& configFilePath);
     ~WebServer();
+
+    AppConfig getAppConfig() const;
 
     void start();
     void stop();
