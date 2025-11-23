@@ -82,7 +82,7 @@ struct ::sockaddr_in Listener::resolveAddress() const {
         throw runtime_error(string("getaddrinfo() failed for interface: ") + _interface);
     }
     struct ::sockaddr_in addr;
-    struct ::sockaddr_in* resolved = reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
+    struct ::sockaddr_in* const resolved = reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(_port);
