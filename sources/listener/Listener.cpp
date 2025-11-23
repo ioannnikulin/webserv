@@ -1,6 +1,7 @@
 #include "Listener.hpp"
 
 #include <fcntl.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <poll.h>
 #include <sys/socket.h>
@@ -9,6 +10,7 @@
 #include <cerrno>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -33,8 +35,9 @@ int setupSocket() {
         close(socketFd);
         throw runtime_error(string("setsockopt() failed: ") + strerror(errno));
     }
-    const int flags =
-        fcntl(socketFd, F_GETFL, 0);  // NOTE: not sure, subject forbids this flag for MacOS
+    // NOTE: not sure, subject forbids this flag for MacOS
+    // NOTE: for MacOS, fcntl() can only be used with: F_SETFL, O_NONBLOCK, FD_CLOEXEC
+    const int flags = fcntl(socketFd, F_GETFL, 0);
     if (flags == -1) {
         throw runtime_error(string("fcntl(F_GETFL) failed: ") + strerror(errno));
     }
@@ -55,16 +58,47 @@ Listener& Listener::operator=(const Listener& other) {
     return (*this);
 }
 
+struct ::sockaddr_in Listener::resolveAddress() const {
+    struct addrinfo hints;
+    struct addrinfo* res = NULL;
+
+    hints.ai_family = AF_UNSPEC;      // AF_INET or AF_INET6
+    hints.ai_socktype = SOCK_STREAM;  // TCP
+    hints.ai_flags = AI_PASSIVE;      // for bind()
+    hints.ai_protocol = 0;
+    hints.ai_addrlen = 0;
+    hints.ai_canonname = 0;
+    hints.ai_addr = 0;
+    hints.ai_next = 0;
+
+    std::ostringstream oss;
+    oss << _port;
+    std::string portStr = oss.str();
+
+    const char* node = (_interface == "*" ? NULL : _interface.c_str());
+
+    int err = getaddrinfo(node, portStr.c_str(), &hints, &res);
+    if (err != 0) {
+        throw runtime_error(string("getaddrinfo() failed for interface: ") + _interface);
+    }
+    struct ::sockaddr_in addr;
+    struct ::sockaddr_in* resolved = reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
+
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(_port);
+    addr.sin_addr = resolved->sin_addr;
+
+    freeaddrinfo(res);
+    return (addr);
+}
+
 Listener::Listener(const std::string& interface, int port)
     : _interface(interface)
     , _port(port)
     , _listeningSocketFd(-1) {
     _listeningSocketFd = setupSocket();
+    struct sockaddr_in addr = resolveAddress();
 
-    struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(_port);
-    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     /* NOTE:
     probably this is wrong - we're taking the socket before the server actually starts up,
     and report about listening on this socket before calling start().
