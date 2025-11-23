@@ -62,9 +62,9 @@ struct ::sockaddr_in Listener::resolveAddress() const {
     struct addrinfo hints;
     struct addrinfo* res = NULL;
 
-    hints.ai_family = AF_UNSPEC;      // AF_INET or AF_INET6
-    hints.ai_socktype = SOCK_STREAM;  // TCP
-    hints.ai_flags = AI_PASSIVE;      // for bind()
+    hints.ai_family = AF_UNSPEC;      // NOTE: AF_INET or AF_INET6
+    hints.ai_socktype = SOCK_STREAM;  // NOTE: TCP
+    hints.ai_flags = AI_PASSIVE;      // NOTE: for bind()
     hints.ai_protocol = 0;
     hints.ai_addrlen = 0;
     hints.ai_canonname = 0;
@@ -73,16 +73,17 @@ struct ::sockaddr_in Listener::resolveAddress() const {
 
     std::ostringstream oss;
     oss << _port;
-    std::string portStr = oss.str();
+    const std::string portStr = oss.str();
 
     const char* node = (_interface == "*" ? NULL : _interface.c_str());
 
-    int err = getaddrinfo(node, portStr.c_str(), &hints, &res);
+    const int err = getaddrinfo(node, portStr.c_str(), &hints, &res);
     if (err != 0) {
         throw runtime_error(string("getaddrinfo() failed for interface: ") + _interface);
     }
     struct ::sockaddr_in addr;
-    struct ::sockaddr_in* const resolved = reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
+    struct ::sockaddr_in const* resolved =
+        reinterpret_cast<struct sockaddr_in const*>(res->ai_addr);
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(_port);
