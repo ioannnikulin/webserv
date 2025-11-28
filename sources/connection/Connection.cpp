@@ -21,6 +21,7 @@ using std::runtime_error;
 using std::string;
 
 namespace webserver {
+Connection::Connection(): _clientSocket(NULL), _clientSocketFd(0), _request(NULL) {}
 Connection::Connection(int listeningSocketFd)
     : _clientSocket(NULL)
     , _request(NULL) {
@@ -35,8 +36,18 @@ Connection::Connection(int listeningSocketFd)
     }
 }
 
-void Connection::setClientSocket(::pollfd* clientSocket) {
+Connection& Connection::setClientSocket(::pollfd* clientSocket) {
     _clientSocket = clientSocket;
+    return (*this);
+}
+
+Connection& Connection::setResponseBuffer(string buffer) {
+    _responseBuffer = buffer;
+    return (*this);
+}
+
+std::string Connection::getResponseBuffer() const {
+    return (_responseBuffer);
 }
 
 int Connection::getClientSocketFd() const {
@@ -83,7 +94,7 @@ void Connection::markResponseReadyForReturn() {
     _clientSocket->events |= POLLOUT;
 }
 
-void Connection::generateReponseHeaders() {
+void Connection::generateResponseHeaders() {
     std::ostringstream oss;
     oss << "HTTP/1.0 200 OK\r\nContent-Length: ";
     oss << _responseBuffer.size() << "\r\n\r\n";
@@ -97,7 +108,7 @@ void Connection::handleRequest() {
     clog << "---\n" << endl;
     _request = new Request(rawRequest);
     _responseBuffer = RequestHandler::handle(_request->getType(), _request->getLocation());
-    generateReponseHeaders();
+    generateResponseHeaders();
     markResponseReadyForReturn();
     // NOTE: doesn't send directly, have to get approval from MasterListener's poll first
 }
