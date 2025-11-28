@@ -8,7 +8,6 @@
 namespace webserver {
 class Connection {
 private:
-    Connection();
     Connection(const Connection& other);
     Connection& operator=(const Connection& other);
 
@@ -21,14 +20,17 @@ private:
     void markResponseReadyForReturn();
 
 public:
+    Connection();
     explicit Connection(int listeningSocketFd);
     ~Connection();
 
     int getClientSocketFd() const;
-    void setClientSocket(::pollfd* clientSocket);
+    Connection& setClientSocket(::pollfd* clientSocket);
+    Connection& setResponseBuffer(std::string buffer);
+    std::string getResponseBuffer() const;
 
     void handleRequest();
-    void generateReponseHeaders();
+    void generateResponseHeaders();
     void sendResponse();
 };
 }  // namespace webserver
