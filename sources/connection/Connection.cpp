@@ -21,7 +21,11 @@ using std::runtime_error;
 using std::string;
 
 namespace webserver {
-Connection::Connection(): _clientSocket(NULL), _clientSocketFd(0), _request(NULL) {}
+Connection::Connection()
+    : _clientSocket(NULL)
+    , _clientSocketFd(0)
+    , _request(NULL) {
+}
 Connection::Connection(int listeningSocketFd)
     : _clientSocket(NULL)
     , _request(NULL) {
