@@ -26,6 +26,7 @@ Connection::Connection()
     , _clientSocketFd(0)
     , _request(NULL) {
 }
+
 Connection::Connection(int listeningSocketFd)
     : _clientSocket(NULL)
     , _request(NULL) {
