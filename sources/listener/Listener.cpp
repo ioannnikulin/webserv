@@ -14,8 +14,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "../utils/colors.hpp"
-#include "../utils/utils.hpp"
+#include "colors.hpp"
+#include "utils.hpp"
 
 using std::cerr;
 using std::clog;
@@ -135,6 +135,7 @@ bool Listener::hasActiveClientSocket(int clientSocketFd) const {
     return (_clientConnections.find(clientSocketFd) != _clientConnections.end());
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 int Listener::acceptConnection() {
     Connection* nconn = new Connection(_listeningSocketFd);
     _clientConnections[nconn->getClientSocketFd()] = nconn;

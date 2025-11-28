@@ -44,7 +44,9 @@ public:
                     webserver::FolderConfig("/", false, "index.html")
                 )
             );
+
         TS_SKIP("configuration parsing not implemented");
+
         TS_ASSERT_THROWS_NOTHING(s.getAppConfig());
         TS_ASSERT_EQUALS(expected, s.getAppConfig());
     }

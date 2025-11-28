@@ -1,8 +1,9 @@
 #include <poll.h>
 
-#include <../request/Request.hpp>
 #include <map>
 #include <string>
+
+#include "Request.hpp"
 
 namespace webserver {
 class Connection {

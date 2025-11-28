@@ -130,7 +130,7 @@ all: $(MAIN_FNAME)
 # compare this to $(TEST_fname) rule below
 # this rule builds webserv executable
 $(MAIN_FNAME): $(MAIN_ENDPOINT_OBJ) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS)
-	$(CPP) $(LINK_FLAGS) $^ -o $@
+	@$(CPP) $(LINK_FLAGS) $^ -o $@
 
 $(OBJ_F)/%.o: %.cpp | $(OBJ_F) $(MAIN_OBJ_DIRS) $(TEST_OBJ_DIRS)
 	@$(CPP) $(COMPILE_FLAGS) $(LINK_FLAGS) -c $(PREPROC_DEFINES) $< -o $@
