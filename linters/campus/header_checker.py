@@ -11,6 +11,7 @@ regexpUsing = re.compile(r"^\s*using\s", re.M)
 regexpCommentOneLine = re.compile(r'//(.*)')
 regexpCommentMultiline = re.compile(r'/\*(.*?)\*/', re.DOTALL)
 regexpCommentValidContentPrefix = re.compile(r'^(( TODO [0-9]+:)|( NOTE:)|( namespace)|( clang-format))')
+regexpIncludeRelative = re.compile(r'#include ".*/')
 
 def lineNum(match, s):
     start_pos = match.start()
@@ -41,6 +42,8 @@ def checkCommentPrefixes(s, issues):
 def textChecks(f):
     s = f.read_text()
     issues = []
+    for match in regexpIncludeRelative.finditer(s):
+        issues.append(lineNum(match, s) + "please include by filename only")
     for match in regexpUsing.finditer(s):
         issues.append(lineNum(match, s) + "contains 'using' directive (forbidden in headers)")
     checkCommentPrefixes(s, issues)

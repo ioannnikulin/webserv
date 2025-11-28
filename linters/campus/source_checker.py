@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from header_checker import checkCommentPrefixes
 from header_checker import lineNum
+from header_checker import regexpIncludeRelative
 
 roots = sys.argv[1:] if len(sys.argv) > 1 else ["sources", "include", "tests"]
 headerSuffixes = {".cpp", ".c"}
@@ -46,6 +47,9 @@ for f in files:
 
     checkCommentPrefixes(s, issues)
 
+    for match in regexpIncludeRelative.finditer(s):
+        issues.append(lineNum(match, s) + "please include by filename only")
+        
     if regexpPoll.search(s):
         pollCalls += 1
 
