@@ -1,5 +1,6 @@
 #include <poll.h>
 
+#include <../request/Request.hpp>
 #include <map>
 #include <string>
 
@@ -13,6 +14,7 @@ private:
     ::pollfd* _clientSocket;  // NOTE: do not delete it here! it's managed by MasterListener
     int _clientSocketFd;
     std::string _responseBuffer;
+    Request* _request;
 
     std::string receiveRequestContent();
     void markResponseReadyForReturn();
@@ -23,7 +25,9 @@ public:
 
     int getClientSocketFd() const;
     void setClientSocket(::pollfd* clientSocket);
+
     void handleRequest();
+    void generateReponseHeaders();
     void sendResponse();
 };
 }  // namespace webserver

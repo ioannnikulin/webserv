@@ -15,7 +15,7 @@ using std::ofstream;
 using std::set;
 using std::string;
 
-class ConfigParsingTests : public CxxTest::TestSuite {
+class AppConfigParsingTests : public CxxTest::TestSuite {
 private:
     set<string> _configFilenames;
 

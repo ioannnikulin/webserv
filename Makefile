@@ -40,6 +40,12 @@ CONNECTION_SRCS = $(addprefix $(SOURCE_F)/$(CONNECTION_F)/,$(CONNECTION_SRC_NAME
 
 # ------------------------------------------------------------
 
+REQUEST_F = request
+REQUEST_SRC_NAMES = Request.cpp
+REQUEST_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_F)/,$(REQUEST_SRC_NAMES))
+
+# ------------------------------------------------------------
+
 REQUEST_HANDLER_F = request_handler
 REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp
 REQUEST_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_HANDLER_F)/,$(REQUEST_HANDLER_SRC_NAMES))
@@ -73,6 +79,7 @@ MAIN_NONENDPOINT_SRCS = \
 	$(APP_CONFIG_SRCS) \
 	$(LISTENER_SRCS) \
 	$(CONNECTION_SRCS) \
+	$(REQUEST_SRCS) \
 	$(REQUEST_HANDLER_SRCS) \
 	$(RESPONSE_GENERATOR_SRCS) \
 	$(WEBSERV_SRCS) \
@@ -93,6 +100,7 @@ MAIN_DIRS = \
 	$(SOURCE_F)/$(APP_CONFIG_F) \
 	$(SOURCE_F)/$(LISTENER_F) \
 	$(SOURCE_F)/$(CONNECTION_F) \
+	$(SOURCE_F)/$(REQUEST_F) \
 	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
 	$(SOURCE_F)/$(HTTP_METHODS_F) \
@@ -122,7 +130,7 @@ all: $(MAIN_FNAME)
 # compare this to $(TEST_fname) rule below
 # this rule builds webserv executable
 $(MAIN_FNAME): $(MAIN_ENDPOINT_OBJ) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS)
-	@$(CPP) $(LINK_FLAGS) $^ -o $@
+	$(CPP) $(LINK_FLAGS) $^ -o $@
 
 $(OBJ_F)/%.o: %.cpp | $(OBJ_F) $(MAIN_OBJ_DIRS) $(TEST_OBJ_DIRS)
 	@$(CPP) $(COMPILE_FLAGS) $(LINK_FLAGS) -c $(PREPROC_DEFINES) $< -o $@

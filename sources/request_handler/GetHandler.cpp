@@ -1,10 +1,16 @@
 #include "GetHandler.hpp"
 
 #include <string>
+
 using std::string;
+
 namespace webserver {
-string GetHandler::handle(string requestBody) {
-    (void)requestBody;
-    return ("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!");
+string GetHandler::handle(string location) {
+    /* TODO 58: a request handler must get more information as arguments. 
+    at least the root folder. or maybe full path resolution 
+    should happen on earlier stages?
+    */
+    (void)location;
+    return ("Hello, World!");
 }
 }  // namespace webserver

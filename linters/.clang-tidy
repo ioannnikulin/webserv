@@ -9,6 +9,7 @@ Checks: >-
     # so checking Canonical Orthodox Form only with custom header_checker.py
   cppcoreguidelines-*,
   bugprone-*,
+  -bugprone-easily-swappable-parameters,
   clang-analyzer-*,
   llvm-header-guide
 

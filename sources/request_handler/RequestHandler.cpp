@@ -7,7 +7,8 @@
 using std::string;
 
 namespace webserver {
-string RequestHandler::handle(string requestBody) {
-    return (GetHandler::handle(requestBody));
+string RequestHandler::handle(string type, string location) {
+    (void)type;
+    return (GetHandler::handle(location));
 }
 }  // namespace webserver
