@@ -8,10 +8,11 @@
 
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
-#include "../request_handler/RequestHandler.hpp"
+#include "request_handler/RequestHandler.hpp"
 
 using std::clog;
 using std::endl;
@@ -20,7 +21,8 @@ using std::string;
 
 namespace webserver {
 Connection::Connection(int listeningSocketFd)
-    : _clientSocket(NULL) {
+    : _clientSocket(NULL)
+    , _request(NULL) {
     struct sockaddr_in clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
     _clientSocketFd =
@@ -80,11 +82,21 @@ void Connection::markResponseReadyForReturn() {
     _clientSocket->events |= POLLOUT;
 }
 
+void Connection::generateReponseHeaders() {
+    std::ostringstream oss;
+    oss << "HTTP/1.0 200 OK\r\nContent-Length: ";
+    oss << _responseBuffer.size() << "\r\n\r\n";
+    oss << _responseBuffer;
+    _responseBuffer = oss.str();
+}
+
 void Connection::handleRequest() {
-    const string request = receiveRequestContent();
-    clog << "Received request on socket fd " << _clientSocketFd << ":\n---\n" << request;
-    std::cout << "---\n" << endl;
-    _responseBuffer = RequestHandler::handle(request);
+    const string rawRequest = receiveRequestContent();
+    clog << "Received request on socket fd " << _clientSocketFd << ":\n---\n" << rawRequest;
+    clog << "---\n" << endl;
+    _request = new Request(rawRequest);
+    _responseBuffer = RequestHandler::handle(_request->getType(), _request->getLocation());
+    generateReponseHeaders();
     markResponseReadyForReturn();
     // NOTE: doesn't send directly, have to get approval from MasterListener's poll first
 }

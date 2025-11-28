@@ -10,7 +10,7 @@ private:
     GetHandler& operator=(const GetHandler& other);
 
 public:
-    static std::string handle(std::string requestBody);
+    static std::string handle(std::string location);
     ~GetHandler();
 };
 }  // namespace webserver

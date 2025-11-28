@@ -9,7 +9,7 @@ private:
     RequestHandler& operator=(const RequestHandler& other);
 
 public:
-    static std::string handle(std::string requestBody);
+    static std::string handle(std::string type, std::string location);
     ~RequestHandler();
 };
 }  // namespace webserver
