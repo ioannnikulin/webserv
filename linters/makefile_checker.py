@@ -22,20 +22,21 @@ def cppPresence(root, makefileText):
         exit_code = 1
 
     make_cpp = set(re.findall(r"[A-Za-z0-9_.-]+\.cpp", makefileText))
+    ignored_cpp = set(["cxx_runner.cpp"])
 
-    missing_in_makefile = all_cpp - make_cpp
-    extra_in_makefile = make_cpp - all_cpp
+    missing_in_makefile = all_cpp - make_cpp - ignored_cpp
+    extra_in_makefile = make_cpp - all_cpp - ignored_cpp
 
     if missing_in_makefile:
         print("These .cpp files exist on disk but are missing in the Makefile:")
         for f in sorted(missing_in_makefile):
-            print("   ", f)
+            print("\t", f)
         exit_code = 1
 
     if extra_in_makefile:
         print("These .cpp files are listed in the Makefile but do not exist on disk:")
         for f in sorted(extra_in_makefile):
-            print("   ", f)
+            print("\t", f)
     #    exit_code = 1 # not considered a failure for now
 
 def main():

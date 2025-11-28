@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "configuration/AppConfig.hpp"
-#include "listener/MasterListener.hpp"
+#include "AppConfig.hpp"
+#include "MasterListener.hpp"
 
 namespace webserver {
 class WebServer {

@@ -11,9 +11,9 @@
 #include <string>
 #include <vector>
 
-#include "../utils/colors.hpp"
-#include "../utils/utils.hpp"
 #include "Listener.hpp"
+#include "colors.hpp"
+#include "utils.hpp"
 
 using std::cerr;
 using std::clog;
@@ -78,6 +78,7 @@ MasterListener::MasterListener(const set<pair<string, int> >& interfacePortPairs
     }
 }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void MasterListener::handleIncomingConnection(::pollfd& activeFd) {
     Listener* listener = findListener(_listeners, activeFd.fd);
     // NOTE: is it a request on a LISTENING socket? so a request for a new connection?
@@ -103,6 +104,7 @@ void MasterListener::handleIncomingConnection(::pollfd& activeFd) {
     cerr << "Unknown socket fd " << activeFd.fd << " has sent data, ignoring." << endl;
 }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) const {
     Listener* listener = findListener(_clientListeners, activeFd.fd);
 
@@ -120,6 +122,7 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) const {
     output_formatting::printSeparator();
 }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
     populateFdsFromListeners(_pollFds, _listeners);
 

@@ -6,9 +6,9 @@
 #include <set>
 #include <vector>
 
-#include "../http_methods/HttpMethodType.hpp"
 #include "CgiHandlerConfig.hpp"
 #include "FolderConfig.hpp"
+#include "HttpMethodType.hpp"
 #include "UploadConfig.hpp"
 
 namespace webserver {

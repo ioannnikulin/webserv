@@ -30,6 +30,7 @@ public:
             .addHeader("Accept", "*/*");
 
         TS_SKIP("header parsing not implemented");
+
         TS_ASSERT_THROWS_NOTHING(Request(raw));
         Request actual(raw);
         TS_ASSERT_EQUALS(expected, actual);

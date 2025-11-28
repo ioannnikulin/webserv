@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+PROJECT_ROOT=$(pwd)
+
 CLANG_TIDY=$(which clang-tidy)
 
 if [ ! -x "$CLANG_TIDY" ]; then
@@ -22,8 +24,8 @@ if [ $# -lt 4 ]; then
 	usage
 fi
 
-COMPILE_FLAGS=$2
-LINK_FLAGS=$3
+COMPILE_FLAGS=($2)
+LINK_FLAGS=$(echo $3 | sed "s|-I|-I$PROJECT_ROOT/|g")
 SOURCES=("${@:4}")
 
 # translation units
@@ -42,10 +44,14 @@ TEST_SIMPLER_STRUCTURE="tests.*(is not inside any namespace)|(missing .*ctor)"
 
 check() {
 	echo "Running clang-tidy check..."
+	LINK_FLAGS_ARRAY=()
+	for dir in $LINK_FLAGS; do
+		LINK_FLAGS_ARRAY+=("$dir")
+	done
 	errs=0
 	for f in "${TUS[@]}"; do
 		out=$(mktemp)
-		"$CLANG_TIDY" $f "$SETTINGS_FILE_FLAG" -- "$COMPILE_FLAGS" "$LINK_FLAGS" >$out 2>&1 || true
+		"$CLANG_TIDY" $f "$SETTINGS_FILE_FLAG" -- "${COMPILE_FLAGS[@]}" "${LINK_FLAGS_ARRAY[@]}" >$out 2>&1 || true
 		filtered=$(grep -n -E 'warning:|error:' "$out" | grep -v -E "$CLANG_TIDY_IGNORED_REGEX" | grep -v -E TEST_SIMPLER_STRUCTURE || true)
 		if [ -n "$filtered" ]; then
 			printf "%s\n" "$filtered"
