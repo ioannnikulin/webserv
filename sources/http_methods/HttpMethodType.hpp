@@ -1,6 +1,19 @@
 #ifndef HTTPMETHODTYPE_HPP
 #define HTTPMETHODTYPE_HPP
 
+#include <map>
+#include <string>
+
 enum HttpMethodType { GET, POST, DELETE };
+
+/* NOTE:
+Struct to store the HTTP response data, later used by response generator.
+*/
+struct ResponseData {
+    int statusCode;
+    long contentLength;
+    std::string body;
+    std::string contentType;
+};
 
 #endif

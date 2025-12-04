@@ -11,8 +11,9 @@
 #include <map>
 #include <string>
 
-#include "request_handler/RequestHandler.hpp"
+#include "request_handler/GetHandler.hpp"
 
+using std::clog;
 using std::endl;
 using std::map;
 using std::ofstream;
@@ -30,7 +31,7 @@ private:
         do {
             pos = path.find('/', pos + 1);
             string sub = path.substr(0, pos);
-            if (!sub.empty()) {
+            if (!sub.empty() && pos != string::npos) {
                 if (mkdir(sub.c_str(), 0755) != 0 && errno != EEXIST)
                     return false;
             }
@@ -53,7 +54,7 @@ private:
     }
 
 public:
-    void test0() {
+    void testThatGetFetchesFilesAndGeneratesCorrectResponseHeaders() {
         _files["/folder/foo.txt"] = "footext";
         _files["/folder/bar.txt"] = "bartext";
         _files["/another/key.txt"] = "communication";
@@ -63,22 +64,44 @@ public:
         _emptyFolders.insert("/third");
         createTestFiles();
 
-        TS_SKIP("request handling not implemented");
+        ResponseData actual = webserver::GetHandler::handleRequest("folder/foo.txt", _rootFolder);
+        TS_ASSERT_EQUALS(200, actual.statusCode);
+        TS_ASSERT_EQUALS(7, actual.contentLength);
+        TS_ASSERT_EQUALS("footext", actual.body);
+        TS_ASSERT_EQUALS("text/plain", actual.contentType);
 
-        string actual = webserver::RequestHandler::handle("GET", "/folder/foo.txt");
-        TS_ASSERT_EQUALS("footext", actual);
-        actual = webserver::RequestHandler::handle("GET", "/folder/bar.txt");
-        TS_ASSERT_EQUALS("bartext", actual);
-        actual = webserver::RequestHandler::handle("GET", "/another/key.txt");
-        TS_ASSERT_EQUALS("communication", actual);
-        actual = webserver::RequestHandler::handle("GET", "/another/empty.txt");
-        TS_ASSERT_EQUALS("", actual);
-        TS_ASSERT_THROWS(
-            webserver::RequestHandler::handle("GET", "/folder/doesntexist.txt"),
-            std::runtime_error  // TODO 58: actually should declare some more specific exception
+        actual = webserver::GetHandler::handleRequest("folder/bar.txt", _rootFolder);
+        TS_ASSERT_EQUALS(200, actual.statusCode);
+        TS_ASSERT_EQUALS(7, actual.contentLength);
+        TS_ASSERT_EQUALS("bartext", actual.body);
+        TS_ASSERT_EQUALS("text/plain", actual.contentType);
+
+        actual = webserver::GetHandler::handleRequest("another/key.txt", _rootFolder);
+        TS_ASSERT_EQUALS(200, actual.statusCode);
+        TS_ASSERT_EQUALS(13, actual.contentLength);
+        TS_ASSERT_EQUALS("communication", actual.body);
+        TS_ASSERT_EQUALS("text/plain", actual.contentType);
+
+        actual = webserver::GetHandler::handleRequest("another/empty.txt", _rootFolder);
+        TS_ASSERT_EQUALS(200, actual.statusCode);
+        TS_ASSERT_EQUALS(0, actual.contentLength);
+        TS_ASSERT_EQUALS("", actual.body);
+        TS_ASSERT_EQUALS("text/plain", actual.contentType);
+
+        actual = webserver::GetHandler::handleRequest("another/doesnotexist.txt", _rootFolder);
+        TS_ASSERT_EQUALS(404, actual.statusCode);
+        TS_ASSERT_EQUALS(194, actual.contentLength);
+        TS_ASSERT_EQUALS(
+            "<html>\n    <head>\n\t\t<style>\n\t\t\tbody {\n\t\t\t\tbackground-color: "
+            "pink;\n\t\t\t}\n\t\t</style>\n        <title>404</title>\n    </head>\n    <body>\n   "
+            "     <h1>404. Resource not found.</h1>\n    </body>\n</html>\n",
+            actual.body
         );
+        TS_ASSERT_EQUALS("text/html", actual.contentType);
+        // 4 asserts
     }
 
+    // deletes test files
     void tearDown() {
         string cmd = "rm -rf '" + _rootFolder + "'";
         system(cmd.c_str());

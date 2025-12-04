@@ -5,7 +5,7 @@
 using std::string;
 
 namespace webserver {
-const string Endpoint::DEFAULT_INTERFACE = "127.10.0.1";
+const string Endpoint::DEFAULT_INTERFACE = "127.4.0.1";
 const int Endpoint::DEFAULT_PORT = 8888;
 
 Endpoint::Endpoint()

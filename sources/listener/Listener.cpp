@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "configuration/AppConfig.hpp"
 #include "utils/colors.hpp"
 #include "utils/utils.hpp"
 
@@ -115,12 +116,12 @@ Listener::Listener(const std::string& interface, int port)
         throw runtime_error(string("listen() failed: ") + strerror(errno));
     }
 
-    output_formatting::printSeparator();
+    utils::printSeparator();
     // clang-format off
     clog << "Listening on " << B_GREEN << "http:/" << "/" << _interface << ":" << _port << RESET
          << " via socket " << _listeningSocketFd << endl;
     // clang-format on
-    output_formatting::printSeparator();
+    utils::printSeparator();
 }
 
 void Listener::setClientSocket(::pollfd* clientSocket) {
@@ -142,8 +143,8 @@ int Listener::acceptConnection() {
     return (nconn->getClientSocketFd());
 }
 
-void Listener::receiveRequest(const ::pollfd& clientSocketFd) {
-    _clientConnections.at(clientSocketFd.fd)->handleRequest();
+void Listener::receiveRequest(const ::pollfd& clientSocketFd, const AppConfig* appConfig) {
+    _clientConnections.at(clientSocketFd.fd)->handleRequest(appConfig);
 }
 
 void Listener::sendResponse(int clientSocketFd) {

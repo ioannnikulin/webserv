@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 
+#include "configuration/AppConfig.hpp"
 #include "request/Request.hpp"
 
 namespace webserver {
@@ -29,8 +30,7 @@ public:
     Connection& setResponseBuffer(std::string buffer);
     std::string getResponseBuffer() const;
 
-    void handleRequest();
-    void generateResponseHeaders();
+    void handleRequest(const AppConfig* appConfig);
     void sendResponse();
 };
 }  // namespace webserver

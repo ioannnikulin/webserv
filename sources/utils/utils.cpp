@@ -1,6 +1,7 @@
 #include "utils.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include "colors.hpp"
@@ -9,7 +10,7 @@
 #define SEPARATOR_CHAR '='
 #define SEPARATOR_COLOR CYAN
 
-namespace output_formatting {
+namespace utils {
 void setColor(std::string color) {
     std::cout << color;
 }
@@ -25,15 +26,21 @@ void printSeparator(void) {
     std::cout << std::endl;
 }
 
-}  // namespace output_formatting
-/* NOTE: unused functions
- void waitForInput() {
-     std::string input;
-     std::cout << "Press ENTER to continue...";
-     std::getline(std::cin, input);
- }
+std::string toString(int x) {
+    std::ostringstream oss;
+    oss << x;
+    return oss.str();
+}
+}  // namespace utils
 
- void clearTerminal() {
-     std::cout << "\033[2J\033[H";
- }
+/* NOTE: unused functions
+void waitForInput() {
+	std::string input;
+	std::cout << "Press ENTER to continue...";
+	std::getline(std::cin, input);
+	}
+
+void clearTerminal() {
+	std::cout << "\033[2J\033[H";
+	}
 */

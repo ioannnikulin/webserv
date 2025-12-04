@@ -52,8 +52,14 @@ REQUEST_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_HANDLER_F)/,$(REQUEST_H
 
 # ------------------------------------------------------------
 
+FILE_SYSTEM_F = file_system
+FILE_SYSTEM_SRC_NAMES = FileSystem.cpp MimeTypes.cpp
+FILE_SYSTEM_SRCS = $(addprefix $(SOURCE_F)/$(FILE_SYSTEM_F)/,$(FILE_SYSTEM_SRC_NAMES))
+
+# ------------------------------------------------------------
+
 RESPONSE_GENERATOR_F = response_generator
-RESPONSE_GENERATOR_SRC_NAMES = response_generator.cpp
+RESPONSE_GENERATOR_SRC_NAMES = ResponseGenerator.cpp
 RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RESPONSE_GENERATOR_SRC_NAMES))
 
 # ------------------------------------------------------------
@@ -61,6 +67,12 @@ RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RES
 HTTP_METHODS_F = http_methods
 HTTP_METHODS_SRC_NAMES =
 HTTP_METHODS_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_METHODS_F)/,$(HTTP_METHODS_SRC_NAMES))
+
+# ------------------------------------------------------------
+
+HTTP_STATUSES_F = http_status
+HTTP_STATUSES_SRC_NAMES = HttpStatus.cpp
+HTTP_STATUSES_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_STATUSES_F)/,$(HTTP_STATUSES_SRC_NAMES))
 
 # ------------------------------------------------------------
 
@@ -83,6 +95,9 @@ MAIN_NONENDPOINT_SRCS = \
 	$(REQUEST_HANDLER_SRCS) \
 	$(RESPONSE_GENERATOR_SRCS) \
 	$(WEBSERV_SRCS) \
+	$(HTTP_METHODS_SRCS) \
+	$(HTTP_STATUSES_SRCS) \
+	$(FILE_SYSTEM_SRCS) \
 	$(UTILS_SRCS) \
 
 
@@ -104,6 +119,8 @@ MAIN_DIRS = \
 	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
 	$(SOURCE_F)/$(HTTP_METHODS_F) \
+	$(SOURCE_F)/$(HTTP_STATUSES_F) \
+	$(SOURCE_F)/$(FILE_SYSTEM_F) \
 	$(SOURCE_F)/$(UTILS_F) \
 
 
@@ -199,7 +216,7 @@ format-fix:
 # exits with 1 if any file would change
 format-check:
 	@bash ${LINTERS_F}/clang_format.sh check ${SOURCE_F} ${TEST_F}
-	
+
 # ------------------------------------------------------------
 
 # smarter analysis: bugs, potential undefined behavior

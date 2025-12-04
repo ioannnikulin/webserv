@@ -19,6 +19,10 @@ FolderConfig::FolderConfig(const FolderConfig& other)
     , _indexPageFileLocation(other._indexPageFileLocation) {
 }
 
+std::string FolderConfig::getRootPath() const {
+    return (_rootPath);
+}
+
 bool FolderConfig::operator==(const FolderConfig& other) const {
     return (
         _rootPath == other._rootPath && _enableListing == other._enableListing &&

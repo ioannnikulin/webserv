@@ -7,7 +7,7 @@
 
 namespace webserver {
 RouteConfig::RouteConfig()
-    : _folderConfigSection(NULL)
+    : _folderConfigSection(new FolderConfig("/home/dmlasko/Desktop/webserv", false, ""))
     , _uploadConfigSection(NULL) {
 }
 
@@ -34,6 +34,10 @@ RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
 RouteConfig& RouteConfig::setFolderConfig(const FolderConfig& tgt) {
     _folderConfigSection = new FolderConfig(tgt);
     return (*this);
+}
+
+const FolderConfig* RouteConfig::getFolderConfig() const {
+    return (_folderConfigSection);
 }
 
 bool RouteConfig::operator==(const RouteConfig& other) const {

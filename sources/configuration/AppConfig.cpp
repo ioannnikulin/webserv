@@ -1,11 +1,14 @@
 #include "AppConfig.hpp"
 
+#include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include "RouteConfig.hpp"
 
+using std::map;
 using std::pair;
 using std::set;
 using std::string;
@@ -17,6 +20,7 @@ const int AppConfig::DEFAULT_MAX_BODY_SIZE = 1048576;
 AppConfig::AppConfig()
     : _maxRequestBodySizeBytes(DEFAULT_MAX_BODY_SIZE) {
     _endpoints.insert(Endpoint());
+    _routes.insert(std::make_pair("/", RouteConfig()));
 }
 
 AppConfig::AppConfig(const AppConfig& other)
@@ -49,6 +53,15 @@ set<pair<string, int> > AppConfig::getAllInterfacePortPairs(void) const {
         result.insert(pair<string, int>(it->getInterface(), it->getPort()));
     }
     return (result);
+}
+
+const RouteConfig& AppConfig::getRoute(std::string route) const {
+    map<string, RouteConfig>::const_iterator it = _routes.find(route);
+
+    if (it == _routes.end()) {
+        throw std::runtime_error("Route not found: " + route);
+    }
+    return it->second;
 }
 
 AppConfig::~AppConfig() {

@@ -10,6 +10,7 @@
 
 #include "WebServer.hpp"
 
+using std::clog;
 using std::endl;
 using std::ofstream;
 using std::set;
@@ -29,10 +30,9 @@ public:
             .addHeader("User-Agent", "curl/8.5.0")
             .addHeader("Accept", "*/*");
 
-        TS_SKIP("header parsing not implemented");
-
-        TS_ASSERT_THROWS_NOTHING(Request(raw));
+        TS_SKIP("not implemented");
         Request actual(raw);
+        clog << actual.getLocation() << endl;
         TS_ASSERT_EQUALS(expected, actual);
     }
 };
