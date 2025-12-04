@@ -113,7 +113,7 @@ MAIN_OBJ_DIRS = $(addprefix $(OBJ_F)/, $(MAIN_DIRS))
 
 LINK_FLAGS = \
 	-I$(TEST_F) \
-	$(addprefix	-I, $(MAIN_DIRS))
+	-I$(SOURCE_F) \
 
 
 # for makefile only: where to look for cpps mentioned in rules

@@ -11,9 +11,9 @@
 #include <string>
 #include <vector>
 
-#include "Listener.hpp"
-#include "colors.hpp"
-#include "utils.hpp"
+#include "listener/Listener.hpp"
+#include "utils/colors.hpp"
+#include "utils/utils.hpp"
 
 using std::cerr;
 using std::clog;

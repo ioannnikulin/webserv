@@ -12,8 +12,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "Request.hpp"
-#include "RequestHandler.hpp"
+#include "request/Request.hpp"
+#include "request_handler/RequestHandler.hpp"
 
 using std::clog;
 using std::endl;

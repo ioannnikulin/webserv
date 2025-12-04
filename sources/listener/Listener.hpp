@@ -7,7 +7,7 @@
 #include <map>
 #include <string>
 
-#include "Connection.hpp"
+#include "connection/Connection.hpp"
 
 namespace webserver {
 class Listener {

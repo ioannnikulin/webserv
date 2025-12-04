@@ -49,7 +49,7 @@ for f in files:
     checkCommentPrefixes(s, issues)
 
     for match in regexpIncludeRelative.finditer(s):
-        issues.append(lineNum(match, s) + "please include by filename only")
+        issues.append(lineNum(match, s) + "please specify the path starting from the project source root")
         
     if regexpPoll.search(s):
         pollCalls += 1
