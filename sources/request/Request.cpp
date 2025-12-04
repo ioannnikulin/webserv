@@ -5,9 +5,9 @@
 using std::string;
 
 namespace webserver {
-const string Request::Request::DEFAULT_TYPE = "INVALID";
-const string Request::Request::DEFAULT_LOCATION = "/dev/null";
-const string Request::Request::DEFAULT_PROTOCOL = "0.0";
+const string Request::DEFAULT_TYPE = "INVALID";
+const string Request::DEFAULT_LOCATION = "/dev/null";
+const string Request::DEFAULT_PROTOCOL = "0.0";
 
 Request::Request()
     : _type(DEFAULT_TYPE)

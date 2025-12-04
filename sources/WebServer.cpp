@@ -6,8 +6,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "AppConfig.hpp"
-#include "MasterListener.hpp"
+#include "configuration/AppConfig.hpp"
+#include "listener/MasterListener.hpp"
 
 using std::cerr;
 using std::endl;

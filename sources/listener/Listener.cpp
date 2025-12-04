@@ -14,8 +14,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "colors.hpp"
-#include "utils.hpp"
+#include "utils/colors.hpp"
+#include "utils/utils.hpp"
 
 using std::cerr;
 using std::clog;

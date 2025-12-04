@@ -11,7 +11,7 @@
 #include <map>
 #include <string>
 
-#include "RequestHandler.hpp"
+#include "request_handler/RequestHandler.hpp"
 
 using std::endl;
 using std::map;

@@ -6,10 +6,10 @@
 #include <set>
 #include <vector>
 
-#include "CgiHandlerConfig.hpp"
-#include "FolderConfig.hpp"
-#include "HttpMethodType.hpp"
-#include "UploadConfig.hpp"
+#include "configuration/CgiHandlerConfig.hpp"
+#include "configuration/FolderConfig.hpp"
+#include "configuration/UploadConfig.hpp"
+#include "http_methods/HttpMethodType.hpp"
 
 namespace webserver {
 class RouteConfig {
