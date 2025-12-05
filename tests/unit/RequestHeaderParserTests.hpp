@@ -12,6 +12,7 @@
 #include "http_status/BadRequest.hpp"
 
 using std::clog;
+using std::clog;
 using std::endl;
 using std::ofstream;
 using std::set;

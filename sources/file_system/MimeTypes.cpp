@@ -15,6 +15,14 @@ std::map<std::string, std::string> MimeTypes::initMimeMap() {
     mimeMap["pdf"] = "application/pdf";
     mimeMap["txt"] = "text/plain";
     mimeMap["ico"] = "image/x-icon";
+	mimeMap["json"] = "application/json";
+	mimeMap["wasm"] = "application/wasm";
+	mimeMap["svg"]  = "image/svg+xml";
+	mimeMap["webp"] = "image/webp";
+	mimeMap["woff"] = "font/woff";
+	mimeMap["woff2"] = "font/woff2";
+	mimeMap["csv"] = "text/csv";
+	mimeMap["xml"] = "application/xml";
 
     return (mimeMap);
 }

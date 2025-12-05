@@ -2,16 +2,15 @@
 
 #include <map>
 #include <sstream>
+#include <string>
+#include <utility>
 
-#include "http_methods/HttpMethodType.hpp"
 #include "request_handler/GetHandler.hpp"
-#include "utils/utils.hpp"
 
 using std::map;
 using std::string;
 
 namespace webserver {
-
 HttpStatus::HttpStatus(int code, const std::string& reasonPhrase)
     : _code(code)
     , _reasonPhrase(reasonPhrase)
