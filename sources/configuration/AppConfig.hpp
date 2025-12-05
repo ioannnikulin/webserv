@@ -27,6 +27,8 @@ public:
     AppConfig& addEndpoint(const Endpoint& tgt);
     AppConfig& addRoute(std::string route, const RouteConfig& tgt);
 
+    const RouteConfig& getRoute(std::string route) const;
+
     bool operator==(const AppConfig& other) const;
 };
 }  // namespace webserver

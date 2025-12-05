@@ -21,6 +21,8 @@ private:
 
 public:
     void testConfig0() {
+        TS_SKIP("configuration parsing not implemented");
+
         const string fname = "config0.tst";
         _configFilenames.insert(fname);
         ofstream f("config0.tst");
@@ -44,8 +46,6 @@ public:
                     webserver::FolderConfig("/", false, "index.html")
                 )
             );
-
-        TS_SKIP("configuration parsing not implemented");
 
         TS_ASSERT_THROWS_NOTHING(s.getAppConfig());
         TS_ASSERT_EQUALS(expected, s.getAppConfig());

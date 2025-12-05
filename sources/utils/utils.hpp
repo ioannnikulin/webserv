@@ -3,14 +3,14 @@
 
 #include <string>
 
-#include "colors.hpp"
-
-namespace output_formatting {
+namespace utils {
 void printSeparator(void);
 void setColor(std::string color);
 void resetColor(void);
+
+std::string toString(int x);
 void waitForInput();
 void clearTerminal();
-}  // namespace output_formatting
+}  // namespace utils
 
 #endif
