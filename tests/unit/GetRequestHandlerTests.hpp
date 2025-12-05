@@ -56,9 +56,9 @@ private:
 public:
     void testThatGetFetchesFilesAndGeneratesCorrectResponseHeaders() {
         _files["/folder/foo.txt"] = "footext";
-        _files["/folder/bar.txt"] = "bartext";
-        _files["/another/key.txt"] = "communication";
-        _files["/another/empty.txt"] = "";
+        _files["/folder/bar.xml"] = "bartext";
+        _files["/another/key.jpg"] = "communication";
+        _files["/another/empty.mp3"] = "";
         _emptyFolders.insert("/folder/empty");
         _emptyFolders.insert("/another/empty");
         _emptyFolders.insert("/third");
@@ -70,23 +70,23 @@ public:
         TS_ASSERT_EQUALS("footext", actual.body);
         TS_ASSERT_EQUALS("text/plain", actual.contentType);
 
-        actual = webserver::GetHandler::handleRequest("folder/bar.txt", _rootFolder);
+        actual = webserver::GetHandler::handleRequest("folder/bar.xml", _rootFolder);
         TS_ASSERT_EQUALS(200, actual.statusCode);
         TS_ASSERT_EQUALS(7, actual.contentLength);
         TS_ASSERT_EQUALS("bartext", actual.body);
-        TS_ASSERT_EQUALS("text/plain", actual.contentType);
+        TS_ASSERT_EQUALS("application/xml", actual.contentType);
 
-        actual = webserver::GetHandler::handleRequest("another/key.txt", _rootFolder);
+        actual = webserver::GetHandler::handleRequest("another/key.jpg", _rootFolder);
         TS_ASSERT_EQUALS(200, actual.statusCode);
         TS_ASSERT_EQUALS(13, actual.contentLength);
         TS_ASSERT_EQUALS("communication", actual.body);
-        TS_ASSERT_EQUALS("text/plain", actual.contentType);
+        TS_ASSERT_EQUALS("image/jpeg", actual.contentType);
 
-        actual = webserver::GetHandler::handleRequest("another/empty.txt", _rootFolder);
+        actual = webserver::GetHandler::handleRequest("another/empty.mp3", _rootFolder);
         TS_ASSERT_EQUALS(200, actual.statusCode);
         TS_ASSERT_EQUALS(0, actual.contentLength);
         TS_ASSERT_EQUALS("", actual.body);
-        TS_ASSERT_EQUALS("text/plain", actual.contentType);
+        TS_ASSERT_EQUALS("audio/mpeg", actual.contentType);
 
         actual = webserver::GetHandler::handleRequest("another/doesnotexist.txt", _rootFolder);
         TS_ASSERT_EQUALS(404, actual.statusCode);
@@ -102,10 +102,10 @@ public:
     }
 
     // deletes test files
-    void tearDown() {
-        string cmd = "rm -rf '" + _rootFolder + "'";
-        system(cmd.c_str());
-    }
+    //void tearDown() {
+    //    string cmd = "rm -rf '" + _rootFolder + "'";
+    //    system(cmd.c_str());
+    //}
 };
 
 string GetRequestHandlerTests::_rootFolder = "testRoot";
