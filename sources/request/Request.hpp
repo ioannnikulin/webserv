@@ -11,10 +11,17 @@ private:
     std::string _location;
     std::string _protocol;
     std::map<std::string, std::string> _headers;
+    std::string _body;
 
     static const std::string DEFAULT_TYPE;
     static const std::string DEFAULT_LOCATION;
     static const std::string DEFAULT_PROTOCOL;
+
+    static const std::string MALFORMED_FIRST_LINE;
+
+    void parseFirstLine(std::string firstLine);
+    void parseHeaders(std::string rawHeaders);
+    void parseBody(std::string body);
 
 public:
     Request();
@@ -30,6 +37,7 @@ public:
     std::string getLocation() const;
     Request& setProtocol(std::string protocol);
     Request& addHeader(std::string key, std::string value);
+    std::string getHeader(std::string key) const;
 };
 }  // namespace webserver
 

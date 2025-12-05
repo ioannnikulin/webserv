@@ -109,7 +109,7 @@ void Connection::generateResponseHeaders() {
 
 void Connection::handleRequest() {
     const string rawRequest = receiveRequestContent();
-    clog << "Received request on socket fd " << _clientSocketFd << ":\n---\n" << rawRequest;
+    clog << "Received requet on socket fd " << _clientSocketFd << ":\n---\n" << rawRequest;
     clog << "---\n" << endl;
     _request = new Request(rawRequest);
     _responseBuffer = RequestHandler::handle(_request->getType(), _request->getLocation());
