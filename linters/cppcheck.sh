@@ -33,12 +33,15 @@ collect() {
 # that is not used immediately in the same header
 NO_UNUSED_FIELDS_IN_HEADERS="--suppress=unusedStructMember:*.hpp"
 NO_UNUSED_FIELDS_IN_HEADERS="--suppress=unusedStructMember:*.hpp"
+# some are used in tests, which are generated on the fly and are not analyzed by cppcheck
+NO_UNUSED_FUNCTIONS="--suppress=unusedFunction/*"
 
 check() {
 	echo "Running cppcheck..."
 	out=$(mktemp)
 	"$CPPCHECK" --std="$LANG_STD" --enable=all --inconclusive \
 		"$NO_UNUSED_FIELDS_IN_HEADERS" \
+		"$NO_UNUSED_FUNCTIONS" \
 		"$INCLUDES" "${FILES[@]}" \
 		--template='{file}:{line}:{column}:{severity}:{id}:{message}' >"$out" 2>&1 || true
 

@@ -29,13 +29,14 @@ public:
     HttpStatus& operator=(const HttpStatus& other);
     ~HttpStatus();
 
-    static void initStatusMap(); /* NOTE:
-									fills map; called once at server start
-                                  	static void initStatusHelper(
-                                    int code,
-                                    const std::string& reasonPhrase
-								  	*/
-                                 // NOTE: helper function for initStatusMap()
+    static void initStatusMap();
+    /* NOTE:
+    fills map; called once at server start
+    static void initStatusHelper(
+    int code,
+    const std::string& reasonPhrase
+    */
+    // NOTE: helper function for initStatusMap()
     static void addStatus(int code, const std::string& reasonPhrase);
     static const std::string UNKNOWN_STATUS;
 

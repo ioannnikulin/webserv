@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 
-enum HttpMethodType { GET, POST, DELETE };
+enum HttpMethodType { GET, POST, DELETE, SHUTDOWN };
 
 /* NOTE:
 Struct to store the HTTP response data, later used by response generator.

@@ -4,7 +4,8 @@ CXX = ${CPP}
 COMPILE_FLAGS = -Wall -Wextra -Werror	\
 				-std=c++98	\
 				-g	\
-				-pedantic -Wold-style-cast -Wdeprecated-declarations
+				-pedantic -Wold-style-cast -Wdeprecated-declarations  \
+
 PREPROC_DEFINES =
 
 SOURCE_F = sources
@@ -58,6 +59,12 @@ FILE_SYSTEM_SRCS = $(addprefix $(SOURCE_F)/$(FILE_SYSTEM_F)/,$(FILE_SYSTEM_SRC_N
 
 # ------------------------------------------------------------
 
+FILE_SYSTEM_F = file_system
+FILE_SYSTEM_SRC_NAMES = FileSystem.cpp MimeTypes.cpp
+FILE_SYSTEM_SRCS = $(addprefix $(SOURCE_F)/$(FILE_SYSTEM_F)/,$(FILE_SYSTEM_SRC_NAMES))
+
+# ------------------------------------------------------------
+
 RESPONSE_GENERATOR_F = response_generator
 RESPONSE_GENERATOR_SRC_NAMES = ResponseGenerator.cpp
 RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RESPONSE_GENERATOR_SRC_NAMES))
@@ -71,7 +78,7 @@ HTTP_METHODS_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_METHODS_F)/,$(HTTP_METHODS_SR
 # ------------------------------------------------------------
 
 HTTP_STATUSES_F = http_status
-HTTP_STATUSES_SRC_NAMES = HttpStatus.cpp
+HTTP_STATUSES_SRC_NAMES = HttpStatus.cpp HttpException.cpp
 HTTP_STATUSES_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_STATUSES_F)/,$(HTTP_STATUSES_SRC_NAMES))
 
 # ------------------------------------------------------------
@@ -95,6 +102,9 @@ MAIN_NONENDPOINT_SRCS = \
 	$(REQUEST_HANDLER_SRCS) \
 	$(RESPONSE_GENERATOR_SRCS) \
 	$(WEBSERV_SRCS) \
+	$(HTTP_METHODS_SRCS) \
+	$(HTTP_STATUSES_SRCS) \
+	$(FILE_SYSTEM_SRCS) \
 	$(HTTP_METHODS_SRCS) \
 	$(HTTP_STATUSES_SRCS) \
 	$(FILE_SYSTEM_SRCS) \
