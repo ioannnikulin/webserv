@@ -40,7 +40,7 @@ public:
     static void addStatus(int code, const std::string& reasonPhrase);
     static const std::string UNKNOWN_STATUS;
 
-    static std::string getReasonPhrase(const int code);
+    static std::string getReasonPhrase(int code);
     static std::string getDefaultPageLocation(int code);
 
     // NOTE: next three throw different exceptions if code not found or map empty

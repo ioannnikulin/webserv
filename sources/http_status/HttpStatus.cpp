@@ -2,10 +2,10 @@
 
 #include <map>
 #include <sstream>
+#include <string>
+#include <utility>
 
-#include "http_methods/HttpMethodType.hpp"
 #include "request_handler/GetHandler.hpp"
-#include "utils/utils.hpp"
 
 using std::map;
 using std::string;
@@ -50,19 +50,19 @@ std::string HttpStatus::getDefaultPageLocation(int code) {
 }
 
 void HttpStatus::setPage(int code, const std::string& pageFileLocation) {
-    std::map<int, HttpStatus>::iterator it = _statusMap.find(code);
-    if (it == _statusMap.end()) {
+    const std::map<int, HttpStatus>::iterator itr = _statusMap.find(code);
+    if (itr == _statusMap.end()) {
         return;
     }
-    it->second._pageFileLocation = pageFileLocation;
+    itr->second._pageFileLocation = pageFileLocation;
 }
 
 std::string HttpStatus::getPageFileLocation(int code) {
-    std::map<int, HttpStatus>::const_iterator it = _statusMap.find(code);
-    if (it == _statusMap.end()) {
+    const std::map<int, HttpStatus>::const_iterator itr = _statusMap.find(code);
+    if (itr == _statusMap.end()) {
         return getDefaultPageLocation(code);
     }
-    return (it->second._pageFileLocation);
+    return (itr->second._pageFileLocation);
 }
 
 std::map<int, HttpStatus> HttpStatus::_statusMap;
@@ -74,8 +74,8 @@ void HttpStatus::addStatus(int code, const std::string& reasonPhrase) {
 }
 
 void HttpStatus::initStatusMap() {
-    addStatus(200, "OK");
-    addStatus(404, "Not Found");
+    addStatus(200, "OK");         // NOLINT(readability-magic-numbers)
+    addStatus(404, "Not Found");  // NOLINT(readability-magic-numbers)
     /* NOTE: error codes to be added later
     addStatus(201, "Created");
     addStatus(204, "No Content");
@@ -92,10 +92,11 @@ void HttpStatus::initStatusMap() {
 const std::string HttpStatus::UNKNOWN_STATUS = "SERVER RESPONSE UNDEFINED";
 
 std::string HttpStatus::getReasonPhrase(const int code) {
-    std::map<int, HttpStatus>::const_iterator it = _statusMap.find(code);
-    if (it == _statusMap.end())
+    const std::map<int, HttpStatus>::const_iterator itr = _statusMap.find(code);
+    if (itr == _statusMap.end()) {
         return UNKNOWN_STATUS;
-    return it->second._reasonPhrase;
+    }
+    return (itr->second._reasonPhrase);
 }
 
 }  // namespace webserver

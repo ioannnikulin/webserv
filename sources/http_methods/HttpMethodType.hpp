@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 
+namespace webserver {
 enum HttpMethodType { GET, POST, DELETE, SHUTDOWN };
 
 /* NOTE:
@@ -15,5 +16,5 @@ struct ResponseData {
     std::string body;
     std::string contentType;
 };
-
+}  // namespace webserver
 #endif
