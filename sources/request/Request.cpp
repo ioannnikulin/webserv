@@ -38,7 +38,7 @@ Request::Request(string raw) {
     if (raw.empty()) {
         throw BadRequest("empty request");
     }
-    string::size_type endOfFirstLine = raw.find("\r\n");
+    const string::size_type endOfFirstLine = raw.find("\r\n");
     if (endOfFirstLine == string::npos) {
         if (raw.find('\n') != string::npos) {
             throw BadRequest("invalid line endings");
@@ -46,7 +46,7 @@ Request::Request(string raw) {
         throw BadRequest(MALFORMED_FIRST_LINE);
     }
     parseFirstLine(raw.substr(0, endOfFirstLine));
-    string::size_type endOfHeaders = raw.find("\r\n\r\n");
+    const string::size_type endOfHeaders = raw.find("\r\n\r\n");
     parseHeaders(raw.substr(endOfFirstLine + 2, endOfHeaders - endOfFirstLine - 2));
     parseBody(endOfHeaders != string::npos ? raw.substr(endOfHeaders + 4) : string());
 }
@@ -65,17 +65,17 @@ void Request::parseHeaders(std::string rawHeaders) {
         if (lineEnd == string::npos) {
             lineEnd = rawHeaders.size();
         }
-        string::size_type colon = rawHeaders.find(':', lineStart);
+        const string::size_type colon = rawHeaders.find(':', lineStart);
         if (colon == string::npos || colon > lineEnd) {
             throw BadRequest("no colon in a header line");
         }
-        string key = rawHeaders.substr(lineStart, colon - lineStart);
-        // skip spaces after colon
+        const string key = rawHeaders.substr(lineStart, colon - lineStart);
+        // NOTE: skip spaces after colon
         string::size_type valueStart = colon + 1;
         while (valueStart < lineEnd && rawHeaders[valueStart] == ' ') {
             valueStart++;
         }
-        string value = rawHeaders.substr(valueStart, lineEnd - valueStart);
+        const string value = rawHeaders.substr(valueStart, lineEnd - valueStart);
         _headers[key] = value;
         lineStart = lineEnd + 2;
     }
@@ -121,11 +121,11 @@ Request& Request::addHeader(string key, string value) {
 }
 
 string Request::getHeader(std::string key) const {
-    map<string, string>::const_iterator it = _headers.find(key);
-    if (it != _headers.end()) {
-        return it->second;
+    const map<string, string>::const_iterator itr = _headers.find(key);
+    if (itr != _headers.end()) {
+        return (itr->second);
     }
-    return "";
+    return ("");
 }
 
 Request::~Request() {

@@ -66,7 +66,7 @@ FILE_SYSTEM_SRCS = $(addprefix $(SOURCE_F)/$(FILE_SYSTEM_F)/,$(FILE_SYSTEM_SRC_N
 # ------------------------------------------------------------
 
 RESPONSE_GENERATOR_F = response_generator
-RESPONSE_GENERATOR_SRC_NAMES = ResponseGenerator.cpp
+RESPONSE_GENERATOR_SRC_NAMES = response_generator.cpp
 RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RESPONSE_GENERATOR_SRC_NAMES))
 
 # ------------------------------------------------------------

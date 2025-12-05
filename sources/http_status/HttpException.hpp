@@ -10,6 +10,7 @@ class HttpException : public std::exception {
 private:
     HttpStatus::CODE _code;
     std::string _message;
+    mutable std::string _resultBuffer;
 
 protected:
     HttpException();

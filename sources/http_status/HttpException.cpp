@@ -1,6 +1,7 @@
 #include "http_status/HttpException.hpp"
 
 #include <sstream>
+#include <string>
 
 #include "http_status/BadRequest.hpp"
 #include "http_status/HttpStatus.hpp"
@@ -13,7 +14,8 @@ namespace webserver {
 const char* HttpException::what() const throw() {
     ostringstream oss;
     oss << HttpStatus::getReasonPhrase(_code) << ": " << _message;
-    return (oss.str().c_str());
+    _resultBuffer = oss.str();
+    return (_resultBuffer.c_str());
 }
 
 HttpStatus::CODE HttpException::getCode() const {
