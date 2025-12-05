@@ -59,12 +59,6 @@ FILE_SYSTEM_SRCS = $(addprefix $(SOURCE_F)/$(FILE_SYSTEM_F)/,$(FILE_SYSTEM_SRC_N
 
 # ------------------------------------------------------------
 
-FILE_SYSTEM_F = file_system
-FILE_SYSTEM_SRC_NAMES = FileSystem.cpp MimeTypes.cpp
-FILE_SYSTEM_SRCS = $(addprefix $(SOURCE_F)/$(FILE_SYSTEM_F)/,$(FILE_SYSTEM_SRC_NAMES))
-
-# ------------------------------------------------------------
-
 RESPONSE_GENERATOR_F = response_generator
 RESPONSE_GENERATOR_SRC_NAMES = response_generator.cpp
 RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RESPONSE_GENERATOR_SRC_NAMES))
@@ -107,7 +101,6 @@ MAIN_NONENDPOINT_SRCS = \
 	$(FILE_SYSTEM_SRCS) \
 	$(HTTP_METHODS_SRCS) \
 	$(HTTP_STATUSES_SRCS) \
-	$(FILE_SYSTEM_SRCS) \
 	$(UTILS_SRCS) \
 
 
@@ -130,7 +123,6 @@ MAIN_DIRS = \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
 	$(SOURCE_F)/$(HTTP_METHODS_F) \
 	$(SOURCE_F)/$(HTTP_STATUSES_F) \
-	$(SOURCE_F)/$(FILE_SYSTEM_F) \
 	$(SOURCE_F)/$(UTILS_F) \
 
 
