@@ -25,6 +25,8 @@ regexpUsingNamespace = re.compile(r"^\s*using\snamespace\s", re.M)
 regexpReturn = re.compile(r"^\s*return(.*)")
 regexpValidReturnContent = re.compile(r"((;)|( \(.*\);))")
 regexpPoll = re.compile(f"^bpoll\\(")
+regexpErrno = re.compile(r".*\n.*\n.*\n.*\berrno\b")
+regexpIoOperations = re.compile(r"\b(read|write|recv|send)\(")
 
 files = collectFiles(roots)
 if not files:
@@ -50,6 +52,10 @@ for f in files:
 
     for match in regexpIncludeRelative.finditer(s):
         issues.append(lineNum(match, s) + "please specify the path starting from the project source root")
+        
+    for match in regexpErrno.finditer(s):
+        if regexpIoOperations.search(match.group(0)):
+            issues.append(lineNum(match, s) + "using errno with IO operations is forbidden by the subject")
         
     if regexpPoll.search(s):
         pollCalls += 1

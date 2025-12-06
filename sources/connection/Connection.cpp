@@ -66,7 +66,7 @@ string Connection::receiveRequestContent() {
     // TODO 55: check what poll actually does in these cases, maybe the rest will be just picked up on next iteration
     const ssize_t bytesRead = recv(_clientSocketFd, buffer, sizeof(buffer) - 1, 0);
     if (bytesRead == -1) {
-        throw runtime_error(string("recv() failed"));  // NOTE: errno here forbidden
+        throw runtime_error(string("recv() failed"));
         // TODO 48: probably should retry, not throw
     }
     if (bytesRead == 0) {  // NOTE: we don't support keep-alive connections
@@ -87,7 +87,7 @@ void Connection::sendResponse() {
         const ssize_t sent =
             send(_clientSocketFd, _responseBuffer.data() + totalSent, toSend - totalSent, 0);
         if (sent == -1) {
-            throw runtime_error(string("send() failed"));  // NOTE: errno forbidden here
+            throw runtime_error(string("send() failed"));
             // TODO 48: probably should retry, not throw
         }
         totalSent += sent;
