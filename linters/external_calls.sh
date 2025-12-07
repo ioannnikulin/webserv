@@ -23,6 +23,9 @@ ALLOWED_EXTERNAL_FUNCTIONS=(
 	# memmove, memcmp, strlen leak from STL optimizations,
 	# so we allow them here, but better chek raw sources to forbid direct usage
 	memmove strlen memcmp
+
+	# atoi, atol, isspace for parsing
+	atoi atol isspace
 )
 
 allowed_regex="$(printf "%s\n" "${ALLOWED_EXTERNAL_FUNCTIONS[@]}" | paste -sd'|' -)"

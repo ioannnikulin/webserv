@@ -4,8 +4,7 @@ int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
 
-    // NOTE: creates a single webserver instance (singleton)
-    webserver::WebServer& server = webserver::WebServer::getInstance("");
+    webserver::WebServer& server = webserver::WebServer::getInstance(argv[1]);
     server.start();
 
     return (0);
