@@ -7,21 +7,20 @@
 namespace webserver {
 class CgiHandlerConfig {
 private:
-    CgiHandlerConfig();
-    CgiHandlerConfig& operator=(const CgiHandlerConfig& other);
-
+    int _timeoutSeconds;
     std::string _executablePath;
     std::string _rootPath;
-    int _timeoutSeconds;
+
     // TODO 16: much more here
 
 public:
-    CgiHandlerConfig(
-        const std::string& rootPath,
-        bool enableListing,
-        const std::string& indexPageFileLocation
-    );
+    CgiHandlerConfig();
     CgiHandlerConfig(const CgiHandlerConfig& other);
+    CgiHandlerConfig& operator=(const CgiHandlerConfig& other);
+
+    CgiHandlerConfig(int timeoutSeconds, const std::string& executablePath);
+    std::string getExtension() const;
+    int getTimeoutSeconds() const;
     ~CgiHandlerConfig();
 
     bool operator==(const CgiHandlerConfig& other) const;

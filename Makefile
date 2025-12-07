@@ -28,6 +28,18 @@ APP_CONFIG_SRCS = $(addprefix $(SOURCE_F)/$(APP_CONFIG_F)/,$(APP_CONFIG_SRC_NAME
 
 # ------------------------------------------------------------
 
+APP_CONFIG_PARSER_F = $(APP_CONFIG_F)/parser
+APP_CONFIG_PARSER_SRC_NAMES = \
+	ConfigParser.cpp \
+	ConfigParserElements.cpp \
+	ConfigParserLocation.cpp \
+	ConfigParserTokens.cpp \
+	LocationTempData.cpp \
+
+APP_CONFIG_PARSER_SRCS = $(addprefix $(SOURCE_F)/$(APP_CONFIG_PARSER_F)/,$(APP_CONFIG_PARSER_SRC_NAMES))
+
+# ------------------------------------------------------------
+
 LISTENER_F = listener
 LISTENER_SRC_NAMES = Listener.cpp MasterListener.cpp
 LISTENER_SRCS = $(addprefix $(SOURCE_F)/$(LISTENER_F)/,$(LISTENER_SRC_NAMES))
@@ -58,8 +70,14 @@ RESPONSE_GENERATOR_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_GENERATOR_F)/,$(RES
 
 # ------------------------------------------------------------
 
+HTTP_ERRORS_F = http_errors
+HTTP_ERRORS_SRC_NAMES = HttpError.cpp
+HTTP_ERRORS_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_ERRORS_F)/,$(HTTP_ERRORS_SRC_NAMES))
+
+# ------------------------------------------------------------
+
 HTTP_METHODS_F = http_methods
-HTTP_METHODS_SRC_NAMES =
+HTTP_METHODS_SRC_NAMES = HttpMethodType.cpp
 HTTP_METHODS_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_METHODS_F)/,$(HTTP_METHODS_SRC_NAMES))
 
 # ------------------------------------------------------------
@@ -77,6 +95,9 @@ WEBSERV_SRCS = $(addprefix $(SOURCE_F)/,$(WEBSERV_SRC_NAMES))
 
 MAIN_NONENDPOINT_SRCS = \
 	$(APP_CONFIG_SRCS) \
+	$(APP_CONFIG_PARSER_SRCS) \
+	$(HTTP_ERRORS_SRCS) \
+	$(HTTP_METHODS_SRCS) \
 	$(LISTENER_SRCS) \
 	$(CONNECTION_SRCS) \
 	$(REQUEST_SRCS) \
@@ -84,8 +105,7 @@ MAIN_NONENDPOINT_SRCS = \
 	$(RESPONSE_GENERATOR_SRCS) \
 	$(WEBSERV_SRCS) \
 	$(UTILS_SRCS) \
-
-
+	
 MAIN_NONENDPOINT_OBJS = $(addprefix $(OBJ_F)/,$(MAIN_NONENDPOINT_SRCS:.cpp=.o))
 
 # ------------------------------------------------------------
@@ -98,11 +118,13 @@ MAIN_FNAME = webserv
 MAIN_DIRS = \
 	$(SOURCE_F) \
 	$(SOURCE_F)/$(APP_CONFIG_F) \
+	$(SOURCE_F)/$(APP_CONFIG_PARSER_F) \
 	$(SOURCE_F)/$(LISTENER_F) \
 	$(SOURCE_F)/$(CONNECTION_F) \
 	$(SOURCE_F)/$(REQUEST_F) \
 	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	$(SOURCE_F)/$(RESPONSE_GENERATOR_F) \
+	$(SOURCE_F)/$(HTTP_ERRORS_F) \
 	$(SOURCE_F)/$(HTTP_METHODS_F) \
 	$(SOURCE_F)/$(UTILS_F) \
 

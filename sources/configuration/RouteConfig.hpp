@@ -14,6 +14,7 @@
 namespace webserver {
 class RouteConfig {
 private:
+    std::string _path;
     std::set<HttpMethodType> _allowedMethods;
     std::map<std::string, std::string> _redirections;  // NOTE: from:to
     FolderConfig* _folderConfigSection;
@@ -24,11 +25,16 @@ public:
     RouteConfig();
     RouteConfig& operator=(const RouteConfig& other);
     RouteConfig(const RouteConfig& other);
-
-    RouteConfig& setFolderConfig(const FolderConfig& tgt);
+    ~RouteConfig();
 
     bool operator==(const RouteConfig& other) const;
-    ~RouteConfig();
+    void addAllowedMethod(HttpMethodType method);
+    void addRedirection(const std::string& from, const std::string& toDir);
+    RouteConfig& setFolderConfig(const FolderConfig& folder);
+    void setUploadConfig(const UploadConfig& upload);
+    void setPath(std::string path);
+    void addCgiHandler(const CgiHandlerConfig& cfg, std::string extension);
+    std::string getPath() const;
 };
 }  // namespace webserver
 
