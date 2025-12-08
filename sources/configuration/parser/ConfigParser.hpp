@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "../AppConfig.hpp"
-#include "LocationTempData.hpp"
+#include "configuration/AppConfig.hpp"
+#include "configuration/parser/LocationTempData.hpp"
 
 namespace webserver {
 class ConfigParser {

@@ -1,4 +1,4 @@
-#include "HttpMethodType.hpp"
+#include "http_methods/HttpMethodType.hpp"
 
 #include <stdexcept>
 #include <string>

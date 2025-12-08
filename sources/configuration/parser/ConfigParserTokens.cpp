@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "ConfigParser.hpp"
+#include "configuration/parser/ConfigParser.hpp"
 
 using std::runtime_error;
 using std::string;

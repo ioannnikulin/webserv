@@ -4,9 +4,9 @@
 #include <map>
 #include <string>
 
-#include "CgiHandlerConfig.hpp"
-#include "RouteConfig.hpp"
-#include "UploadConfig.hpp"
+#include "configuration/CgiHandlerConfig.hpp"
+#include "configuration/RouteConfig.hpp"
+#include "configuration/UploadConfig.hpp"
 
 namespace webserver {
 class Endpoint {

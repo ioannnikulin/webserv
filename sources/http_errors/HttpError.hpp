@@ -33,8 +33,8 @@ public:
     static void setPage(
         int code,
         const std::string& pageFileLocation
-    );                                           // TODO 15: used in configuration parser
-    std::string getPageContent(int code) const;  // TODO 18: read file, return its content
+    );                                            // TODO 15: used in configuration parser
+    static std::string getPageContent(int code);  // TODO 18: read file, return its content
 
     static bool isAValidHttpStatusCode(int code);
 

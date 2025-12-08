@@ -4,8 +4,8 @@
 #include <set>
 #include <string>
 
-#include "Endpoint.hpp"
-#include "RouteConfig.hpp"
+#include "configuration/Endpoint.hpp"
+#include "configuration/RouteConfig.hpp"
 
 namespace webserver {
 class AppConfig {

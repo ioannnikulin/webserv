@@ -9,10 +9,10 @@
 #include <string>
 #include <vector>
 
-#include "ConfigParser.hpp"
-#include "HttpError.hpp"
-#include "RouteConfig.hpp"
 #include "WebServer.hpp"
+#include "configuration/RouteConfig.hpp"
+#include "configuration/parser/ConfigParser.hpp"
+#include "http_errors/HttpError.hpp"
 
 using std::endl;
 using std::ofstream;
@@ -297,6 +297,8 @@ public:
           << "    error_page 404 /errors/404.html;\n"
           << "    error_page 500 /errors/500.html;\n"
           << "\n"
+          << "    client_max_body_size 1M;\n"
+          << "\n"
           << "    location / {\n"
           << "        root /srv/secure;\n"
           << "        index index.html;\n"
@@ -321,6 +323,7 @@ public:
         webserver::Endpoint ep("0.0.0.0", 443);
         std::string serverName = "secure.example.com";
         ep.addServerName(serverName);
+        ep.setClientMaxBodySize(1 * webserver::ConfigParser::MIB);
         // Location /
         webserver::RouteConfig route1;
         route1.setPath("/");

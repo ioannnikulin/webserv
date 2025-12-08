@@ -3,10 +3,10 @@
 #include <cstddef>
 #include <string>
 
-#include "../http_methods/HttpMethodType.hpp"
-#include "CgiHandlerConfig.hpp"
-#include "FolderConfig.hpp"
-#include "UploadConfig.hpp"
+#include "configuration/CgiHandlerConfig.hpp"
+#include "configuration/FolderConfig.hpp"
+#include "configuration/UploadConfig.hpp"
+#include "http_methods/HttpMethodType.hpp"
 
 using std::string;
 namespace webserver {

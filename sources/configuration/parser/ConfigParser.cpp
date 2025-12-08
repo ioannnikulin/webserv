@@ -6,8 +6,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "../AppConfig.hpp"
-#include "../Endpoint.hpp"
+#include "configuration/AppConfig.hpp"
+#include "configuration/Endpoint.hpp"
 
 using std::runtime_error;
 using std::string;

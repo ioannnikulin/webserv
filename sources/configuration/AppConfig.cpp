@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 
-#include "Endpoint.hpp"
+#include "configuration/Endpoint.hpp"
 
 using std::pair;
 using std::set;
