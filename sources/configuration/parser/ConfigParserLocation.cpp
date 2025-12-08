@@ -4,13 +4,13 @@
 #include <stdexcept>
 #include <string>
 
-#include "../../http_methods/HttpMethodType.hpp"
-#include "../CgiHandlerConfig.hpp"
-#include "../Endpoint.hpp"
-#include "../FolderConfig.hpp"
-#include "../RouteConfig.hpp"
-#include "../UploadConfig.hpp"
-#include "ConfigParser.hpp"
+#include "configuration/CgiHandlerConfig.hpp"
+#include "configuration/Endpoint.hpp"
+#include "configuration/FolderConfig.hpp"
+#include "configuration/RouteConfig.hpp"
+#include "configuration/UploadConfig.hpp"
+#include "configuration/parser/ConfigParser.hpp"
+#include "http_methods/HttpMethodType.hpp"
 
 using std::runtime_error;
 using std::string;

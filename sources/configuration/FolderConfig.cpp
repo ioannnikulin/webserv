@@ -1,4 +1,4 @@
-#include "FolderConfig.hpp"
+#include "configuration/FolderConfig.hpp"
 
 #include <string>
 

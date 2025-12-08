@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "CgiHandlerConfig.hpp"
-#include "RouteConfig.hpp"
-#include "UploadConfig.hpp"
+#include "configuration/CgiHandlerConfig.hpp"
+#include "configuration/RouteConfig.hpp"
+#include "configuration/UploadConfig.hpp"
 
 using std::string;
 
@@ -158,6 +158,6 @@ void Endpoint::setUploadConfig(const UploadConfig& cfg) {
 }
 
 bool Endpoint::isAValidPort(int port) {
-    return (port > MIN_PORT && port <= MAX_PORT);
+    return (port >= MIN_PORT && port <= MAX_PORT);
 }
 }  // namespace webserver

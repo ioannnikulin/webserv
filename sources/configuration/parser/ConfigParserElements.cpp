@@ -6,11 +6,11 @@
 #include <string>
 #include <vector>
 
-#include "../../http_errors/HttpError.hpp"
-#include "../CgiHandlerConfig.hpp"
-#include "../Endpoint.hpp"
-#include "../UploadConfig.hpp"
-#include "ConfigParser.hpp"
+#include "configuration/CgiHandlerConfig.hpp"
+#include "configuration/Endpoint.hpp"
+#include "configuration/UploadConfig.hpp"
+#include "configuration/parser/ConfigParser.hpp"
+#include "http_errors/HttpError.hpp"
 
 using std::runtime_error;
 using std::string;
