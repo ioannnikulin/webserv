@@ -16,7 +16,7 @@ private:
     std::string _serverName;
     std::string _rootDirectory;
     size_t _maxRequestBodySizeBytes;
-    std::map<std::string, CgiHandlerConfig> _cgiHandlers;
+    std::map<std::string, CgiHandlerConfig*> _cgiHandlers;
     std::vector<RouteConfig> _routes;
     UploadConfig* _uploadConfig;
 
