@@ -1,6 +1,7 @@
 #include "Endpoint.hpp"
 
 #include <cstddef>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -41,6 +42,11 @@ Endpoint::Endpoint(const Endpoint& other)
     , _cgiHandlers(other._cgiHandlers)
     , _routes(other._routes)
     , _uploadConfig(NULL) {
+    for (std::map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
+         it != other._cgiHandlers.end();
+         ++it) {
+        _cgiHandlers[it->first] = new CgiHandlerConfig(*(it->second));
+    }
     if (other._uploadConfig != NULL) {
         _uploadConfig = new UploadConfig(*other._uploadConfig);
     }
@@ -55,6 +61,20 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
         _maxRequestBodySizeBytes = other._maxRequestBodySizeBytes;
         _cgiHandlers = other._cgiHandlers;
         _routes = other._routes;
+
+        for (std::map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
+             it != _cgiHandlers.end();
+             ++it) {
+            delete it->second;
+        }
+        _cgiHandlers.clear();
+
+        for (std::map<std::string, CgiHandlerConfig*>::const_iterator it =
+                 other._cgiHandlers.begin();
+             it != other._cgiHandlers.end();
+             ++it) {
+            _cgiHandlers[it->first] = new CgiHandlerConfig(*(it->second));
+        }
 
         delete _uploadConfig;
 
@@ -95,8 +115,29 @@ bool Endpoint::operator==(const Endpoint& other) const {
     if (_maxRequestBodySizeBytes != other._maxRequestBodySizeBytes) {
         return (false);
     }
-    if (_cgiHandlers != other._cgiHandlers) {
+
+    if (_cgiHandlers.size() != other._cgiHandlers.size()) {
         return (false);
+    }
+
+    std::map<std::string, CgiHandlerConfig*>::const_iterator it1 = _cgiHandlers.begin();
+    std::map<std::string, CgiHandlerConfig*>::const_iterator it2 = other._cgiHandlers.begin();
+
+    while (it1 != _cgiHandlers.end()) {
+        if (it1->first != it2->first) {
+            return (false);
+        }
+        if ((it1->second == NULL) != (it2->second == NULL)) {
+            return (false);
+        }
+        if (it1->second != NULL && it2->second != NULL) {
+            if (!(*(it1->second) == *(it2->second))) {
+                return (false);
+            }
+        }
+
+        ++it1;
+        ++it2;
     }
     if (_routes != other._routes) {
         return (false);
@@ -116,6 +157,12 @@ bool Endpoint::operator==(const Endpoint& other) const {
 
 Endpoint::~Endpoint() {
     delete _uploadConfig;
+    for (std::map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
+         it != _cgiHandlers.end();
+         ++it) {
+        delete it->second;
+    }
+    _cgiHandlers.clear();
 }
 
 Endpoint& Endpoint::setInterface(string interface) {
@@ -141,7 +188,7 @@ void Endpoint::setClientMaxBodySize(size_t size) {
 }
 
 void Endpoint::addCgiHandler(const CgiHandlerConfig& config, string extension) {
-    _cgiHandlers[extension] = config;
+    _cgiHandlers[extension] = new CgiHandlerConfig(config);
 }
 
 void Endpoint::addRoute(const RouteConfig& route) {
