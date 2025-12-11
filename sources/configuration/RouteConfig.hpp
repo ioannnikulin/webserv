@@ -25,8 +25,8 @@ public:
     RouteConfig();
     RouteConfig& operator=(const RouteConfig& other);
     RouteConfig(const RouteConfig& other);
+    ~RouteConfig();
 
-    RouteConfig& setFolderConfig(const FolderConfig& tgt);
     const FolderConfig* getFolderConfig() const;
 
     bool operator==(const RouteConfig& other) const;

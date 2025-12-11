@@ -11,6 +11,9 @@ using std::map;
 using std::string;
 
 namespace webserver {
+
+const int HttpStatus::MIN_CODE = 100;
+const int HttpStatus::MAX_CODE = 599;
 HttpStatus::HttpStatus(int code, const std::string& reasonPhrase)
     : _code(code)
     , _reasonPhrase(reasonPhrase)
@@ -49,14 +52,6 @@ std::string HttpStatus::getDefaultPageLocation(int code) {
     return oss.str();
 }
 
-void HttpStatus::setPage(int code, const std::string& pageFileLocation) {
-    const std::map<int, HttpStatus>::iterator itr = _statusMap.find(code);
-    if (itr == _statusMap.end()) {
-        return;
-    }
-    itr->second._pageFileLocation = pageFileLocation;
-}
-
 std::string HttpStatus::getPageFileLocation(int code) {
     const std::map<int, HttpStatus>::const_iterator itr = _statusMap.find(code);
     if (itr == _statusMap.end() || itr->second._pageFileLocation.empty()) {
@@ -74,19 +69,19 @@ void HttpStatus::addStatus(int code, const std::string& reasonPhrase) {
 }
 
 void HttpStatus::initStatusMap() {
-    addStatus(200, "OK");         // NOLINT(readability-magic-numbers)
-    addStatus(404, "Not Found");  // NOLINT(readability-magic-numbers)
-    /* NOTE: error codes to be added later
-    addStatus(201, "Created");
-    addStatus(204, "No Content");
-    addStatus(400, "Bad Request");
-    addStatus(403, "Forbidden");
-    addStatus(405, "Method Not Allowed");
-    addStatus(413, "Payload Too Large");
-    addStatus(500, "Internal Server Error");
-    addStatus(501, "Not Implemented");
-    addStatus(505, "HTTP Version Not Supported");
-	*/
+    addStatus(OK, "OK");
+    addStatus(CREATED, "Created");
+    addStatus(NO_CONTENT, "No Content");
+    addStatus(BAD_REQUEST, "Bad Request");
+    addStatus(FORBIDDEN, "Forbidden");
+    addStatus(NOT_FOUND, "Not Found");
+    addStatus(METHOD_NOT_ALLOWED, "Method Not Allowed");
+    addStatus(PAYLOAD_TOO_LARGE, "Payload Too Large");
+    addStatus(I_AM_A_TEAPOT, "I am a teapot");
+    addStatus(INTERNAL_SERVER_ERROR, "Internal Server Error");
+    addStatus(NOT_IMPLEMENTED, "Not Implemented");
+    addStatus(BAD_GATEWAY, "Bad Gateway");
+    addStatus(HTTP_VERSION_NOT_SUPPORTED, "HTTP Version Not Supported");
 }
 
 const std::string HttpStatus::UNKNOWN_STATUS = "SERVER RESPONSE UNDEFINED";
@@ -97,6 +92,23 @@ std::string HttpStatus::getReasonPhrase(const int code) {
         return UNKNOWN_STATUS;
     }
     return (itr->second._reasonPhrase);
+}
+
+void HttpStatus::setPage(int code, const std::string& pageFileLocation) {
+    const std::map<int, HttpStatus>::iterator errorIt = _statusMap.find(code);
+    if (errorIt == _statusMap.end()) {
+        throw std::runtime_error("Trying to set error page for unknown code");
+    }
+
+    if (pageFileLocation.empty()) {
+        throw std::runtime_error("Empty page file location for error_page");
+    }
+
+    errorIt->second._pageFileLocation = pageFileLocation;
+}
+
+bool HttpStatus::isAValidHttpStatusCode(int code) {
+    return (code >= MIN_CODE && code <= MAX_CODE);
 }
 
 }  // namespace webserver

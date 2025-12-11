@@ -12,7 +12,7 @@
 #include "WebServer.hpp"
 #include "configuration/RouteConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
-#include "http_errors/HttpError.hpp"
+#include "http_status/HttpStatus.hpp"
 
 using std::endl;
 using std::ofstream;
@@ -320,6 +320,7 @@ public:
         webserver::AppConfig expected;
         webserver::Endpoint ep("0.0.0.0", 443);
         std::string serverName = "secure.example.com";
+        
         ep.addServerName(serverName);
         ep.setClientMaxBodySize(1 * webserver::ConfigParser::MIB);
         // Location /
@@ -345,7 +346,7 @@ public:
 
         expected.addEndpoint(ep);
 
-        //printDebugInfo(expected, actual);
+        printDebugInfo(expected, actual);
         TS_ASSERT_EQUALS(expected, actual);
     }
 
