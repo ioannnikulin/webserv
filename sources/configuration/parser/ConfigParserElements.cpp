@@ -10,7 +10,7 @@
 #include "configuration/Endpoint.hpp"
 #include "configuration/UploadConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
-#include "http_errors/HttpError.hpp"
+#include "http_status/HttpStatus.hpp"
 
 using std::runtime_error;
 using std::string;
@@ -160,7 +160,7 @@ void ConfigParser::parseErrorPage() {
             break;
         }
         const int code = std::atoi(_tokens[_index].c_str());
-        if (!HttpError::isAValidHttpStatusCode(code)) {
+        if (!HttpStatus::isAValidHttpStatusCode(code)) {
             throw runtime_error("Invalid HTTP status code in error_page: " + _tokens[_index]);
         }
         codes.push_back(code);
@@ -184,7 +184,7 @@ void ConfigParser::parseErrorPage() {
     _index++;
 
     for (size_t i = 0; i < codes.size(); i++) {
-        HttpError::setPage(codes[i], pagePath);
+        HttpStatus::setPage(codes[i], pagePath);
     }
 }
 

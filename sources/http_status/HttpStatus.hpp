@@ -10,6 +10,9 @@ namespace webserver {
 
 class HttpStatus {
 private:
+    static const int MIN_CODE;
+    static const int MAX_CODE;
+
     // NOTE: subject suggests we have same pages for all endpoints, so static for now
     HttpStatus();
 
@@ -42,6 +45,8 @@ public:
 
     static std::string getReasonPhrase(int code);
     static std::string getDefaultPageLocation(int code);
+
+    static bool isAValidHttpStatusCode(int code);
 
     // NOTE: next three throw different exceptions if code not found or map empty
     static void setPage(

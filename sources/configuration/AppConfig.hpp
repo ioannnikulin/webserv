@@ -9,10 +9,15 @@
 
 namespace webserver {
 class AppConfig {
-private:
-    AppConfig& operator=(const AppConfig& other);
+    static const int DEFAULT_MAX_BODY_SIZE;
 
+private:
+    size_t _maxRequestBodySizeBytes;
     std::set<Endpoint> _endpoints;
+
+    std::map<std::string, RouteConfig> _routes;
+
+    AppConfig& operator=(const AppConfig& other);
 
 public:
     AppConfig();
