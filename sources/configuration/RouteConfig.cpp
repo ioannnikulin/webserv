@@ -11,7 +11,7 @@
 using std::string;
 namespace webserver {
 RouteConfig::RouteConfig()
-    : _folderConfigSection(NULL)
+    : _folderConfigSection(new FolderConfig("/media/psf/Home/Desktop/webserv", false, ""))
     , _uploadConfigSection(NULL) {
 }
 
@@ -54,6 +54,10 @@ RouteConfig& RouteConfig::setFolderConfig(const FolderConfig& folder) {
     delete _folderConfigSection;
     _folderConfigSection = new FolderConfig(folder);
     return (*this);
+}
+
+const FolderConfig* RouteConfig::getFolderConfig() const {
+    return (_folderConfigSection);
 }
 
 bool RouteConfig::operator==(const RouteConfig& other) const {

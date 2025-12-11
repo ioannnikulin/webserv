@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "configuration/AppConfig.hpp"
 #include "listener/Listener.hpp"
 #include "utils/colors.hpp"
 #include "utils/utils.hpp"
@@ -79,7 +80,7 @@ MasterListener::MasterListener(const set<pair<string, int> >& interfacePortPairs
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-void MasterListener::handleIncomingConnection(::pollfd& activeFd) {
+void MasterListener::handleIncomingConnection(::pollfd& activeFd, const AppConfig* appConfig) {
     Listener* listener = findListener(_listeners, activeFd.fd);
     // NOTE: is it a request on a LISTENING socket? so a request for a new connection?
     if (listener != NULL) {
@@ -92,7 +93,7 @@ void MasterListener::handleIncomingConnection(::pollfd& activeFd) {
     listener = findListener(_clientListeners, activeFd.fd);
     if (listener != NULL) {
         clog << "Existing client on socket fd " << activeFd.fd << " has sent data." << endl;
-        listener->receiveRequest(activeFd);
+        listener->receiveRequest(activeFd, appConfig);
         if (!listener->hasActiveClientSocket(activeFd.fd)) {
             // NOTE: client disconnected so we remove him from existing sessions list
             _clientListeners.erase(_clientListeners.find(activeFd.fd));
@@ -115,15 +116,21 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) const {
         return;
     }
     listener->sendResponse(activeFd.fd);
-    // NOTE: no keep-alive, so killing right away
+    // NOTE: no keep-alive in HTTP 1.0, so killing right away
     // NOTE: if he wants to go on, he'd have to go to listening socket again
     listener->killConnection(activeFd.fd);
-    clog << "✅ " << B_GREEN << "Sent response to socket fd " << activeFd.fd << endl << RESET;
-    output_formatting::printSeparator();
+    utils::printSeparator();
+    utils::setColor(B_GREEN);
+    std::cout << "📨 Sent response to socket fd " << activeFd.fd << endl;
+    utils::resetColor();
+    utils::printSeparator();
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
+void MasterListener::listenAndHandle(
+    volatile __sig_atomic_t& isRunning,
+    const AppConfig* appConfig
+) {
     populateFdsFromListeners(_pollFds, _listeners);
 
     while (isRunning == 1) {
@@ -138,7 +145,7 @@ void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
         for (size_t i = 0; i < _pollFds.size();) {
             if ((_pollFds[i].revents & POLLIN) > 0) {
                 // NOTE: something happened on that listening socket, let's dive in
-                handleIncomingConnection(_pollFds[i]);
+                handleIncomingConnection(_pollFds[i], appConfig);
                 i++;
                 continue;
             }

@@ -1,0 +1,33 @@
+#ifndef RESPONSE_HPP
+#define RESPONSE_HPP
+
+#include <map>
+#include <string>
+
+namespace webserver {
+
+class Response {
+private:
+    int _statusCode;
+    std::map<std::string, std::string> _headers;
+    std::string _body;
+
+public:
+    Response();
+    Response(int status, const std::string& body, const std::string& type);
+    Response(const Response& other);
+    Response& operator=(const Response& other);
+    ~Response();
+
+    std::string serialize() const;
+
+    int getStatus() const;
+    std::string getBody() const;
+    std::string getHeader(const std::string& key);
+
+    void setStatus(int status);
+    void setBody(std::string fileContent);
+    void setHeader(const std::string& key, const std::string& value);
+};
+}  // namespace webserver
+#endif
