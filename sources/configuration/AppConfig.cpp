@@ -1,18 +1,26 @@
 #include "AppConfig.hpp"
 
+#include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include "configuration/Endpoint.hpp"
 
+using std::map;
 using std::pair;
 using std::set;
 using std::string;
 
 namespace webserver {
 
-AppConfig::AppConfig() {
+const int AppConfig::DEFAULT_MAX_BODY_SIZE = 1048576;
+
+AppConfig::AppConfig()
+    : _maxRequestBodySizeBytes(DEFAULT_MAX_BODY_SIZE) {
+    _endpoints.insert(Endpoint());
+    _routes.insert(std::make_pair("/", RouteConfig()));
 }
 
 AppConfig::AppConfig(const AppConfig& other)
@@ -35,10 +43,19 @@ std::set<Endpoint> AppConfig::getEndpoints() const {
 set<pair<string, int> > AppConfig::getAllInterfacePortPairs(void) const {
     set<pair<string, int> > result;
 
-    for (set<Endpoint>::const_iterator it = _endpoints.begin(); it != _endpoints.end(); it++) {
-        result.insert(pair<string, int>(it->getInterface(), it->getPort()));
+    for (set<Endpoint>::const_iterator itr = _endpoints.begin(); itr != _endpoints.end(); itr++) {
+        result.insert(pair<string, int>(itr->getInterface(), itr->getPort()));
     }
     return (result);
+}
+
+const RouteConfig& AppConfig::getRoute(std::string route) const {
+    const map<string, RouteConfig>::const_iterator itr = _routes.find(route);
+
+    if (itr == _routes.end()) {
+        throw std::runtime_error("Route not found: " + route);
+    }
+    return itr->second;
 }
 
 AppConfig::~AppConfig() {

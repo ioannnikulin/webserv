@@ -11,8 +11,10 @@
 #include <map>
 #include <string>
 
-#include "request_handler/RequestHandler.hpp"
+#include "http_methods/HttpMethodType.hpp"
+#include "request_handler/GetHandler.hpp"
 
+using std::clog;
 using std::endl;
 using std::map;
 using std::ofstream;
@@ -30,7 +32,7 @@ private:
         do {
             pos = path.find('/', pos + 1);
             string sub = path.substr(0, pos);
-            if (!sub.empty()) {
+            if (!sub.empty() && pos != string::npos) {
                 if (mkdir(sub.c_str(), 0755) != 0 && errno != EEXIST)
                     return false;
             }
@@ -53,32 +55,55 @@ private:
     }
 
 public:
-    void test0() {
+    void testThatGetFetchesFilesAndGeneratesCorrectResponseHeaders() {
         _files["/folder/foo.txt"] = "footext";
-        _files["/folder/bar.txt"] = "bartext";
-        _files["/another/key.txt"] = "communication";
-        _files["/another/empty.txt"] = "";
+        _files["/folder/bar.xml"] = "bartext";
+        _files["/another/key.jpg"] = "communication";
+        _files["/another/empty.mp3"] = "";
         _emptyFolders.insert("/folder/empty");
         _emptyFolders.insert("/another/empty");
         _emptyFolders.insert("/third");
         createTestFiles();
 
-        TS_SKIP("request handling not implemented");
+        webserver::Response actual =
+            webserver::GetHandler::handleRequest("folder/foo.txt", _rootFolder);
+        TS_ASSERT_EQUALS(200, actual.getStatus());
+        TS_ASSERT_EQUALS("7", actual.getHeader("Content-Length"));
+        TS_ASSERT_EQUALS("footext", actual.getBody());
+        TS_ASSERT_EQUALS("text/plain", actual.getHeader("Content-Type"));
 
-        string actual = webserver::RequestHandler::handle("GET", "/folder/foo.txt");
-        TS_ASSERT_EQUALS("footext", actual);
-        actual = webserver::RequestHandler::handle("GET", "/folder/bar.txt");
-        TS_ASSERT_EQUALS("bartext", actual);
-        actual = webserver::RequestHandler::handle("GET", "/another/key.txt");
-        TS_ASSERT_EQUALS("communication", actual);
-        actual = webserver::RequestHandler::handle("GET", "/another/empty.txt");
-        TS_ASSERT_EQUALS("", actual);
-        TS_ASSERT_THROWS(
-            webserver::RequestHandler::handle("GET", "/folder/doesntexist.txt"),
-            std::runtime_error  // TODO 58: actually should declare some more specific exception
+        actual = webserver::GetHandler::handleRequest("folder/bar.xml", _rootFolder);
+        TS_ASSERT_EQUALS(200, actual.getStatus());
+        TS_ASSERT_EQUALS("7", actual.getHeader("Content-Length"));
+        TS_ASSERT_EQUALS("bartext", actual.getBody());
+        TS_ASSERT_EQUALS("application/xml", actual.getHeader("Content-Type"));
+
+        actual = webserver::GetHandler::handleRequest("another/key.jpg", _rootFolder);
+        TS_ASSERT_EQUALS(200, actual.getStatus());
+        TS_ASSERT_EQUALS("13", actual.getHeader("Content-Length"));
+        TS_ASSERT_EQUALS("communication", actual.getBody());
+        TS_ASSERT_EQUALS("image/jpeg", actual.getHeader("Content-Type"));
+
+        actual = webserver::GetHandler::handleRequest("another/empty.mp3", _rootFolder);
+        TS_ASSERT_EQUALS(200, actual.getStatus());
+        TS_ASSERT_EQUALS("0", actual.getHeader("Content-Length"));
+        TS_ASSERT_EQUALS("", actual.getBody());
+        TS_ASSERT_EQUALS("audio/mpeg", actual.getHeader("Content-Type"));
+
+        actual = webserver::GetHandler::handleRequest("another/doesnotexist.txt", _rootFolder);
+        TS_ASSERT_EQUALS(404, actual.getStatus());
+        TS_ASSERT_EQUALS("184", actual.getHeader("Content-Length"));
+        TS_ASSERT_EQUALS(
+            "<html>\n    <head>\n\t\t<style>\n\t\t\tbody {\n\t\t\t\tbackground-color: "
+            "pink;\n\t\t\t}\n\t\t</style>\n        <title>404</title>\n    </head>\n    <body>\n   "
+            "     <h1>404 Not Found.</h1>\n    </body>\n</html>\n",
+            actual.getBody()
         );
+        TS_ASSERT_EQUALS("text/html", actual.getHeader("Content-Type"));
+        // 4 asserts
     }
 
+    // deletes test files
     void tearDown() {
         string cmd = "rm -rf '" + _rootFolder + "'";
         system(cmd.c_str());

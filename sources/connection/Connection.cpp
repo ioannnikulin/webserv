@@ -8,12 +8,13 @@
 
 #include <cstring>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 
+#include "configuration/AppConfig.hpp"
 #include "request/Request.hpp"
 #include "request_handler/RequestHandler.hpp"
+#include "utils/colors.hpp"
 
 using std::clog;
 using std::endl;
@@ -99,21 +100,15 @@ void Connection::markResponseReadyForReturn() {
     _clientSocket->events |= POLLOUT;
 }
 
-void Connection::generateResponseHeaders() {
-    std::ostringstream oss;
-    oss << "HTTP/1.0 200 OK\r\nContent-Length: ";
-    oss << _responseBuffer.size() << "\r\n\r\n";
-    oss << _responseBuffer;
-    _responseBuffer = oss.str();
-}
-
-void Connection::handleRequest() {
+void Connection::handleRequest(const AppConfig* appConfig) {
     const string rawRequest = receiveRequestContent();
-    clog << "Received request on socket fd " << _clientSocketFd << ":\n---\n" << rawRequest;
-    clog << "---\n" << endl;
+    // NOTE: DL should it be cout or clog? clog is usually used for errors?
+    std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocketFd << RESET;
+    std::clog << ":\n---\n";
+    std::clog << rawRequest;
+    std::clog << "---\n" << endl;
     _request = new Request(rawRequest);
-    _responseBuffer = RequestHandler::handle(_request->getType(), _request->getLocation());
-    generateResponseHeaders();
+    _responseBuffer = RequestHandler::handleRequest(_request, appConfig);
     markResponseReadyForReturn();
     // NOTE: doesn't send directly, have to get approval from MasterListener's poll first
 }

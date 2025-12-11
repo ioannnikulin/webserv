@@ -8,8 +8,10 @@
 
 #include "configuration/AppConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
-#include "http_errors/HttpError.hpp"
+#include "http_status/HttpStatus.hpp"
 #include "listener/MasterListener.hpp"
+#include "utils/colors.hpp"
+#include "utils/utils.hpp"
 
 using std::cerr;
 using std::endl;
@@ -32,6 +34,9 @@ extern "C" void handleSigint(int signum) {
     (void)signum;
     WebServer& server = WebServer::getInstance("");
     server.stop();
+    utils::setColor(B_RED);
+    std::cout << "\n❌ Webserver stopped after Ctrl+C." << std::endl;
+    utils::resetColor();
 }
 
 void WebServer::handleSignals() {
@@ -47,7 +52,7 @@ AppConfig WebServer::getAppConfig() const {
 
 WebServer::WebServer(const std::string& configFilePath)
     : _isRunning(0) {
-    HttpError::initializeErrors();
+    HttpStatus::initStatusMap();
     ConfigParser parser;
     _appConfig = new AppConfig(parser.parse(configFilePath));
     handleSignals();
@@ -65,7 +70,7 @@ WebServer::~WebServer() {
 
 void WebServer::start() {
     _isRunning = 1;
-    _masterListener->listenAndHandle(_isRunning);
+    _masterListener->listenAndHandle(_isRunning, _appConfig);
 }
 
 void WebServer::stop() {
