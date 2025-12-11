@@ -1,6 +1,14 @@
-#include "UploadConfig.hpp"
+#include "configuration/UploadConfig.hpp"
 
+#include <string>
+
+using std::string;
 namespace webserver {
+UploadConfig::UploadConfig(bool uploadEnabled, const string& uploadRootFolder)
+    : _uploadEnabled(uploadEnabled)
+    , _uploadRootFolder(uploadRootFolder) {
+}
+
 UploadConfig::UploadConfig(const UploadConfig& other)
     : _uploadEnabled(other._uploadEnabled)
     , _uploadRootFolder(other._uploadRootFolder) {

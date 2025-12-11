@@ -7,6 +7,8 @@
 #include <string>
 
 #include "configuration/AppConfig.hpp"
+#include "configuration/parser/ConfigParser.hpp"
+#include "http_errors/HttpError.hpp"
 #include "listener/MasterListener.hpp"
 
 using std::cerr;
@@ -45,13 +47,14 @@ AppConfig WebServer::getAppConfig() const {
 
 WebServer::WebServer(const std::string& configFilePath)
     : _isRunning(0) {
-    (void)configFilePath;
-    _appConfig = new AppConfig();
+    HttpError::initializeErrors();
+    ConfigParser parser;
+    _appConfig = new AppConfig(parser.parse(configFilePath));
     handleSignals();
     _masterListener = new MasterListener(_appConfig->getAllInterfacePortPairs());
 }
 
-WebServer& WebServer::getInstance(const std::string& configFilePath) {
+WebServer& WebServer::getInstance(const string& configFilePath) {
     static WebServer instance = WebServer(configFilePath);
     return (instance);
 }

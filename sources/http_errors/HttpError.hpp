@@ -7,32 +7,36 @@
 namespace webserver {
 class HttpError {
 private:
-    HttpError();
-    HttpError(const HttpError& other);
-    HttpError& operator=(const HttpError& other);
+    int _code;
     HttpError(int code, const std::string& message);
     HttpError(int code, const std::string& message, const std::string& page);
 
     const std::string _message;
     const std::string
-        _defaultPageFileLocation;  // NOTE: hardcoded in initializeErrors; no accessors
-    const std::string
-        _pageFileLocation;  // NOTE: actually used; take from config, else pickup default
+        _defaultPageFileLocation;   // NOTE: hardcoded in initializeErrors; no accessors
+    std::string _pageFileLocation;  // NOTE: actually used; take from config, else pickup default
 
     // NOTE: subject suggests we have same pages for all endpoints, so static for now
     static std::map<int, HttpError> _errors;
+    static const int MIN_CODE;
+    static const int MAX_CODE;
 
 public:
-    void initializeErrors();  // NOTE: fills map; called once at server start
+    static void initializeErrors();  // NOTE: fills map; called once at server start
+    HttpError();
+    HttpError(const HttpError& other);
+    HttpError& operator=(const HttpError& other);
     ~HttpError();
 
     // NOTE: next three throw different exceptions if code not found or map empty
     std::string getMessage(int code) const;
-    void setPage(
+    static void setPage(
         int code,
         const std::string& pageFileLocation
-    );                                           // TODO 15: used in configuration parser
-    std::string getPageContent(int code) const;  // TODO 18: read file, return its content
+    );                                            // TODO 15: used in configuration parser
+    static std::string getPageContent(int code);  // TODO 18: read file, return its content
+
+    static bool isAValidHttpStatusCode(int code);
 
     enum CODE {
         OK = 200,
