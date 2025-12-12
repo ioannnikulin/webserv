@@ -5,42 +5,42 @@
 
 namespace webserver {
 
-const std::string MimeTypes::DEFAULT_MIME = "application/octet-stream";
+const std::string MimeTypes::DEFAULT_MIME_TYPE = "application/octet-stream";
 
-std::map<std::string, std::string> MimeTypes::initMimeMap() {
-    std::map<std::string, std::string> mimeMap;
+std::map<std::string, std::string> MimeTypes::initMimeTypeMap() {
+    std::map<std::string, std::string> map;
 
-    mimeMap["html"] = "text/html";
-    mimeMap["css"] = "text/css";
-    mimeMap["js"] = "application/javascript";
-    mimeMap["png"] = "image/png";
-    mimeMap["jpg"] = "image/jpeg";
-    mimeMap["jpeg"] = "image/jpeg";
-    mimeMap["gif"] = "image/gif";
-    mimeMap["mp3"] = "audio/mpeg";
-    mimeMap["mp4"] = "video/mp4";
-    mimeMap["pdf"] = "application/pdf";
-    mimeMap["txt"] = "text/plain";
-    mimeMap["ico"] = "image/x-icon";
-    mimeMap["json"] = "application/json";
-    mimeMap["wasm"] = "application/wasm";
-    mimeMap["svg"] = "image/svg+xml";
-    mimeMap["webp"] = "image/webp";
-    mimeMap["woff"] = "font/woff";
-    mimeMap["woff2"] = "font/woff2";
-    mimeMap["csv"] = "text/csv";
-    mimeMap["xml"] = "application/xml";
+    map["html"] = "text/html";
+    map["css"] = "text/css";
+    map["js"] = "application/javascript";
+    map["png"] = "image/png";
+    map["jpg"] = "image/jpeg";
+    map["jpeg"] = "image/jpeg";
+    map["gif"] = "image/gif";
+    map["mp3"] = "audio/mpeg";
+    map["mp4"] = "video/mp4";
+    map["pdf"] = "application/pdf";
+    map["txt"] = "text/plain";
+    map["ico"] = "image/x-icon";
+    map["json"] = "application/json";
+    map["wasm"] = "application/wasm";
+    map["svg"] = "image/svg+xml";
+    map["webp"] = "image/webp";
+    map["woff"] = "font/woff";
+    map["woff2"] = "font/woff2";
+    map["csv"] = "text/csv";
+    map["xml"] = "application/xml";
 
-    return (mimeMap);
+    return (map);
 }
 
-std::map<std::string, std::string> MimeTypes::mimeMap = MimeTypes::initMimeMap();
+std::map<std::string, std::string> MimeTypes::_mimeTypeMap = MimeTypes::initMimeTypeMap();
 
 std::string MimeTypes::getMimeType(const std::string& extension) {
-    const std::map<std::string, std::string>::const_iterator itr = mimeMap.find(extension);
-    if (itr != mimeMap.end()) {
+    const std::map<std::string, std::string>::const_iterator itr = _mimeTypeMap.find(extension);
+    if (itr != _mimeTypeMap.end()) {
         return (itr->second);
     }
-    return (DEFAULT_MIME);
+    return (DEFAULT_MIME_TYPE);
 }
 }  // namespace webserver

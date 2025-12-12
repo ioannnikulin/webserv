@@ -24,6 +24,7 @@ private:
         _defaultPageFileLocation;  // NOTE: default page for a specific error. hardcoded in initializeErrors; no accessors
     std::string
         _pageFileLocation;  // NOTE: custom page that can be set via config. actually used; take from config, else pickup default
+    static void addStatus(int code, const std::string& reasonPhrase);
 
 public:
     HttpStatus(int code, const std::string& reasonPhrase);
@@ -33,19 +34,11 @@ public:
     ~HttpStatus();
 
     static void initStatusMap();
-    /* NOTE:
-    fills map; called once at server start
-    static void initStatusHelper(
-    int code,
-    const std::string& reasonPhrase
-    */
-    // NOTE: helper function for initStatusMap()
-    static void addStatus(int code, const std::string& reasonPhrase);
+
     static const std::string UNKNOWN_STATUS;
 
     static std::string getReasonPhrase(int code);
     static std::string getDefaultPageLocation(int code);
-
     static bool isAValidHttpStatusCode(int code);
 
     // NOTE: next three throw different exceptions if code not found or map empty
@@ -53,9 +46,8 @@ public:
         int code,
         const std::string& pageFileLocation
     );  // TODO 15: used in configuration parser
-    static std::string getPageFileLocation(int code);
 
-    // NOTE: removed / fully replace by serveFile. static ResponseData getPageContent(int code);
+    static std::string getPageFileLocation(int code);
 
     enum CODE {
         OK = 200,

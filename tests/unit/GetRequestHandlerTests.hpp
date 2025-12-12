@@ -100,7 +100,6 @@ public:
             actual.getBody()
         );
         TS_ASSERT_EQUALS("text/html", actual.getHeader("Content-Type"));
-        // 4 asserts
     }
 
     // deletes test files

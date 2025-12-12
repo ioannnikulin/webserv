@@ -7,4 +7,5 @@ test
 cxxtest
 *.tst
 .fuse_hidden*
+testRoot
 .DS_Store

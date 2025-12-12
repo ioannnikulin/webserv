@@ -7,14 +7,14 @@
 namespace webserver {
 class MimeTypes {
 private:
-    static std::map<std::string, std::string> mimeMap;
-    static const std::string DEFAULT_MIME;
+    static std::map<std::string, std::string> _mimeTypeMap;
+    static const std::string DEFAULT_MIME_TYPE;
 
     MimeTypes();
     MimeTypes(const MimeTypes& other);
     MimeTypes& operator=(const MimeTypes& other);
 
-    static std::map<std::string, std::string> initMimeMap();
+    static std::map<std::string, std::string> initMimeTypeMap();
 
 public:
     ~MimeTypes();

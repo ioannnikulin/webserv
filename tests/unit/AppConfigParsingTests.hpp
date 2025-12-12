@@ -91,9 +91,11 @@ private:
     }
 
 public:
-    void testConfig0() {
-        TS_SKIP("configuration parsing not implemented");
+    void setUp() {
+        webserver::HttpStatus::initStatusMap();
+    }
 
+    void testConfig0_BasicServer() {
         const string fname = "config0.tst";
         _configFilenames.insert(fname);
         ofstream f(fname.c_str());
@@ -320,7 +322,7 @@ public:
         webserver::AppConfig expected;
         webserver::Endpoint ep("0.0.0.0", 443);
         std::string serverName = "secure.example.com";
-        
+
         ep.addServerName(serverName);
         ep.setClientMaxBodySize(1 * webserver::ConfigParser::MIB);
         // Location /
