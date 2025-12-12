@@ -13,8 +13,6 @@ std::string toString(std::size_t value);
 
 std::string getTimestamp();
 
-void waitForInput();
-void clearTerminal();
 }  // namespace utils
 
 #endif

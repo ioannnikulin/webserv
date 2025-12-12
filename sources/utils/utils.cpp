@@ -54,15 +54,3 @@ std::string getTimestamp() {
 }
 
 }  // namespace utils
-
-/* NOTE: 
-unused functions
-void waitForInput() {
-	std::string input;
-	std::cout << "Press ENTER to continue...";
-	std::getline(std::cin, input);
-	}
-void clearTerminal() {
-	std::cout << "\033[2J\033[H";
-	}
-*/

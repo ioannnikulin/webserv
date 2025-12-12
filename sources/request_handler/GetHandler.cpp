@@ -30,12 +30,7 @@ Response GetHandler::serveStatusPage(int statusCode) {
 }
 
 Response GetHandler::handleRequest(string requestTarget, string rootLocation) {
-    // NOTE: DL we do nothing with request body for now, later we will parse it
-
-    // NOTE: STEP 1. Resolve the file path (using server config). Manual path input for now.
-
-    // NOTE: STEP 2. Check if it exists & is readable (via stat())
-    // NOTE: has to be turned into a general ValidateFile function
+    // NOTE: STEP 1. Resolve the file path (using server config).
 
     std::cout << "requestTarget: " << requestTarget << std::endl;
     // NOTE: can be added to Logger. std::clog << "Trying to access: " << finalLocation << std::endl;
@@ -44,6 +39,9 @@ Response GetHandler::handleRequest(string requestTarget, string rootLocation) {
     }
     const string finalLocation = rootLocation + "/" + requestTarget;
     std::cout << "finalLocation: " << finalLocation << std::endl;
+
+    // NOTE: STEP 2. Check if it exists & is readable
+    // NOTE: has to be turned into a general ValidateFile function
     if (file_system::fileExists(finalLocation.c_str())) {
         return (serveFile(finalLocation, HttpStatus::OK));
     }

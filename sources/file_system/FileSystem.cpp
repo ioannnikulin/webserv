@@ -9,7 +9,7 @@
 
 #include "http_status/HttpStatus.hpp"
 
-#define DEF_BUFFER_SIZE 4096
+#define DEFAULT_BUFFER_SIZE 4096
 
 namespace file_system {
 
@@ -42,7 +42,7 @@ std::string readFile(const char* path) {
         throw std::runtime_error("Failed to open file");
     }
 
-    char buffer[DEF_BUFFER_SIZE];
+    char buffer[DEFAULT_BUFFER_SIZE];
     std::string result;
 
     ssize_t bytes;

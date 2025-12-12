@@ -8,6 +8,7 @@
 #include "request_handler/GetHandler.hpp"
 #include "response/Response.hpp"
 #include "utils/utils.hpp"
+#include "configuration/Endpoint.hpp" // add this include
 
 using std::string;
 
@@ -16,19 +17,12 @@ using std::string;
 namespace webserver {
 
 string RequestHandler::handleRequest(Request* request, const AppConfig* appConfig) {
-    (void)request;
-    // NOTE: currently only works with GET requests
 
-    /* NOTE: 1. Request parsing will happen here
-    ParsedRequest req = RequestParser::parse(location);
-	*/
-
-    // NOTE: 2. Select method handler; currently only works with GET requests
+    // NOTE: 1. Select method handler; currently only works with GET requests
     const Response response = GetHandler::handleRequest(
         request->getRequestTarget(),
         appConfig->getRoute("/").getFolderConfig()->getRootPath()
     );
-    // NOTE: for the future: request->getLocation());
 
     // NOTE: 3. Pass to response serializer
     const std::string resp = response.serialize();
@@ -40,4 +34,32 @@ string RequestHandler::handleRequest(Request* request, const AppConfig* appConfi
     return (resp);
 }
 
+
+
+string RequestHandler::handleRequest(Request* request, const AppConfig* appConfig) {
+    const std::set<Endpoint> endpoints = appConfig->getEndpoints();
+    if (endpoints.empty()) {
+        throw std::runtime_error("No endpoints configured");
+    }
+
+    const Endpoint& ep = *endpoints.begin();          // TEMP: single server
+    const RouteConfig& route = ep.getRoute("/");      // or later: matchRoute(target)
+
+    const FolderConfig* folder = route.getFolderConfig();
+    if (!folder) {
+        throw std::runtime_error("Route '/' has no folder config");
+    }
+
+    const Response response = GetHandler::handleRequest(
+        request->getRequestTarget(),
+        folder->getRootPath()
+    );
+
+    return response.serialize();
+}
+
+
+
 }  // namespace webserver
+
+
