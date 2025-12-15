@@ -18,13 +18,15 @@ namespace webserver {
 
 string RequestHandler::handleRequest(Request* request, const AppConfig* appConfig) {
 
+    (void)appConfig;
+
     // NOTE: 1. Select method handler; currently only works with GET requests
     const Response response = GetHandler::handleRequest(
         request->getRequestTarget(),
-        appConfig->getRoute("/").getFolderConfig()->getRootPath()
+        // appConfig->getRoute("/").getFolderConfig()->getRootPath()
+        "/media/psf/Home/Desktop/webserv"
     );
-
-    // NOTE: 3. Pass to response serializer
+    // NOTE: 2. After the response is formed, pass to response serializer
     const std::string resp = response.serialize();
     if (PRINT_RESPONSES) {
         utils::printSeparator();
@@ -33,32 +35,6 @@ string RequestHandler::handleRequest(Request* request, const AppConfig* appConfi
     }
     return (resp);
 }
-
-
-
-string RequestHandler::handleRequest(Request* request, const AppConfig* appConfig) {
-    const std::set<Endpoint> endpoints = appConfig->getEndpoints();
-    if (endpoints.empty()) {
-        throw std::runtime_error("No endpoints configured");
-    }
-
-    const Endpoint& ep = *endpoints.begin();          // TEMP: single server
-    const RouteConfig& route = ep.getRoute("/");      // or later: matchRoute(target)
-
-    const FolderConfig* folder = route.getFolderConfig();
-    if (!folder) {
-        throw std::runtime_error("Route '/' has no folder config");
-    }
-
-    const Response response = GetHandler::handleRequest(
-        request->getRequestTarget(),
-        folder->getRootPath()
-    );
-
-    return response.serialize();
-}
-
-
 
 }  // namespace webserver
 
