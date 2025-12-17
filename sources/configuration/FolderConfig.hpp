@@ -20,7 +20,10 @@ public:
         bool enableListing,
         const std::string& indexPageFileLocation
     );
+
     std::string getRootPath() const;
+    std::string getIndexPageFileLocation() const;
+
     bool operator==(const FolderConfig& other) const;
     ~FolderConfig();
 };

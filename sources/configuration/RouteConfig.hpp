@@ -30,12 +30,12 @@ public:
     const FolderConfig* getFolderConfig() const;
 
     bool operator==(const RouteConfig& other) const;
-    void addAllowedMethod(HttpMethodType method);
-    void addRedirection(const std::string& from, const std::string& toDir);
+    RouteConfig& addAllowedMethod(HttpMethodType method);
+    RouteConfig& addRedirection(const std::string& from, const std::string& toDir);
     RouteConfig& setFolderConfig(const FolderConfig& folder);
-    void setUploadConfig(const UploadConfig& upload);
-    void setPath(std::string path);
-    void addCgiHandler(const CgiHandlerConfig& cfg, std::string extension);
+    RouteConfig& setUploadConfig(const UploadConfig& upload);
+    RouteConfig& setPath(std::string path);
+    RouteConfig& addCgiHandler(const CgiHandlerConfig& cfg, std::string extension);
     std::string getPath() const;
 };
 }  // namespace webserver
