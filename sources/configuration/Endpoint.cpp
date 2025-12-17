@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -10,6 +11,7 @@
 #include "configuration/UploadConfig.hpp"
 
 using std::string;
+using std::vector;
 
 namespace webserver {
 const string Endpoint::DEFAULT_ROOT;
@@ -170,8 +172,9 @@ Endpoint& Endpoint::setInterface(string interface) {
     return (*this);
 }
 
-void Endpoint::setPort(const int& port) {
+Endpoint& Endpoint::setPort(const int& port) {
     _port = port;
+    return (*this);
 }
 
 Endpoint& Endpoint::addServerName(const string& name) {
@@ -179,29 +182,43 @@ Endpoint& Endpoint::addServerName(const string& name) {
     return (*this);
 }
 
-void Endpoint::setRoot(const string& path) {
+Endpoint& Endpoint::setRoot(const string& path) {
     _rootDirectory = path;
+    return (*this);
 }
 
-void Endpoint::setClientMaxBodySize(size_t size) {
+Endpoint& Endpoint::setClientMaxBodySize(size_t size) {
     _maxRequestBodySizeBytes = size;
+    return (*this);
 }
 
-void Endpoint::addCgiHandler(const CgiHandlerConfig& config, string extension) {
+Endpoint& Endpoint::addCgiHandler(const CgiHandlerConfig& config, string extension) {
     _cgiHandlers[extension] = new CgiHandlerConfig(config);
+    return (*this);
 }
 
-void Endpoint::addRoute(const RouteConfig& route) {
+Endpoint& Endpoint::addRoute(const RouteConfig& route) {
     _routes.push_back(route);
+    return (*this);
 }
 
-std::vector<RouteConfig> Endpoint::getRoutes() const {
+vector<RouteConfig> Endpoint::getRoutes() const {
     return (_routes);
 }
 
-void Endpoint::setUploadConfig(const UploadConfig& cfg) {
+RouteConfig Endpoint::getRoute(std::string route) const {
+    for (size_t i = 0; i < _routes.size(); ++i) {
+        if (_routes[i].getPath() == route) {
+            return (_routes[i]);
+        }
+    }
+    throw std::runtime_error("Route not found");
+}
+
+Endpoint& Endpoint::setUploadConfig(const UploadConfig& cfg) {
     delete _uploadConfig;
     _uploadConfig = new UploadConfig(cfg);
+    return (*this);
 }
 
 bool Endpoint::isAValidPort(int port) {

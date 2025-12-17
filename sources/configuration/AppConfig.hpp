@@ -11,7 +11,6 @@ namespace webserver {
 class AppConfig {
 private:
     std::set<Endpoint> _endpoints;
-    std::map<std::string, RouteConfig> _routes;
 
     AppConfig& operator=(const AppConfig& other);
 
@@ -23,8 +22,6 @@ public:
     std::set<std::pair<std::string, int> > getAllInterfacePortPairs(void) const;
     AppConfig& addEndpoint(const Endpoint& tgt);
     std::set<Endpoint> getEndpoints() const;
-
-    const RouteConfig& getRoute(std::string route) const;
 
     bool operator==(const AppConfig& other) const;
 };
