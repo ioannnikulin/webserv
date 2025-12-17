@@ -1,13 +1,18 @@
 #include "GetHandler.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
+#include "configuration/AppConfig.hpp"
 #include "file_system/FileSystem.hpp"
 #include "file_system/MimeTypes.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "response/Response.hpp"
 
+using std::clog;
+using std::endl;
+using std::ostringstream;
 using std::string;
 
 namespace webserver {
@@ -29,21 +34,25 @@ Response GetHandler::serveStatusPage(int statusCode) {
     return serveFile(path, statusCode);
 }
 
-Response GetHandler::handleRequest(string requestTarget, string rootLocation) {
-    // NOTE: STEP 1. Resolve the file path (using server config).
-
-    std::cout << "requestTarget: " << requestTarget << std::endl;
-    // NOTE: can be added to Logger. std::clog << "Trying to access: " << finalLocation << std::endl;
-    if (requestTarget == "/") {
-        requestTarget = "/tests/e2e/1/index.html";
+Response GetHandler::handleRequest(string location, const AppConfig* appConfig) {
+    ostringstream oss;
+    oss << appConfig->getEndpoints().begin()->getRoute("/").getFolderConfig()->getRootPath() << "/";
+    if (location == "/") {
+        oss << appConfig->getEndpoints()
+                   .begin()
+                   ->getRoute("/")
+                   .getFolderConfig()
+                   ->getIndexPageFileLocation();
+    } else {
+        if (!location.empty() && location[0] == '/') {
+            location = location.substr(1);
+        }
+        oss << location;
     }
-    const string finalLocation = rootLocation + "/" + requestTarget;
-    std::cout << "finalLocation: " << finalLocation << std::endl;
-
-    // NOTE: STEP 2. Check if it exists & is readable
-    // NOTE: has to be turned into a general ValidateFile function
-    if (file_system::fileExists(finalLocation.c_str())) {
-        return (serveFile(finalLocation, HttpStatus::OK));
+    location = oss.str();
+    clog << "GET " << location << endl;
+    if (file_system::fileExists(location.c_str())) {
+        return (serveFile(location, HttpStatus::OK));
     }
     return (serveStatusPage(HttpStatus::NOT_FOUND));
 }

@@ -19,7 +19,7 @@ private:
     ~GetHandler();
 
 public:
-    static Response handleRequest(std::string requestTarget, std::string rootLocation);
+    static Response handleRequest(std::string location, const AppConfig* appConfig);
     static Response serveFile(const std::string& path, int statusCode);
     static Response serveStatusPage(int statusCode);
 };

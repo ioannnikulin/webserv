@@ -103,25 +103,30 @@ RouteConfig::~RouteConfig() {
     delete _uploadConfigSection;
 }
 
-void RouteConfig::setPath(string path) {
+RouteConfig& RouteConfig::setPath(string path) {
     _path = path;
+    return (*this);
 }
 
-void RouteConfig::setUploadConfig(const UploadConfig& upload) {
+RouteConfig& RouteConfig::setUploadConfig(const UploadConfig& upload) {
     delete _uploadConfigSection;
     _uploadConfigSection = new UploadConfig(upload);
+    return (*this);
 }
 
-void RouteConfig::addAllowedMethod(HttpMethodType method) {
+RouteConfig& RouteConfig::addAllowedMethod(HttpMethodType method) {
     _allowedMethods.insert(method);
+    return (*this);
 }
 
-void RouteConfig::addRedirection(const string& from, const string& toDir) {
+RouteConfig& RouteConfig::addRedirection(const string& from, const string& toDir) {
     _redirections[from] = toDir;
+    return (*this);
 }
 
-void RouteConfig::addCgiHandler(const CgiHandlerConfig& cfg, string extension) {
+RouteConfig& RouteConfig::addCgiHandler(const CgiHandlerConfig& cfg, string extension) {
     _cgiHandlers[extension] = cfg;
+    return (*this);
 }
 
 string RouteConfig::getPath() const {

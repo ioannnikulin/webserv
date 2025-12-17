@@ -1,14 +1,11 @@
 #include "AppConfig.hpp"
 
-#include <map>
 #include <set>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include "configuration/Endpoint.hpp"
 
-using std::map;
 using std::pair;
 using std::set;
 using std::string;
@@ -42,15 +39,6 @@ set<pair<string, int> > AppConfig::getAllInterfacePortPairs(void) const {
         result.insert(pair<string, int>(itr->getInterface(), itr->getPort()));
     }
     return (result);
-}
-
-const RouteConfig& AppConfig::getRoute(std::string route) const {
-    const map<string, RouteConfig>::const_iterator itr = _routes.find(route);
-
-    if (itr == _routes.end()) {
-        throw std::runtime_error("Route not found: " + route);
-    }
-    return itr->second;
 }
 
 AppConfig::~AppConfig() {

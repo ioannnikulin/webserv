@@ -39,15 +39,16 @@ public:
     ~Endpoint();
 
     Endpoint& setInterface(std::string interface);
-    void setPort(const int& port);
-    void setRoot(const std::string& path);
-    void setClientMaxBodySize(size_t size);
+    Endpoint& setPort(const int& port);
+    Endpoint& setRoot(const std::string& path);
+    Endpoint& setClientMaxBodySize(size_t size);
     Endpoint& addServerName(const std::string& name);
-    void addCgiHandler(const CgiHandlerConfig& config, std::string extension);
-    void addRoute(const RouteConfig& route);
-    void setUploadConfig(const UploadConfig& cfg);
+    Endpoint& addCgiHandler(const CgiHandlerConfig& config, std::string extension);
+    Endpoint& addRoute(const RouteConfig& route);
+    Endpoint& setUploadConfig(const UploadConfig& cfg);
     std::string getInterface() const;
     int getPort() const;
+    RouteConfig getRoute(std::string route) const;
     std::vector<RouteConfig> getRoutes() const;
 
     static bool isAValidPort(int port);

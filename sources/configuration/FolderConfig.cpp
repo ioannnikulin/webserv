@@ -2,11 +2,13 @@
 
 #include <string>
 
+using std::string;
+
 namespace webserver {
 FolderConfig::FolderConfig(
-    const std::string& rootPath,
+    const string& rootPath,
     bool enableListing,
-    const std::string& indexPageFileLocation
+    const string& indexPageFileLocation
 )
     : _rootPath(rootPath)
     , _enableListing(enableListing)
@@ -19,8 +21,12 @@ FolderConfig::FolderConfig(const FolderConfig& other)
     , _indexPageFileLocation(other._indexPageFileLocation) {
 }
 
-std::string FolderConfig::getRootPath() const {
+string FolderConfig::getRootPath() const {
     return (_rootPath);
+}
+
+string FolderConfig::getIndexPageFileLocation() const {
+    return (_indexPageFileLocation);
 }
 
 bool FolderConfig::operator==(const FolderConfig& other) const {

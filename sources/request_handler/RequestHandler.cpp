@@ -8,7 +8,6 @@
 #include "request_handler/GetHandler.hpp"
 #include "response/Response.hpp"
 #include "utils/utils.hpp"
-#include "configuration/Endpoint.hpp" // add this include
 
 using std::string;
 
@@ -17,15 +16,10 @@ using std::string;
 namespace webserver {
 
 string RequestHandler::handleRequest(Request* request, const AppConfig* appConfig) {
-
     (void)appConfig;
 
     // NOTE: 1. Select method handler; currently only works with GET requests
-    const Response response = GetHandler::handleRequest(
-        request->getRequestTarget(),
-        // appConfig->getRoute("/").getFolderConfig()->getRootPath()
-        "/media/psf/Home/Desktop/webserv"
-    );
+    const Response response = GetHandler::handleRequest(request->getRequestTarget(), appConfig);
     // NOTE: 2. After the response is formed, pass to response serializer
     const std::string resp = response.serialize();
     if (PRINT_RESPONSES) {
@@ -37,5 +31,3 @@ string RequestHandler::handleRequest(Request* request, const AppConfig* appConfi
 }
 
 }  // namespace webserver
-
-
