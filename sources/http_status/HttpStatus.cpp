@@ -12,6 +12,8 @@ namespace webserver {
 
 const int HttpStatus::MIN_CODE = 100;
 const int HttpStatus::MAX_CODE = 599;
+const std::string HttpStatus::DEFAULT_STATUS_PAGE_DIR = "status_pages";
+
 HttpStatus::HttpStatus(int code, const std::string& reasonPhrase)
     : _code(code)
     , _reasonPhrase(reasonPhrase)
@@ -46,7 +48,7 @@ HttpStatus::~HttpStatus() {
 
 std::string HttpStatus::getDefaultPageLocation(int code) {
     std::ostringstream oss;
-    oss << "./errors/" << code << ".html";
+    oss << "./" << DEFAULT_STATUS_PAGE_DIR << "/" << code << ".html";
     return oss.str();
 }
 
@@ -93,16 +95,16 @@ std::string HttpStatus::getReasonPhrase(const int code) {
 }
 
 void HttpStatus::setPage(int code, const std::string& pageFileLocation) {
-    const std::map<int, HttpStatus>::iterator errorIt = _statusMap.find(code);
-    if (errorIt == _statusMap.end()) {
-        throw std::runtime_error("Trying to set error page for unknown code");
+    const std::map<int, HttpStatus>::iterator itr = _statusMap.find(code);
+    if (itr == _statusMap.end()) {
+        throw std::runtime_error("Trying to set a status page for an unknown status code");
     }
 
     if (pageFileLocation.empty()) {
-        throw std::runtime_error("Empty page file location for error_page");
+        throw std::runtime_error("Provided status page location is empty");
     }
 
-    errorIt->second._pageFileLocation = pageFileLocation;
+    itr->second._pageFileLocation = pageFileLocation;
 }
 
 bool HttpStatus::isAValidHttpStatusCode(int code) {

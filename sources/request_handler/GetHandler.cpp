@@ -18,15 +18,15 @@ using std::string;
 namespace webserver {
 
 Response GetHandler::serveFile(const std::string& path, int statusCode) {
-    Response res;
+    Response resp;
 
-    res.setStatus(statusCode);
-    res.setBody(file_system::readFile(path.c_str()));
+    resp.setStatus(statusCode);
+    resp.setBody(file_system::readFile(path.c_str()));
 
     const std::string ext = file_system::getFileExtension(path);
-    res.setHeader("Content-Type", webserver::MimeTypes::getMimeType(ext));
+    resp.setHeader("Content-Type", webserver::MimeTypes::getMimeType(ext));
 
-    return res;
+    return (resp);
 }
 
 Response GetHandler::serveStatusPage(int statusCode) {

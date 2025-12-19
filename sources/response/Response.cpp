@@ -45,7 +45,7 @@ Response& Response::operator=(const Response& other) {
         _body = other._body;
         _headers = other._headers;
     }
-    return *this;
+    return (*this);
 }
 
 Response::~Response() {
@@ -55,12 +55,16 @@ int Response::getStatus() const {
     return (_statusCode);
 }
 
-std::string Response::getBody() const {
+const std::string& Response::getBody() const {
     return (_body);
 }
 
-std::string Response::getHeader(const std::string& key) {
-    return (_headers[key]);
+std::string Response::getHeader(const std::string& key) const {
+    const std::map<std::string, std::string>::const_iterator itr = _headers.find(key);
+    if (itr != _headers.end()) {
+        return (itr->second);
+    }
+    return ("");
 }
 
 void Response::setStatus(int status) {
