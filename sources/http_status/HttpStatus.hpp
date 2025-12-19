@@ -4,14 +4,13 @@
 #include <map>
 #include <string>
 
-#include "http_methods/HttpMethodType.hpp"
-
 namespace webserver {
 
 class HttpStatus {
 private:
     static const int MIN_CODE;
     static const int MAX_CODE;
+    static const std::string DEFAULT_STATUS_PAGE_DIR;
 
     HttpStatus();
 
@@ -20,10 +19,10 @@ private:
 
     int _code;
     std::string _reasonPhrase;
-    std::string
-        _defaultPageFileLocation;  // NOTE: default page for a specific error. hardcoded in initializeErrors; no accessors
-    std::string
-        _pageFileLocation;  // NOTE: custom page that can be set via config. actually used; take from config, else pickup default
+    // NOTE: default page. hardcoded in initStatusMap(); no accessors
+    std::string _defaultPageFileLocation;
+    // NOTE: custom page that can be set via config. actually used; taken from config if present, else set to default
+    std::string _pageFileLocation;
     static void addStatus(int code, const std::string& reasonPhrase);
 
 public:
@@ -42,10 +41,7 @@ public:
     static std::string getDefaultPageLocation(int code);
     static bool isAValidHttpStatusCode(int code);
 
-    static void setPage(
-        int code,
-        const std::string& pageFileLocation
-    );  // TODO 15: used in configuration parser
+    static void setPage(int code, const std::string& pageFileLocation);
 
     static std::string getPageFileLocation(int code);
 

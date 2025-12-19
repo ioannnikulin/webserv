@@ -1,7 +1,6 @@
 #ifndef HTTPMETHODTYPE_HPP
 #define HTTPMETHODTYPE_HPP
 
-#include <map>
 #include <string>
 
 namespace webserver {

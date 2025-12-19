@@ -15,15 +15,14 @@ private:
 public:
     Response();
     Response(int status, const std::string& body, const std::string& type);
-    Response(const Response& other);
     Response& operator=(const Response& other);
+    Response(const Response& other);
     ~Response();
-
     std::string serialize() const;
 
     int getStatus() const;
-    std::string getBody() const;
-    std::string getHeader(const std::string& key);
+    const std::string& getBody() const;
+    std::string getHeader(const std::string& key) const;
 
     void setStatus(int status);
     void setBody(std::string fileContent);

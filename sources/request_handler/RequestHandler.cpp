@@ -16,8 +16,6 @@ using std::string;
 namespace webserver {
 
 string RequestHandler::handleRequest(Request* request, const AppConfig* appConfig) {
-    (void)appConfig;
-
     // NOTE: 1. Select method handler; currently only works with GET requests
     const Response response = GetHandler::handleRequest(request->getRequestTarget(), appConfig);
     // NOTE: 2. After the response is formed, pass to response serializer
