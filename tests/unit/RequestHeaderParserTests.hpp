@@ -27,7 +27,7 @@ public:
         Request expected;
         expected.setType("GET")
             .setRequestTarget("/")
-            .setProtocol("HTTP/1.1")
+            .setVersion("HTTP/1.1")
             // spaces after colon skipped, spaces after the value are preserved
             .addHeader("Host", "127.10.0.1:8888 ")
             .addHeader("User-Agent", "curl/8.5.0")

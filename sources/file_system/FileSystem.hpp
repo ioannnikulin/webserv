@@ -1,3 +1,6 @@
+#ifndef FILESYSTEM_HPP
+#define FILESYSTEM_HPP
+
 #include <string>
 
 namespace file_system {
@@ -7,3 +10,5 @@ long getFileSize(const char* path);
 std::string readFile(const char* path);
 std::string getFileExtension(const std::string& path);
 }  // namespace file_system
+
+#endif

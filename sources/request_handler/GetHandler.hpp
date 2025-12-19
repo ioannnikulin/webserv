@@ -1,3 +1,6 @@
+#ifndef GETHANDLER_HPP
+#define GETHANDLER_HPP
+
 #include <string>
 
 #include "http_methods/HttpMethodType.hpp"
@@ -24,3 +27,4 @@ public:
     static Response serveStatusPage(int statusCode);
 };
 }  // namespace webserver
+#endif

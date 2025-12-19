@@ -12,26 +12,26 @@ using std::string;
 
 namespace webserver {
 const string Request::DEFAULT_TYPE = "INVALID";
-const string Request::DEFAULT_LOCATION = "/dev/null";
-const string Request::DEFAULT_PROTOCOL = "0.0";
+const string Request::DEFAULT_REQUEST_TARGET = "/dev/null";
+const string Request::DEFAULT_HTTP_VERSION = "0.0";
 
 Request::Request()
     : _method(DEFAULT_TYPE)
-    , _requestTarget(DEFAULT_LOCATION)
-    , _protocol(DEFAULT_PROTOCOL) {
+    , _requestTarget(DEFAULT_REQUEST_TARGET)
+    , _version(DEFAULT_HTTP_VERSION) {
 }
 
 Request::Request(const Request& other)
     : _method(other._method)
     , _requestTarget(other._requestTarget)
-    , _protocol(other._protocol)
+    , _version(other._version)
     , _headers(other._headers)
     , _body(other._body) {
 }
 
 const std::string Request::MALFORMED_FIRST_LINE =
     "expected to get a first line, containing a valid request type in capitals, "
-    "a location starting with '/', a protocol version starting with "
+    "a requestTarget starting with '/', a protocol version starting with "
     "'HTTP/', and \r\n in the end";
 
 Request::Request(string raw) {
@@ -53,7 +53,7 @@ Request::Request(string raw) {
 
 void Request::parseFirstLine(std::string firstLine) {
     istringstream iss(firstLine);
-    if (!(iss >> _method >> _requestTarget >> _protocol)) {
+    if (!(iss >> _method >> _requestTarget >> _version)) {
         throw BadRequest(MALFORMED_FIRST_LINE);
     }
 }
@@ -88,7 +88,7 @@ void Request::parseBody(std::string body) {
 bool Request::operator==(const Request& other) const {
     return (
         _method == other._method && _requestTarget == other._requestTarget &&
-        _protocol == other._protocol && _headers == other._headers && _body == other._body
+        _version == other._version && _headers == other._headers && _body == other._body
     );
 }
 
@@ -101,8 +101,8 @@ string Request::getType() const {
     return (_method);
 }
 
-Request& Request::setRequestTarget(string location) {
-    _requestTarget = location;
+Request& Request::setRequestTarget(string requestTarget) {
+    _requestTarget = requestTarget;
     return (*this);
 }
 
@@ -110,8 +110,12 @@ string Request::getRequestTarget() const {
     return (_requestTarget);
 }
 
-Request& Request::setProtocol(string protocol) {
-    _protocol = protocol;
+std::string Request::getVersion() const {
+    return (_version);
+}
+
+Request& Request::setVersion(string version) {
+    _version = version;
     return (*this);
 }
 

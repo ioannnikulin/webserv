@@ -13,13 +13,13 @@ private:
     static const int MIN_CODE;
     static const int MAX_CODE;
 
-    // NOTE: subject suggests we have same pages for all endpoints, so static for now
     HttpStatus();
 
+    // NOTE: subject suggests we have same pages for all endpoints, so static for now
     static std::map<int, HttpStatus> _statusMap;
 
     int _code;
-    std::string _reasonPhrase;  // NOTE: the reason phrase for the error
+    std::string _reasonPhrase;
     std::string
         _defaultPageFileLocation;  // NOTE: default page for a specific error. hardcoded in initializeErrors; no accessors
     std::string
@@ -37,11 +37,11 @@ public:
 
     static const std::string UNKNOWN_STATUS;
 
+    // NOTE: these three methods should throw different exceptions if status code not found or status code map is empty
     static std::string getReasonPhrase(int code);
     static std::string getDefaultPageLocation(int code);
     static bool isAValidHttpStatusCode(int code);
 
-    // NOTE: next three throw different exceptions if code not found or map empty
     static void setPage(
         int code,
         const std::string& pageFileLocation

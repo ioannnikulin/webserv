@@ -58,6 +58,12 @@ std::string readFile(const char* path) {
 }
 
 std::string getFileExtension(const std::string& path) {
+    /* NOTE: 
+    If we find a dot (.) that is located before the last slash, it is part of a directory name, not the file extension
+    Example: dir/.config/file
+    Without the slash check we will end up with ".config/file" being our file extension, which is wrong.
+    With the slash check, we get "" as the extension, which is correct.
+    */
     const std::string::size_type slash = path.find_last_of("/\\");
     const std::string::size_type dot = path.find_last_of('.');
 
