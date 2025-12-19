@@ -1,3 +1,6 @@
+#ifndef CONNECTION_HPP
+#define CONNECTION_HPP
+
 #include <poll.h>
 
 #include <map>
@@ -34,3 +37,5 @@ public:
     void sendResponse();
 };
 }  // namespace webserver
+
+#endif

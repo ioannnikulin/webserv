@@ -5,8 +5,6 @@
 #include <string>
 #include <utility>
 
-#include "request_handler/GetHandler.hpp"
-
 using std::map;
 using std::string;
 

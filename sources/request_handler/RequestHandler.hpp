@@ -1,5 +1,5 @@
-#ifndef REQUEST_HANDLER_HPP
-#define REQUEST_HANDLER_HPP
+#ifndef REQUESTHANDLER_HPP
+#define REQUESTHANDLER_HPP
 
 #include <string>
 

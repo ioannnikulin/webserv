@@ -7,19 +7,18 @@
 namespace webserver {
 class Request {
 private:
-    std::string _method;  // NOTE: GET, POST, DELETE
-    std::string
-        _requestTarget;  // NOTE: request-target is the official name as per RFC 7230; _location is a bad name
-                         // NOTE: request-target is the full form as in /foo/bar?x=1
-    std::string _path;   // NOTE: only /foo/bar
-    std::string _query;  // NOTE: only x=1
-    std::string _protocol;
+    std::string _method;         // NOTE: GET, POST, DELETE
+    std::string _requestTarget;  // NOTE: request-target is the official name as per RFC 7230
+                                 // NOTE: request-target is the full form as in /foo/bar?x=1
+    std::string _path;           // NOTE: only /foo/bar
+    std::string _query;          // NOTE: only x=1
+    std::string _version;
     std::map<std::string, std::string> _headers;
     std::string _body;
 
     static const std::string DEFAULT_TYPE;
-    static const std::string DEFAULT_LOCATION;
-    static const std::string DEFAULT_PROTOCOL;
+    static const std::string DEFAULT_REQUEST_TARGET;
+    static const std::string DEFAULT_HTTP_VERSION;
 
     static const std::string MALFORMED_FIRST_LINE;
 
@@ -39,7 +38,7 @@ public:
     Request& setType(std::string type);
 
     std::string getRequestTarget() const;
-    Request& setRequestTarget(std::string location);
+    Request& setRequestTarget(std::string requestTarget);
 
     std::string getPath() const;
 
@@ -47,8 +46,8 @@ public:
 
     std::string getBody() const;
 
-    std::string getProtocol() const;
-    Request& setProtocol(std::string protocol);
+    std::string getVersion() const;
+    Request& setVersion(std::string version);
 
     Request& addHeader(std::string key, std::string value);
     std::string getHeader(std::string key) const;
