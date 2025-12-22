@@ -95,12 +95,6 @@ UTILS_SRCS = $(addprefix $(SOURCE_F)/$(UTILS_F)/,$(UTILS_SRC_NAMES))
 
 # ------------------------------------------------------------
 
-FILE_SYSTEM_F = file_system
-FILE_SYSTEM_SRC_NAMES = FileSystem.cpp MimeTypes.cpp
-FILE_SYSTEM_SRCS = $(addprefix $(SOURCE_F)/$(FILE_SYSTEM_F)/,$(FILE_SYSTEM_SRC_NAMES))
-
-# ------------------------------------------------------------
-
 WEBSERV_SRC_NAMES = WebServer.cpp
 WEBSERV_SRCS = $(addprefix $(SOURCE_F)/,$(WEBSERV_SRC_NAMES))
 

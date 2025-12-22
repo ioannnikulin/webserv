@@ -4,19 +4,20 @@
 #include <map>
 #include <string>
 
+#include "http_methods/HttpMethodType.hpp"
+
 namespace webserver {
 class Request {
 private:
-    std::string _method;         // NOTE: GET, POST, DELETE
-    std::string _requestTarget;  // NOTE: request-target is the official name as per RFC 7230
-                                 // NOTE: request-target is the full form as in /foo/bar?x=1
+    HttpMethodType _method;
+    std::string _requestTarget;  // NOTE: full form as in /foo/bar?x=1
     std::string _path;           // NOTE: only /foo/bar
     std::string _query;          // NOTE: only x=1
-    std::string _version;
+    std::string _protocolVersion;
     std::map<std::string, std::string> _headers;
     std::string _body;
 
-    static const std::string DEFAULT_TYPE;
+    static const HttpMethodType DEFAULT_TYPE;
     static const std::string DEFAULT_REQUEST_TARGET;
     static const std::string DEFAULT_HTTP_VERSION;
 
@@ -34,8 +35,8 @@ public:
     bool operator==(const Request& other) const;
     ~Request();
 
-    std::string getType() const;
-    Request& setType(std::string type);
+    HttpMethodType getType() const;
+    Request& setType(HttpMethodType type);
 
     std::string getRequestTarget() const;
     Request& setRequestTarget(std::string requestTarget);

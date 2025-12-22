@@ -41,7 +41,6 @@ Endpoint::Endpoint(const Endpoint& other)
     , _serverName(other._serverName)
     , _rootDirectory(other._rootDirectory)
     , _maxRequestBodySizeBytes(other._maxRequestBodySizeBytes)
-    , _cgiHandlers()
     , _routes(other._routes)
     , _uploadConfig(NULL) {
     for (std::map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
@@ -59,11 +58,11 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
         return (*this);
     }
 
-    // cleanup
+    // NOTE: cleanup
 
     for (std::map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
-        it != _cgiHandlers.end();
-        ++it) {
+         it != _cgiHandlers.end();
+         ++it) {
         delete it->second;
     }
     _cgiHandlers.clear();
@@ -71,18 +70,16 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
     delete _uploadConfig;
     _uploadConfig = NULL;
 
-    // copying
+    // NOTE: copying
 
-    for (std::map<std::string, CgiHandlerConfig*>::const_iterator it =
-            other._cgiHandlers.begin();
-        it != other._cgiHandlers.end();
-        ++it) {
+    for (std::map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
+         it != other._cgiHandlers.end();
+         ++it) {
         _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
     }
 
-    _uploadConfig =
-        (other._uploadConfig != NULL) ? new UploadConfig(*other._uploadConfig) : NULL;
-    
+    _uploadConfig = (other._uploadConfig != NULL) ? new UploadConfig(*other._uploadConfig) : NULL;
+
     _interface = other._interface;
     _port = other._port;
     _serverName = other._serverName;

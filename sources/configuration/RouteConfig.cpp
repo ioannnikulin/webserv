@@ -11,7 +11,7 @@
 using std::string;
 namespace webserver {
 RouteConfig::RouteConfig()
-    : _folderConfigSection(new FolderConfig("/home/dmlasko/Desktop/webserv", false, ""))
+    : _folderConfigSection(NULL)
     , _uploadConfigSection(NULL) {
 }
 

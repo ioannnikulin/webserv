@@ -14,6 +14,7 @@
 #include <string>
 
 #include "configuration/AppConfig.hpp"
+#include "http_methods/HttpMethodType.hpp"
 #include "http_status/HttpException.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "http_status/ShuttingDown.hpp"
@@ -87,7 +88,6 @@ string Connection::receiveRequestContent() {
     return (string(buffer));
 }
 
-// NOTE: DL changed all ssize_t to size_t
 void Connection::sendResponse() {
     size_t totalSent = 0;
     const size_t toSend = _responseBuffer.size();
@@ -117,11 +117,11 @@ void Connection::handleRequest(const AppConfig* appConfig, bool shouldDeny) {
                   << rawRequest << "---\n"
                   << endl;
         if (shouldDeny) {
-            throw ShuttingDown(
-            );  // NOTE: another request said to shut down, we delegated handling here to reuse the response
+            throw ShuttingDown();
+            // NOTE: another request said to shut down, we delegated handling here to reuse the response
         }
         _request = new Request(rawRequest);
-        if (_request->getType() == "SHUTDOWN") {  // TODO 81: after #15 use enum here
+        if (_request->getType() == SHUTDOWN) {
             throw ShuttingDown();
         }
         _responseBuffer = RequestHandler::handleRequest(_request, appConfig);
