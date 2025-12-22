@@ -17,6 +17,9 @@ HttpMethodType stringToMethod(const string& str) {
     if (str == "DELETE") {
         return (DELETE);
     }
+    if (str == "SHUTDOWN") {
+        return (SHUTDOWN);
+    }
 
     throw runtime_error("Invalid HTTP method in limit_except: " + str);
 }

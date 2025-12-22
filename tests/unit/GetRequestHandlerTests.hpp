@@ -66,7 +66,8 @@ public:
         _emptyFolders.insert("/another/empty");
         _emptyFolders.insert("/third");
         createTestFiles();
-        webserver::Endpoint ep = webserver::Endpoint().addRoute(webserver::RouteConfig().setPath("/").setFolderConfig(
+        webserver::Endpoint ep =
+            webserver::Endpoint().addRoute(webserver::RouteConfig().setPath("/").setFolderConfig(
                 webserver::FolderConfig(_rootFolder, false, "index.html")
             ));
         webserver::AppConfig config = webserver::AppConfig().addEndpoint(ep);

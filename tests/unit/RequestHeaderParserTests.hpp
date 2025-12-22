@@ -21,7 +21,7 @@ public:
             "GET / HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
             "Accept: */*\r\n\r\n";
         Request expected;
-        expected.setType("GET")
+        expected.setType(webserver::GET)
             .setRequestTarget("/")
             .setVersion("HTTP/1.1")
             // spaces after colon skipped, spaces after the value are preserved

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 
+#include "http_methods/HttpMethodType.hpp"
 #include "http_status/BadRequest.hpp"
 
 using std::istringstream;
@@ -11,20 +12,20 @@ using std::map;
 using std::string;
 
 namespace webserver {
-const string Request::DEFAULT_TYPE = "INVALID";
+const HttpMethodType Request::DEFAULT_TYPE = GET;
 const string Request::DEFAULT_REQUEST_TARGET = "/dev/null";
 const string Request::DEFAULT_HTTP_VERSION = "0.0";
 
 Request::Request()
     : _method(DEFAULT_TYPE)
     , _requestTarget(DEFAULT_REQUEST_TARGET)
-    , _version(DEFAULT_HTTP_VERSION) {
+    , _protocolVersion(DEFAULT_HTTP_VERSION) {
 }
 
 Request::Request(const Request& other)
     : _method(other._method)
     , _requestTarget(other._requestTarget)
-    , _version(other._version)
+    , _protocolVersion(other._protocolVersion)
     , _headers(other._headers)
     , _body(other._body) {
 }
@@ -53,7 +54,13 @@ Request::Request(string raw) {
 
 void Request::parseFirstLine(std::string firstLine) {
     istringstream iss(firstLine);
-    if (!(iss >> _method >> _requestTarget >> _version)) {
+    string method;
+    if (!(iss >> method >> _requestTarget >> _protocolVersion)) {
+        throw BadRequest(MALFORMED_FIRST_LINE);
+    }
+    try {
+        _method = stringToMethod(method);
+    } catch (...) {
         throw BadRequest(MALFORMED_FIRST_LINE);
     }
 }
@@ -88,16 +95,17 @@ void Request::parseBody(std::string body) {
 bool Request::operator==(const Request& other) const {
     return (
         _method == other._method && _requestTarget == other._requestTarget &&
-        _version == other._version && _headers == other._headers && _body == other._body
+        _protocolVersion == other._protocolVersion && _headers == other._headers &&
+        _body == other._body
     );
 }
 
-Request& Request::setType(string type) {
+Request& Request::setType(HttpMethodType type) {
     _method = type;
     return (*this);
 }
 
-string Request::getType() const {
+HttpMethodType Request::getType() const {
     return (_method);
 }
 
@@ -111,11 +119,11 @@ string Request::getRequestTarget() const {
 }
 
 std::string Request::getVersion() const {
-    return (_version);
+    return (_protocolVersion);
 }
 
 Request& Request::setVersion(string version) {
-    _version = version;
+    _protocolVersion = version;
     return (*this);
 }
 
