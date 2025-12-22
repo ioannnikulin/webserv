@@ -11,9 +11,9 @@ private:
     int _statusCode;
     std::map<std::string, std::string> _headers;
     std::string _body;
+    Response();
 
 public:
-    Response();
     Response(int status, const std::string& body, const std::string& type);
     Response& operator=(const Response& other);
     Response(const Response& other);

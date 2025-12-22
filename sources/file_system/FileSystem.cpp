@@ -15,10 +15,15 @@ namespace file_system {
 
 bool fileExists(const char* path) {
     struct stat fileStat;
-    if (stat(path, &fileStat) == 0) {
-        return (true);
+    if (stat(path, &fileStat) != 0) {
+        return (false);
     }
-    return (false);
+    const int fdr = open(path, O_RDONLY);
+    if (fdr < 0) {
+        return (false);
+    }
+    close(fdr);
+    return (true);
 }
 
 int validateFile(const char* path) {

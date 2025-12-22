@@ -1,0 +1,9 @@
+server {
+    listen 172.18.0.10:8080;
+    server_name localhost;
+
+    location / {
+        root /var/www/html;
+        index folder/index.html;
+    }
+}

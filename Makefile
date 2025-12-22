@@ -202,8 +202,11 @@ test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
 
 # ------------------------------------------------------------
 
+DROP_RESULTS = $(shell find tests -type f -name "*result*.json")
+DROP_DOCKER_WEBSERV = $(shell find tests -type f -name "webserv")
+
 clean:
-	rm -rf $(OBJ_F) $(TEST_FNAME) $(CXXTEST_F)
+	rm -rf $(OBJ_F) $(TEST_EXECUTABLE) $(CXXTEST_F) $(DROP_RESULTS) $(DROP_DOCKER_WEBSERV)
 
 fclean: clean
 	rm -f $(MAIN_FNAME)
@@ -271,14 +274,70 @@ makefile-check:
 
 # ------------------------------------------------------------
 
+# manual docker testing
+
+DEMO_DOCKER=tests/e2e/0
+
+COMPOSE=@docker compose -f $(DEMO_DOCKER)/docker-compose.yml
+
+docker-up: docker-build-images
+	$(COMPOSE) up --build -d
+
+docker-start:
+	$(COMPOSE) start
+
+docker-stop:
+	$(COMPOSE) stop
+
+docker-down:
+	$(COMPOSE) down
+
+docker-shell:
+	@docker exec -it webserv bash
+
+docker-tester:
+	$(COMPOSE) up --build tester0
+
+docker-cleanup:
+	@docker system prune -a --volumes -f
+
+# ------------------------------------------------------------
+
+# automated e2e docker tests
+
+E2E_SCENARIOS = $(shell find tests/e2e -maxdepth 1 -mindepth 1 -type d \
+	! -name "results" ! -name "tester" ! -name "webserv" ! -name "1" )
+
+RESULT_DIRS = $(E2E_SCENARIOS:tests/e2e/%=tests/e2e/results/%)
+
+RESULTS = $(shell find tests/e2e/results -type f)
+
+docker-build-images: $(MAIN_FNAME)
+	@cp $(MAIN_FNAME) tests/e2e/webserv/tools/$(MAIN_FNAME)
+	@cp -R status_pages tests/e2e/webserv/tools
+	@docker build -t tester:latest tests/e2e/tester
+	@docker build -t webserv:latest tests/e2e/webserv
+
+clean-e2e-results:
+	@rm -rf tests/e2e/results/*
+
+e2e: clean-e2e-results docker-build-images $(RESULT_DIRS)
+	@python3 tests/e2e/collect_results.py $(RESULTS)
+
+tests/e2e/results/%:
+	@mkdir -p $@
+	@sh tests/e2e/run_one_test.sh $*
+
+# ------------------------------------------------------------
+
 # run in 42 campus
 # skips some checks whose prerequisites cannot be installed
 # since we don't have root access
-test-campus: external-calls format-check header-check source-check makefile-check test
+test-campus: external-calls format-check header-check source-check makefile-check test e2e
 	@echo "CLEAN"
 
 # runs in GitHub Actions environment, use on personal machine too
-test-github: external-calls format-check cppcheck tidy-check header-check source-check makefile-check test
+test-github: external-calls format-check cppcheck tidy-check header-check source-check makefile-check test e2e
 	@echo "CLEAN"
 
 # ------------------------------------------------------------
@@ -295,5 +354,7 @@ test-github: external-calls format-check cppcheck tidy-check header-check source
 	tidy-check tidy-fix \
 	header-check source-check makefile-check \
 	install-cxxtest generate-cxxtest-tests build-cxx-tests \
+	docker-up docker-down docker-start docker-stop docker-shell docker-tester docker-cleanup \
+	e2e docker-build-images clean-e2e-results \
 	test-campus test-github \
 
