@@ -34,7 +34,7 @@ public:
     * so that the Connection can change the events if needed
     */
     /* NOTE: maybe can simplify this?
-    * MasterListener's queue cannot consist of references,receiveRequest
+    * MasterListener's queue cannot consist of references,
     * so the pollfd object will be created upstairs in MasterListener,
     * not in Connection alongside the file descriptor.
     * an obvious choice would be to create the file descriptor in MasterListener.
