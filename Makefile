@@ -60,7 +60,7 @@ REQUEST_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_F)/,$(REQUEST_SRC_NAMES))
 # ------------------------------------------------------------
 
 REQUEST_HANDLER_F = request_handler
-REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp
+REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp ShutdownHandler.cpp
 REQUEST_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_HANDLER_F)/,$(REQUEST_HANDLER_SRC_NAMES))
 
 # ------------------------------------------------------------
@@ -70,6 +70,7 @@ RESPONSE_SRC_NAMES = Response.cpp
 RESPONSE_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_F)/,$(RESPONSE_SRC_NAMES))
 
 # ------------------------------------------------------------
+
 FILE_SYSTEM_F = file_system
 FILE_SYSTEM_SRC_NAMES = FileSystem.cpp MimeTypes.cpp
 FILE_SYSTEM_SRCS = $(addprefix $(SOURCE_F)/$(FILE_SYSTEM_F)/,$(FILE_SYSTEM_SRC_NAMES))
@@ -94,6 +95,12 @@ UTILS_SRCS = $(addprefix $(SOURCE_F)/$(UTILS_F)/,$(UTILS_SRC_NAMES))
 
 # ------------------------------------------------------------
 
+FILE_SYSTEM_F = file_system
+FILE_SYSTEM_SRC_NAMES = FileSystem.cpp MimeTypes.cpp
+FILE_SYSTEM_SRCS = $(addprefix $(SOURCE_F)/$(FILE_SYSTEM_F)/,$(FILE_SYSTEM_SRC_NAMES))
+
+# ------------------------------------------------------------
+
 WEBSERV_SRC_NAMES = WebServer.cpp
 WEBSERV_SRCS = $(addprefix $(SOURCE_F)/,$(WEBSERV_SRC_NAMES))
 
@@ -102,7 +109,6 @@ WEBSERV_SRCS = $(addprefix $(SOURCE_F)/,$(WEBSERV_SRC_NAMES))
 MAIN_NONENDPOINT_SRCS = \
 	$(APP_CONFIG_SRCS) \
 	$(APP_CONFIG_PARSER_SRCS) \
-	$(HTTP_METHODS_SRCS) \
 	$(LISTENER_SRCS) \
 	$(CONNECTION_SRCS) \
 	$(REQUEST_SRCS) \
@@ -195,7 +201,7 @@ generate-cxxtest-tests: | $(OBJ_F)
 	@PYTHONWARNINGS="ignore::SyntaxWarning" python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp $(TEST_HEADERS)
 
 build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
-	@$(CPP) -std=c++98 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
+	@$(CPP) -std=c++98 -g -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
 
 test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
 	@./$(TEST_EXECUTABLE)

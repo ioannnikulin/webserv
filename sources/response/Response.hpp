@@ -18,6 +18,7 @@ public:
     Response& operator=(const Response& other);
     Response(const Response& other);
     ~Response();
+
     std::string serialize() const;
 
     int getStatus() const;

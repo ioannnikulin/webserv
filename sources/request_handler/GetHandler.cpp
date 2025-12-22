@@ -54,4 +54,5 @@ Response GetHandler::handleRequest(string location, const AppConfig* appConfig) 
     }
     return (serveStatusPage(HttpStatus::NOT_FOUND));
 }
+
 }  // namespace webserver

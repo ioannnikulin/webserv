@@ -30,7 +30,7 @@ private:
     std::map<int, Listener*> _listeners;        // NOTE: listening socket fd: Listener
     std::map<int, Listener*> _clientListeners;  // NOTE: client socket fd: Listener
 
-    void handleIncomingConnection(::pollfd& activeFd, const AppConfig* appConfig);
+    void handleIncomingConnection(::pollfd& activeFd, const AppConfig* appConfig, bool shouldDeny);
     void handleOutgoingConnection(const ::pollfd& activeFd) const;
 
 public:

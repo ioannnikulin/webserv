@@ -34,7 +34,7 @@ public:
     * so that the Connection can change the events if needed
     */
     /* NOTE: maybe can simplify this?
-    * MasterListener's queue cannot consist of references,
+    * MasterListener's queue cannot consist of references,receiveRequest
     * so the pollfd object will be created upstairs in MasterListener,
     * not in Connection alongside the file descriptor.
     * an obvious choice would be to create the file descriptor in MasterListener.
@@ -46,7 +46,8 @@ public:
     bool hasActiveClientSocket(int clientSocketFd) const;
 
     int acceptConnection();  // NOTE: returns client socket fd
-    void receiveRequest(const ::pollfd& clientSocketFd, const AppConfig* appConfig);
+    void
+    receiveRequest(const ::pollfd& clientSocketFd, const AppConfig* appConfig, bool shouldDeny);
     void sendResponse(int clientSocketFd);
     void killConnection(int clientSocketFd);
 

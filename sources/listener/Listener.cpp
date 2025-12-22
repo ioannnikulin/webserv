@@ -143,8 +143,12 @@ int Listener::acceptConnection() {
     return (nconn->getClientSocketFd());
 }
 
-void Listener::receiveRequest(const ::pollfd& clientSocketFd, const AppConfig* appConfig) {
-    _clientConnections.at(clientSocketFd.fd)->handleRequest(appConfig);
+void Listener::receiveRequest(
+    const ::pollfd& clientSocketFd,
+    const AppConfig* appConfig,
+    bool shouldDeny
+) {
+    _clientConnections.at(clientSocketFd.fd)->handleRequest(appConfig, shouldDeny);
 }
 
 void Listener::sendResponse(int clientSocketFd) {
