@@ -1,6 +1,6 @@
 #pragma once
-#ifndef ROUTE_HPP
-#define ROUTE_HPP
+#ifndef ROUTECONFIG_HPP
+#define ROUTECONFIG_HPP
 
 #include <map>
 #include <set>

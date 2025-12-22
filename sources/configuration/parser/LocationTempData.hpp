@@ -1,5 +1,5 @@
-#ifndef LOCATION_TEMP_DATA_HPP
-#define LOCATION_TEMP_DATA_HPP
+#ifndef LOCATIONTEMPDATA_HPP
+#define LOCATIONTEMPDATA_HPP
 
 #include <string>
 

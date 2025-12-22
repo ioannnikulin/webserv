@@ -1,5 +1,5 @@
-#ifndef CGIHANDLER_HPP
-#define CGIHANDLER_HPP
+#ifndef CGIHANDLERCONFIG_HPP
+#define CGIHANDLERCONFIG_HPP
 
 #include <set>
 #include <string>
