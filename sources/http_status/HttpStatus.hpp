@@ -24,6 +24,7 @@ private:
     // NOTE: custom page that can be set via config. actually used; taken from config if present, else set to default
     std::string _pageFileLocation;
     static void addStatus(int code, const std::string& reasonPhrase);
+    static std::string getDefaultPageLocation(int code);
 
 public:
     HttpStatus(int code, const std::string& reasonPhrase);
@@ -38,7 +39,6 @@ public:
 
     // NOTE: these three methods should throw different exceptions if status code not found or status code map is empty
     static std::string getReasonPhrase(int code);
-    static std::string getDefaultPageLocation(int code);
     static bool isAValidHttpStatusCode(int code);
 
     static void setPage(int code, const std::string& pageFileLocation);

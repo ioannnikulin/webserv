@@ -11,10 +11,6 @@
 #include "WebServer.hpp"
 #include "http_status/BadRequest.hpp"
 
-using std::clog;
-using std::endl;
-using std::ofstream;
-using std::set;
 using std::string;
 using webserver::Request;
 
@@ -33,9 +29,7 @@ public:
             .addHeader("User-Agent", "curl/8.5.0")
             .addHeader("Accept", "*/*");
 
-        TS_SKIP("not implemented");
         Request actual(raw);
-        clog << actual.getRequestTarget() << endl;
         TS_ASSERT_EQUALS(expected, actual);
     }
 

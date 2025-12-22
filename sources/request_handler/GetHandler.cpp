@@ -18,14 +18,12 @@ using std::string;
 namespace webserver {
 
 Response GetHandler::serveFile(const std::string& path, int statusCode) {
-    Response resp;
-
-    resp.setStatus(statusCode);
-    resp.setBody(file_system::readFile(path.c_str()));
-
     const std::string ext = file_system::getFileExtension(path);
-    resp.setHeader("Content-Type", webserver::MimeTypes::getMimeType(ext));
-
+    const Response resp(
+        statusCode,
+        file_system::readFile(path.c_str()),
+        MimeTypes::getMimeType(ext)
+    );
     return (resp);
 }
 

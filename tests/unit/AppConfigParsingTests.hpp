@@ -14,80 +14,80 @@
 #include "configuration/parser/ConfigParser.hpp"
 #include "http_status/HttpStatus.hpp"
 
+using std::cout;
 using std::endl;
 using std::ofstream;
 using std::set;
 using std::string;
+using std::vector;
 
 class AppConfigParsingTests : public CxxTest::TestSuite {
 private:
     set<string> _configFilenames;
 
     void printDebugInfo(const webserver::AppConfig& expected, const webserver::AppConfig& actual) {
-        const std::set<webserver::Endpoint>& epActual =
+        const set<webserver::Endpoint>& epActual =
             const_cast<webserver::AppConfig&>(actual).getEndpoints();
-        const std::set<webserver::Endpoint>& epExpected =
+        const set<webserver::Endpoint>& epExpected =
             const_cast<webserver::AppConfig&>(expected).getEndpoints();
 
-        std::cout << "\n=== Configuration Comparison ===" << std::endl;
-        std::cout << "Actual endpoints count:   " << epActual.size() << std::endl;
-        std::cout << "Expected endpoints count: " << epExpected.size() << std::endl;
+        cout << "\n=== Configuration Comparison ===" << endl;
+        cout << "Actual endpoints count:   " << epActual.size() << endl;
+        cout << "Expected endpoints count: " << epExpected.size() << endl;
 
-        std::set<webserver::Endpoint>::const_iterator itA = epActual.begin();
-        std::set<webserver::Endpoint>::const_iterator itE = epExpected.begin();
+        set<webserver::Endpoint>::const_iterator itA = epActual.begin();
+        set<webserver::Endpoint>::const_iterator itE = epExpected.begin();
 
         int endpointNum = 0;
         while (itA != epActual.end() && itE != epExpected.end()) {
-            std::cout << "\n--- Endpoint " << endpointNum << " Comparison ---" << std::endl;
-            std::cout << "Actual interface:   '" << itA->getInterface() << "'" << std::endl;
-            std::cout << "Expected interface: '" << itE->getInterface() << "'" << std::endl;
-            std::cout << "Match: " << (itA->getInterface() == itE->getInterface() ? "YES" : "NO")
-                      << std::endl;
+            cout << "\n--- Endpoint " << endpointNum << " Comparison ---" << endl;
+            cout << "Actual interface:   '" << itA->getInterface() << "'" << endl;
+            cout << "Expected interface: '" << itE->getInterface() << "'" << endl;
+            cout << "Match: " << (itA->getInterface() == itE->getInterface() ? "YES" : "NO")
+                 << endl;
 
-            std::cout << "\nActual port:   " << itA->getPort() << std::endl;
-            std::cout << "Expected port: " << itE->getPort() << std::endl;
-            std::cout << "Match: " << (itA->getPort() == itE->getPort() ? "YES" : "NO")
-                      << std::endl;
+            cout << "\nActual port:   " << itA->getPort() << endl;
+            cout << "Expected port: " << itE->getPort() << endl;
+            cout << "Match: " << (itA->getPort() == itE->getPort() ? "YES" : "NO") << endl;
 
-            const std::vector<webserver::RouteConfig>& routesActual = itA->getRoutes();
-            const std::vector<webserver::RouteConfig>& routesExpected = itE->getRoutes();
+            const vector<webserver::RouteConfig>& routesActual = itA->getRoutes();
+            const vector<webserver::RouteConfig>& routesExpected = itE->getRoutes();
 
-            std::cout << "\n--- Routes Comparison ---" << std::endl;
-            std::cout << "Actual routes count:   " << routesActual.size() << std::endl;
-            std::cout << "Expected routes count: " << routesExpected.size() << std::endl;
-            std::cout << "Match: " << (routesActual.size() == routesExpected.size() ? "YES" : "NO")
-                      << std::endl;
+            cout << "\n--- Routes Comparison ---" << endl;
+            cout << "Actual routes count:   " << routesActual.size() << endl;
+            cout << "Expected routes count: " << routesExpected.size() << endl;
+            cout << "Match: " << (routesActual.size() == routesExpected.size() ? "YES" : "NO")
+                 << endl;
 
             size_t minSize = routesActual.size() < routesExpected.size() ? routesActual.size()
                                                                          : routesExpected.size();
             for (size_t i = 0; i < minSize; ++i) {
-                std::cout << "\n--- Route[" << i << "] Details ---" << std::endl;
-                std::cout << "Actual path:   '" << routesActual[i].getPath() << "'" << std::endl;
-                std::cout << "Expected path: '" << routesExpected[i].getPath() << "'" << std::endl;
-                std::cout << "Match: "
-                          << (routesActual[i].getPath() == routesExpected[i].getPath() ? "YES"
-                                                                                       : "NO")
-                          << std::endl;
+                cout << "\n--- Route[" << i << "] Details ---" << endl;
+                cout << "Actual path:   '" << routesActual[i].getPath() << "'" << endl;
+                cout << "Expected path: '" << routesExpected[i].getPath() << "'" << endl;
+                cout << "Match: "
+                     << (routesActual[i].getPath() == routesExpected[i].getPath() ? "YES" : "NO")
+                     << endl;
 
                 try {
                     bool routesEqual = (routesActual[i] == routesExpected[i]);
-                    std::cout << "Routes equal: " << (routesEqual ? "YES" : "NO") << std::endl;
+                    cout << "Routes equal: " << (routesEqual ? "YES" : "NO") << endl;
                 } catch (...) {
-                    std::cout << "EXCEPTION caught during route comparison!" << std::endl;
+                    cout << "EXCEPTION caught during route comparison!" << endl;
                 }
             }
 
-            std::cout << "\n--- Endpoint Equality Check ---" << std::endl;
-            std::cout << "Endpoints equal: " << (*itA == *itE ? "YES" : "NO") << std::endl;
+            cout << "\n--- Endpoint Equality Check ---" << endl;
+            cout << "Endpoints equal: " << (*itA == *itE ? "YES" : "NO") << endl;
 
             ++itA;
             ++itE;
             ++endpointNum;
         }
 
-        std::cout << "\n--- AppConfig Equality Check ---" << std::endl;
-        std::cout << "AppConfigs equal: " << (expected == actual ? "YES" : "NO") << std::endl;
-        std::cout << "================================\n" << std::endl;
+        cout << "\n--- AppConfig Equality Check ---" << endl;
+        cout << "AppConfigs equal: " << (expected == actual ? "YES" : "NO") << endl;
+        cout << "================================\n" << endl;
     }
 
 public:
@@ -115,7 +115,7 @@ public:
         webserver::AppConfig expected;
         webserver::Endpoint ep("127.0.0.1", 8080);
 
-        std::string serverName = "localhost";
+        string serverName = "localhost";
         ep.addServerName(serverName);
 
         webserver::RouteConfig route;
@@ -161,7 +161,7 @@ public:
         webserver::AppConfig expected;
         webserver::Endpoint ep("0.0.0.0", 8081);
 
-        std::string serverName = "nested.local";
+        string serverName = "nested.local";
         ep.addServerName(serverName);
         // Location /
         webserver::RouteConfig route1;
@@ -224,7 +224,7 @@ public:
         // First server
         webserver::Endpoint ep1("0.0.0.0", 8080);
         webserver::RouteConfig route1;
-        std::string serverName1 = "example.com";
+        string serverName1 = "example.com";
         ep1.addServerName(serverName1);
         route1.setPath("/");
         route1.setFolderConfig(webserver::FolderConfig("/var/www/example", false, "index.html"));
@@ -234,7 +234,7 @@ public:
         // Second server
         webserver::Endpoint ep2("0.0.0.0", 9090);
         webserver::RouteConfig route2;
-        std::string serverName2 = "api.localhost";
+        string serverName2 = "api.localhost";
         ep2.addServerName(serverName2);
         route2.setPath("/api");
         route2.setFolderConfig(webserver::FolderConfig("/var/www/api", false, "index.json"));
@@ -269,7 +269,7 @@ public:
         webserver::AppConfig expected;
         webserver::Endpoint ep("0.0.0.0", 8000);
 
-        std::string serverName = "cgi.local";
+        string serverName = "cgi.local";
         ep.addServerName(serverName);
         webserver::RouteConfig route;
         route.setPath("/");
@@ -321,7 +321,7 @@ public:
 
         webserver::AppConfig expected;
         webserver::Endpoint ep("0.0.0.0", 443);
-        std::string serverName = "secure.example.com";
+        string serverName = "secure.example.com";
 
         ep.addServerName(serverName);
         ep.setClientMaxBodySize(1 * webserver::ConfigParser::MIB);
@@ -355,10 +355,10 @@ public:
     void tearDown() {
         for (set<string>::iterator it = _configFilenames.begin(); it != _configFilenames.end();
              it++) {
-            if (std::remove(it->c_str()) != 0) {
+            if (remove(it->c_str()) != 0) {
                 // Only print error if file should exist but deletion failed
                 // Ignore "file not found" errors
-                // std::cerr << "Failed to remove file " << it->c_str() << "\n";
+                // cerr << "Failed to remove file " << it->c_str() << "\n";
             }
         }
         _configFilenames.clear();

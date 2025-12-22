@@ -1,4 +1,4 @@
-webserv
+/webserv
 build
 .vscode
 *.txt
@@ -7,5 +7,8 @@ test
 cxxtest
 *.tst
 .fuse_hidden*
-testRoot
+/testRoot
 .DS_Store
+tests/e2e/webserv/tools/webserv
+tests/e2e/webserv/tools/status_pages
+tests/e2e/**/results*.json

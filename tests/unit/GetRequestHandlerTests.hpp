@@ -18,8 +18,6 @@
 #include "http_methods/HttpMethodType.hpp"
 #include "request_handler/GetHandler.hpp"
 
-using std::clog;
-using std::endl;
 using std::map;
 using std::ofstream;
 using std::set;

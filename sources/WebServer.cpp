@@ -18,7 +18,6 @@ using std::endl;
 using std::string;
 
 namespace webserver {
-
 WebServer& WebServer::operator=(const WebServer& other) {
     if (&other == this) {
         return (*this);
