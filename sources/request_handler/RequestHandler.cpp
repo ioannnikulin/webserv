@@ -11,7 +11,7 @@
 
 using std::string;
 
-#define PRINT_RESPONSES 1
+#define PRINT_RESPONSES 0
 
 namespace webserver {
 
@@ -22,7 +22,7 @@ string RequestHandler::handleRequest(Request* request, const AppConfig* appConfi
     const std::string resp = response.serialize();
     if (PRINT_RESPONSES) {
         utils::printSeparator();
-        std::cout << resp << std::endl;
+        std::clog << resp << std::endl;
         utils::printSeparator();
     }
     return (resp);

@@ -33,7 +33,7 @@ public:
     Connection& setResponseBuffer(std::string buffer);
     std::string getResponseBuffer() const;
 
-    void handleRequest(const AppConfig* appConfig);
+    void handleRequest(const AppConfig* appConfig, bool shouldDeny);
     void sendResponse();
 };
 }  // namespace webserver

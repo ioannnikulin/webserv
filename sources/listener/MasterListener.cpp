@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "configuration/AppConfig.hpp"
+#include "http_status/ShuttingDown.hpp"
 #include "listener/Listener.hpp"
 #include "utils/colors.hpp"
 #include "utils/utils.hpp"
@@ -80,7 +81,11 @@ MasterListener::MasterListener(const set<pair<string, int> >& interfacePortPairs
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-void MasterListener::handleIncomingConnection(::pollfd& activeFd, const AppConfig* appConfig) {
+void MasterListener::handleIncomingConnection(
+    ::pollfd& activeFd,
+    const AppConfig* appConfig,
+    bool shouldDeny
+) {
     Listener* listener = findListener(_listeners, activeFd.fd);
     // NOTE: is it a request on a LISTENING socket? so a request for a new connection?
     if (listener != NULL) {
@@ -93,10 +98,18 @@ void MasterListener::handleIncomingConnection(::pollfd& activeFd, const AppConfi
     listener = findListener(_clientListeners, activeFd.fd);
     if (listener != NULL) {
         clog << "Existing client on socket fd " << activeFd.fd << " has sent data." << endl;
-        listener->receiveRequest(activeFd, appConfig);
+        bool requestTermination = false;
+        try {
+            listener->receiveRequest(activeFd, appConfig, shouldDeny);
+        } catch (const ShuttingDown& e) {
+            requestTermination = true;
+        }
         if (!listener->hasActiveClientSocket(activeFd.fd)) {
             // NOTE: client disconnected so we remove him from existing sessions list
             _clientListeners.erase(_clientListeners.find(activeFd.fd));
+        }
+        if (requestTermination) {
+            throw(ShuttingDown());
         }
         return;
     }
@@ -145,7 +158,11 @@ void MasterListener::listenAndHandle(
         for (size_t i = 0; i < _pollFds.size();) {
             if ((_pollFds[i].revents & POLLIN) > 0) {
                 // NOTE: something happened on that listening socket, let's dive in
-                handleIncomingConnection(_pollFds[i], appConfig);
+                try {
+                    handleIncomingConnection(_pollFds[i], appConfig, isRunning == 0);
+                } catch (const ShuttingDown& e) {
+                    isRunning = 0;
+                }
                 i++;
                 continue;
             }

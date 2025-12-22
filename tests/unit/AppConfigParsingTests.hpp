@@ -348,7 +348,7 @@ public:
 
         expected.addEndpoint(ep);
 
-        printDebugInfo(expected, actual);
+        //printDebugInfo(expected, actual);
         TS_ASSERT_EQUALS(expected, actual);
     }
 
