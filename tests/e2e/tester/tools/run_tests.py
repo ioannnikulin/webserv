@@ -16,6 +16,18 @@ for arg in sys.argv:
 TEST_FILE = "/tests/tests.json"
 RESULT_FILE = f"/out/results_{tester_id}.json"
 
+def wait_for_server(host, port, timeout=5):
+    import socket, time
+    end = time.time() + timeout
+    while time.time() < end:
+        try:
+            s = socket.create_connection((host, port), 1)
+            s.close()
+            return True
+        except:
+            time.sleep(0.1)
+    return False
+
 def load_tests():
     with open(TEST_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -106,6 +118,12 @@ def run_single_test(test):
 def main():
     tests = load_tests()
     results = {}
+
+    # assuming the first test connects to the correct host
+    webserv_host = tests.get("tests")[0].get("url").replace("http://", "").replace("https://", "").replace("/","")
+    webserv_host, webserv_port = webserv_host.split(":")
+
+    wait_for_server(webserv_host, webserv_port, timeout=10)
 
     for test in tests.get("tests"):
         if test.get("tester") != tester_id:

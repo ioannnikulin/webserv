@@ -40,6 +40,7 @@ services:
         ipv4_address: 172.19.0.10
     ports:
       - "8080:8080"
+    command: ["run"]
       
   tester0:
     container_name: tester0
