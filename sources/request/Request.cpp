@@ -140,6 +140,25 @@ string Request::getHeader(std::string key) const {
     return ("");
 }
 
+bool Request::contentLengthSet() const {
+    return (getHeader("Content-Length") != "");
+}
+
+size_t Request::getContentLength() const {
+    const string str = getHeader("Content-Length");
+    if (str == "") {
+        throw std::runtime_error("No Content-Length set for the request");
+    }
+    istringstream iss(str);
+    size_t ret;
+    iss >> ret;
+    return (ret);
+}
+
+string Request::getBody() const {
+    return (_body);
+}
+
 Request::~Request() {
 }
 

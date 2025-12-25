@@ -51,6 +51,7 @@ RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
 }
 
 RouteConfig& RouteConfig::setFolderConfig(const FolderConfig& folder) {
+    delete _folderConfigSection;
     _folderConfigSection = new FolderConfig(folder);
     return (*this);
 }
@@ -98,6 +99,8 @@ bool RouteConfig::operator==(const RouteConfig& other) const {
 }
 
 RouteConfig::~RouteConfig() {
+    delete _folderConfigSection;
+    delete _uploadConfigSection;
 }
 
 RouteConfig& RouteConfig::setPath(string path) {
@@ -106,6 +109,7 @@ RouteConfig& RouteConfig::setPath(string path) {
 }
 
 RouteConfig& RouteConfig::setUploadConfig(const UploadConfig& upload) {
+    delete _uploadConfigSection;
     _uploadConfigSection = new UploadConfig(upload);
     return (*this);
 }

@@ -22,6 +22,11 @@ HttpStatus::CODE HttpException::getCode() const {
     return (_code);
 }
 
+HttpException::HttpException(HttpStatus::CODE code, std::string message)
+    : _code(code)
+    , _message(message) {
+}
+
 HttpException::HttpException(const HttpException& other) {
     if (this == &other) {
         return;

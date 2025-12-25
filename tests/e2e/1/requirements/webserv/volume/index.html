@@ -1,0 +1,54 @@
+<html>
+    <head>
+		<style>
+			body {
+				margin: 0;
+				height: 100vh;
+
+				animation: bg-cycle 3s infinite alternate;
+				}
+				@keyframes bg-cycle {
+					0%   { background-color: lightseagreen; }
+					33%  { background-color: lightblue; }
+					66%  { background-color: lightcoral; }
+					100% { background-color: lightseagreen; }
+				}
+			#main-container {
+				padding: 100px;
+			}
+		</style>
+        <title>Hello there at our webserv testing website!</title>
+    </head>
+    <body>
+		<div id="main-container">
+        <h1>Welcome to our Webserv test website</h1>
+		<h3>What is a webserver?</h3>
+		<p>A web server is a program (or a combination of software and hardware) that receives HTTP requests from clients - usually browsers - and sends back HTTP responses, often including web content such as HTML pages, images, or other resources.
+</p>
+		<h3>Check out these cool test resources (different MIME types) that showcase the GET method:</h3>
+		<a href="test.jpg">Test JPEG</a>
+		<br>
+		<a href="test.gif">Test GIF</a>
+		<br>
+		<a href="test.png">Test PNG</a>
+		<br>
+		<a href="test.pdf">Test PDF</a>
+		<br>
+		<a href="test.mp3">Test MP3</a>
+		<br>
+		<a href="test.txt">Test .txt file</a>
+		<br>
+		<a href="test.xml">Test XML file</a>
+		<br>
+		<a href="test.csv">Test CSV file</a>
+		<br>
+		<br>
+		<a href="status_pages/403.html">Default 403 page</a>
+		<br>
+		<a href="status_pages/404.html">Default 404 page</a>
+		<br>
+		<a href="status_pages/500.html">Default 500 page</a>
+		<br>
+		</div>
+    </body>
+</html>

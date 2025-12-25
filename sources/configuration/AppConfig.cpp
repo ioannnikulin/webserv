@@ -11,7 +11,6 @@ using std::set;
 using std::string;
 
 namespace webserver {
-
 AppConfig::AppConfig() {
 }
 

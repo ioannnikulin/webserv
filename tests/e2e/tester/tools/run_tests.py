@@ -102,10 +102,27 @@ def run_single_test(test):
 
         return result
 
+def wait_for_server(host, port, timeout=5):
+    import socket, time
+    end = time.time() + timeout
+    while time.time() < end:
+        try:
+            s = socket.create_connection((host, port), 1)
+            s.close()
+            print(f"Connected to server at {host}:{port}, starting tests")
+            return True
+        except:
+            time.sleep(0.1)
+    print(f"Could not connect to server at {host}:{port} within {timeout} seconds")
+    return False
 
 def main():
     tests = load_tests()
     results = {}
+    host = tests.get("tests")[0].get("url").replace("https://", "").replace("http://", "").split("/")[0]
+    port = host.split(":")[1]
+    host = host.split(":")[0]
+    wait_for_server(host, int(port))
 
     for test in tests.get("tests"):
         if test.get("tester") != tester_id:

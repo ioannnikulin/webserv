@@ -11,7 +11,7 @@
 
 using std::string;
 
-#define PRINT_RESPONSES 0
+#define PRINT_RESPONSES 1
 
 namespace webserver {
 

@@ -1,0 +1,19 @@
+server {
+    listen 8080;
+    server_name localhost;
+    client_max_body_size 100;
+
+    location / {
+        methods GET;
+    }
+
+    location /post_body {
+        methods POST;
+    }
+
+    location /directory/ {
+        methods GET;
+        root /var/www/html/YoupiBanane;
+        index youpi.bad_extension;
+    }
+}
