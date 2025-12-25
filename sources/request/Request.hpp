@@ -52,6 +52,8 @@ public:
 
     Request& addHeader(std::string key, std::string value);
     std::string getHeader(std::string key) const;
+    bool contentLengthSet() const;
+    size_t getContentLength() const;
 };
 }  // namespace webserver
 

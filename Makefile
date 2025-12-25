@@ -4,7 +4,7 @@ CXX = ${CPP}
 COMPILE_FLAGS = -Wall -Wextra -Werror	\
 				-std=c++98	\
 				-g	\
-				-pedantic -Wold-style-cast -Wdeprecated-declarations  \
+				-pedantic -Wold-style-cast -Wdeprecated-declarations \
 
 PREPROC_DEFINES =
 
@@ -121,7 +121,7 @@ MAIN_NONENDPOINT_OBJS = $(addprefix $(OBJ_F)/,$(MAIN_NONENDPOINT_SRCS:.cpp=.o))
 MAIN_ENDPOINT_SRC_NAME = webserv.cpp
 MAIN_ENDPOINT_SRC = $(SOURCE_F)/$(MAIN_ENDPOINT_SRC_NAME)
 MAIN_ENDPOINT_OBJ = $(OBJ_F)/$(MAIN_ENDPOINT_SRC:.cpp=.o)
-MAIN_FNAME = webserv
+MAIN_EXECUTABLE = webserv
 
 MAIN_DIRS = \
 	$(SOURCE_F) \
@@ -155,12 +155,10 @@ vpath %.cpp \
 	$(TEST_F)/e2e \
 
 
-all: $(MAIN_FNAME)
+all: $(MAIN_EXECUTABLE)
 
 # MAIN_ENDPOINT - main function of webserv, MAIN_NONENDPOINT - all other components except main
-# compare this to $(TEST_fname) rule below
-# this rule builds webserv executable
-$(MAIN_FNAME): $(MAIN_ENDPOINT_OBJ) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS)
+$(MAIN_EXECUTABLE): $(MAIN_ENDPOINT_OBJ) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS)
 	@$(CPP) $(LINK_FLAGS) $^ -o $@
 
 $(OBJ_F)/%.o: %.cpp | $(OBJ_F) $(MAIN_OBJ_DIRS) $(TEST_OBJ_DIRS)
@@ -191,14 +189,17 @@ TEST_HEADERS := $(shell find tests -name "*.hpp")
 
 generate-cxxtest-tests: | $(OBJ_F)
 	@echo "Generating tests from $(TEST_HEADERS)"
-# syntax warnings come from internal cxxtest generator code problems, hiding
+	# syntax warnings come from internal cxxtest generator code problems, hiding
 	@PYTHONWARNINGS="ignore::SyntaxWarning" python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp $(TEST_HEADERS)
 
 build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
 	@$(CPP) -std=c++98 -g -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
 
 test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
-	@./$(TEST_EXECUTABLE)
+	@valgrind \
+		--leak-check=full --show-leak-kinds=all --track-fds=yes \
+		--error-exitcode=1 \
+		./$(TEST_EXECUTABLE)
 
 # ------------------------------------------------------------
 
@@ -206,10 +207,10 @@ DROP_RESULTS = $(shell find tests -type f -name "*result*.json")
 DROP_DOCKER_WEBSERV = $(shell find tests -type f -name "webserv")
 
 clean:
-	rm -rf $(OBJ_F) $(TEST_EXECUTABLE) $(CXXTEST_F) $(DROP_RESULTS) $(DROP_DOCKER_WEBSERV)
+	@rm -rf $(OBJ_F) $(TEST_EXECUTABLE) $(CXXTEST_F) $(DROP_RESULTS) $(DROP_DOCKER_WEBSERV)
 
-fclean: clean
-	rm -f $(MAIN_FNAME)
+fclean: clean docker-down
+	@rm -f $(MAIN_EXECUTABLE)
 
 re: fclean all
 
@@ -281,7 +282,7 @@ DEMO_DOCKER=tests/e2e/0
 COMPOSE=@docker compose -f $(DEMO_DOCKER)/docker-compose.yml
 
 docker-up: docker-build-images
-	$(COMPOSE) up --build -d
+	$(COMPOSE) up --build -d webserv
 
 docker-start:
 	$(COMPOSE) start
@@ -306,14 +307,16 @@ docker-cleanup:
 # automated e2e docker tests
 
 E2E_SCENARIOS = $(shell find tests/e2e -maxdepth 1 -mindepth 1 -type d \
-	! -name "results" ! -name "tester" ! -name "webserv" ! -name "1" )
+	! -name "results" ! -name "tester" ! -name "webserv" ! -name "1" ! -name "2" )
 
 RESULT_DIRS = $(E2E_SCENARIOS:tests/e2e/%=tests/e2e/results/%)
 
 RESULTS = $(shell find tests/e2e/results -type f)
 
-docker-build-images: $(MAIN_FNAME)
-	@cp $(MAIN_FNAME) tests/e2e/webserv/tools/$(MAIN_FNAME)
+VALGRIND_LOGS = $(shell find tests/e2e -type f -name "valgrind.log")
+
+docker-build-images: $(MAIN_EXECUTABLE)
+	@cp $(MAIN_EXECUTABLE) tests/e2e/webserv/tools/$(MAIN_EXECUTABLE)
 	@cp -R status_pages tests/e2e/webserv/tools
 	@docker build -t tester:latest tests/e2e/tester
 	@docker build -t webserv:latest tests/e2e/webserv
@@ -321,8 +324,8 @@ docker-build-images: $(MAIN_FNAME)
 clean-e2e-results:
 	@rm -rf tests/e2e/results/*
 
-e2e: clean-e2e-results docker-build-images $(RESULT_DIRS)
-	@python3 tests/e2e/collect_results.py $(RESULTS)
+e2e: docker-down clean-e2e-results docker-build-images $(RESULT_DIRS)
+	@python3 tests/e2e/collect_results.py $(RESULTS) $(VALGRIND_LOGS)
 
 tests/e2e/results/%:
 	@mkdir -p $@

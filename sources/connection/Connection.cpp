@@ -29,16 +29,19 @@ using std::exception;
 using std::ostringstream;
 using std::runtime_error;
 using std::string;
+using std::stringstream;
 
 namespace webserver {
 Connection::Connection()
-    : _clientSocket(NULL)
+    : _state(NEWBORN) 
+    , _clientSocket(NULL)
     , _clientSocketFd(0)
     , _request(NULL) {
 }
 
 Connection::Connection(int listeningSocketFd)
-    : _clientSocket(NULL)
+    : _state(NEWBORN)
+    , _clientSocket(NULL)
     , _request(NULL)
     , _clientIp(0)
     , _clientPort(0) {
@@ -81,24 +84,48 @@ int Connection::getClientSocketFd() const {
     return (_clientSocketFd);
 }
 
-string Connection::receiveRequestContent() {
-    const int BUFFER_SIZE = 4096;
-    char buffer[BUFFER_SIZE];
-    // TODO 54: probably this should be looped in case there's more than 4096 bytes
-    // TODO 55: check what poll actually does in these cases, maybe the rest will be just picked up on next iteration
-    const ssize_t bytesRead = recv(_clientSocketFd, buffer, sizeof(buffer) - 1, 0);
+bool Connection::fullRequestReceived() {
+    const string requestBuffer = _requestBuffer.str();
+    clog << "checking [" << requestBuffer << "]" << endl;
+    const size_t pos = requestBuffer.find("\r\n\r\n");
+    if (pos == string::npos) {
+        return (false);
+    }
+    try {
+        const webserver::Request tmp(requestBuffer);
+        if (tmp.getType() == POST) {
+            if (!tmp.contentLengthSet() || tmp.getContentLength() != tmp.getBody().length()) {
+                return (false);
+            }
+            return (true);
+        }
+        // NOTE: GET and DELETE end with \r\n\r\n, and we checked this earlier
+        return (true);
+    } catch (exception& e) {
+        // NOTE: if the request wasn't parsed correctly, let's consider it complete to report an error on it
+        return (false);
+    }
+}
+    
+void Connection::receiveRequestContent() {
+    _state = READING;
+    const int READ_BUFFER_SIZE = 4096;
+    char readBuffer[READ_BUFFER_SIZE];
+    const ssize_t bytesRead = recv(_clientSocketFd, readBuffer, sizeof(readBuffer), 0);
     if (bytesRead == -1) {
         throw runtime_error(string("recv() failed"));
         // TODO 48: probably should retry, not throw
-    }
-    if (bytesRead == 0) {  // NOTE: we don't support keep-alive connections
-        clog << "Client disconnected on socket fd " << _clientSocketFd << endl;
+    } else if (bytesRead == 0) {
         close(_clientSocketFd);
-        _clientSocketFd = -1;
-        return ("");
+        _clientSocket->fd = -1;
+        _state = CLOSED;
+    } else {
+        _requestBuffer << string(readBuffer, bytesRead);
+        if (fullRequestReceived()) {
+            _state = WRITING;
+            close(_clientSocketFd);
+        }
     }
-    buffer[bytesRead] = '\0';
-    return (string(buffer));
 }
 
 void Connection::sendResponse() {
@@ -114,6 +141,7 @@ void Connection::sendResponse() {
         totalSent += sent;
     }
     close(_clientSocket->fd);
+    _clientSocket->fd = -1;
 }
 
 void Connection::markResponseReadyForReturn() {
@@ -121,19 +149,23 @@ void Connection::markResponseReadyForReturn() {
 }
 
 void Connection::handleRequest(const AppConfig* appConfig, bool shouldDeny) {
+    receiveRequestContent();
+    if (_state == READING) {
+        return;  // NOTE: still reading, wait for next poll
+    }
+
     bool requestTermination = false;
     try {
-        const string rawRequest = receiveRequestContent();
         // NOTE: DL should it be cout or clog? clog is usually used for errors?
         std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocketFd << RESET
                   << ":\n---\n"
-                  << rawRequest << "---\n"
+                  << _requestBuffer.str() << "---\n"
                   << endl;
         if (shouldDeny) {
             throw ShuttingDown();
             // NOTE: another request said to shut down, we delegated handling here to reuse the response
         }
-        _request = new Request(rawRequest);
+        _request = new Request(_requestBuffer.str());
         if (_request->getType() == SHUTDOWN) {
             throw ShuttingDown();
         }

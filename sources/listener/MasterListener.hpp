@@ -1,6 +1,6 @@
 #pragma once
-#ifndef MASTER_LISTENER_HPP
-#define MASTER_LISTENER_HPP
+#ifndef MASTERLISTENER_HPP
+#define MASTERLISTENER_HPP
 
 #include <poll.h>
 

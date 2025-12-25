@@ -1,0 +1,33 @@
+networks:
+  net1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+
+services:
+  webserv:
+    container_name: webserv
+    image: webserv:latest
+    volumes:
+      - ./requirements/webserv/conf/config.cnf:/usr/local/bin/config.cnf:ro
+      - ./requirements/webserv/volume:/var/www/html
+      - ./requirements/webserv/logs:/var/logs/webserv
+    networks:
+      net1:
+        ipv4_address: 172.18.0.10
+    ports:
+      - "8080:8080"
+    command: ["valgrind"]
+      
+  tester0:
+    container_name: tester0
+    image: tester:latest
+    networks:
+      - net1
+    volumes:
+      - ./requirements/tester0/tools/tests.json:/tests/tests.json:ro
+      - ./results:/out
+    depends_on:
+      - webserv
+    command: ["--id=tester0"]

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include <map>
+#include <sstream>
 #include <string>
 
 #include "configuration/AppConfig.hpp"
@@ -13,9 +14,12 @@
 namespace webserver {
 class Connection {
 private:
+    enum State { NEWBORN, READING, WRITING, CLOSED };
+    State _state;
     ::pollfd* _clientSocket;  // NOTE: do not delete it here! it's managed by MasterListener
     int _clientSocketFd;
     std::string _responseBuffer;
+    std::ostringstream _requestBuffer;
     Request* _request;
     uint32_t _clientIp;
     uint16_t _clientPort;
@@ -23,7 +27,8 @@ private:
     Connection(const Connection& other);
     Connection& operator=(const Connection& other);
 
-    std::string receiveRequestContent();
+    bool fullRequestReceived();
+    void receiveRequestContent();
     void markResponseReadyForReturn();
 
 public:
@@ -40,5 +45,4 @@ public:
     void sendResponse();
 };
 }  // namespace webserver
-
 #endif

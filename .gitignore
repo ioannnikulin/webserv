@@ -12,3 +12,4 @@ cxxtest
 tests/e2e/webserv/tools/webserv
 tests/e2e/webserv/tools/status_pages
 tests/e2e/**/results*.json
+*.log

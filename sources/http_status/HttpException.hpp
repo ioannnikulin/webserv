@@ -17,10 +17,7 @@ protected:
     HttpException& operator=(const HttpException& other);
 
 public:
-    HttpException(HttpStatus::CODE code, std::string message)
-        : _code(code)
-        , _message(message) {
-    }
+    HttpException(HttpStatus::CODE code, std::string message);
     HttpException(const HttpException& other);
     virtual ~HttpException() throw();
     const char* what() const throw();
