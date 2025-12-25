@@ -2,6 +2,7 @@
 
 #include <netinet/in.h>
 #include <poll.h>
+#include <stdint.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -38,16 +39,28 @@ Connection::Connection()
 
 Connection::Connection(int listeningSocketFd)
     : _clientSocket(NULL)
-    , _request(NULL) {
+    , _request(NULL)
+    , _clientIp(0)
+    , _clientPort(0) {
+    const uint32_t SHIFT24 = 24;
+    const uint32_t SHIFT16 = 16;
+    const uint32_t SHIFT8 = 8;
+    const uint32_t MASK8 = 0xFF;
     struct sockaddr_in clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
     _clientSocketFd =
         accept(listeningSocketFd, reinterpret_cast<struct sockaddr*>(&clientAddr), &clientAddrLen);
-    // TODO 53: store some client address info from here
     if (_clientSocketFd == -1) {
         throw runtime_error(string("accept() failed"));  // NOTE: errno here forbidden
         // TODO 48: probably should retry, not throw
     }
+    _clientIp = clientAddr.sin_addr.s_addr;
+    _clientPort = ntohs(clientAddr.sin_port);
+
+    const uint32_t clientIp = ntohl(_clientIp);
+    clog << "Accepted connection from " << ((clientIp >> SHIFT24) & MASK8) << "."
+         << ((clientIp >> SHIFT16) & MASK8) << "." << ((clientIp >> SHIFT8) & MASK8) << "."
+         << (clientIp & MASK8) << ":" << _clientPort << endl;
 }
 
 Connection& Connection::setClientSocket(::pollfd* clientSocket) {

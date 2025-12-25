@@ -2,6 +2,7 @@
 #define CONNECTION_HPP
 
 #include <poll.h>
+#include <stdint.h>
 
 #include <map>
 #include <string>
@@ -16,6 +17,8 @@ private:
     int _clientSocketFd;
     std::string _responseBuffer;
     Request* _request;
+    uint32_t _clientIp;
+    uint16_t _clientPort;
 
     Connection(const Connection& other);
     Connection& operator=(const Connection& other);
