@@ -336,8 +336,11 @@ tests/e2e/results/%:
 # run in 42 campus
 # skips some checks whose prerequisites cannot be installed
 # since we don't have root access
-test-campus: external-calls format-check header-check source-check makefile-check test e2e
+test-campus: external-calls format-check header-check source-check makefile-check test warn-campus-docker e2e
 	@echo "CLEAN"
+
+warn-campus-docker:
+	@echo "if docker fails, consider running docker-cleanup"
 
 # runs in GitHub Actions environment, use on personal machine too
 test-github: external-calls format-check cppcheck tidy-check header-check source-check makefile-check test e2e
