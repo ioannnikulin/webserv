@@ -33,7 +33,7 @@ using std::stringstream;
 
 namespace webserver {
 Connection::Connection()
-    : _state(NEWBORN) 
+    : _state(NEWBORN)
     , _clientSocket(NULL)
     , _clientSocketFd(0)
     , _request(NULL) {
@@ -106,7 +106,7 @@ bool Connection::fullRequestReceived() {
         return (false);
     }
 }
-    
+
 void Connection::receiveRequestContent() {
     _state = READING;
     const int READ_BUFFER_SIZE = 4096;
