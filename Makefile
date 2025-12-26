@@ -195,11 +195,19 @@ generate-cxxtest-tests: | $(OBJ_F)
 build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
 	@$(CPP) -std=c++98 -g -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
 
-test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
-	@valgrind \
+VALGRIND=@valgrind \
 		--leak-check=full --show-leak-kinds=all --track-fds=yes \
 		--error-exitcode=1 \
-		./$(TEST_EXECUTABLE)
+
+
+test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
+	$(VALGRIND) ./$(TEST_EXECUTABLE)
+
+run: $(MAIN_EXECUTABLE)
+	@./$(MAIN_EXECUTABLE) ./tests/config_files/local_run.conf
+
+valgrind: $(MAIN_EXECUTABLE)
+	$(VALGRIND) ./$(MAIN_EXECUTABLE) ./tests/config_files/local_run.conf 2>&1 | tee valgrind.log
 
 # ------------------------------------------------------------
 
