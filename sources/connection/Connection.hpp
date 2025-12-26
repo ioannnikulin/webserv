@@ -17,7 +17,8 @@ private:
     enum State { NEWBORN, READING, WRITING, CLOSED };
     State _state;
     ::pollfd* _clientSocket;  // NOTE: do not delete it here! it's managed by MasterListener
-    int _clientSocketFd;
+    int _clientSocketFd;      // NOTE: acquired here, then passed to pollfd up in MasterListener
+    // NOTE: DO NOT use it! use _clientSocket.fd instead!
     std::string _responseBuffer;
     std::ostringstream _requestBuffer;
     Request* _request;

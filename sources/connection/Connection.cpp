@@ -111,19 +111,20 @@ void Connection::receiveRequestContent() {
     _state = READING;
     const int READ_BUFFER_SIZE = 4096;
     char readBuffer[READ_BUFFER_SIZE];
-    const ssize_t bytesRead = recv(_clientSocketFd, readBuffer, sizeof(readBuffer), 0);
+    const ssize_t bytesRead = recv(_clientSocket->fd, readBuffer, sizeof(readBuffer), 0);
     if (bytesRead == -1) {
         throw runtime_error(string("recv() failed"));
         // TODO 48: probably should retry, not throw
-    } else if (bytesRead == 0) {
-        close(_clientSocketFd);
+    }
+    if (bytesRead == 0) {
+        close(_clientSocket->fd);
         _clientSocket->fd = -1;
         _state = CLOSED;
     } else {
         _requestBuffer << string(readBuffer, bytesRead);
         if (fullRequestReceived()) {
             _state = WRITING;
-            close(_clientSocketFd);
+            // close(_clientSocketFd);
         }
     }
 }
@@ -133,7 +134,7 @@ void Connection::sendResponse() {
     const size_t toSend = _responseBuffer.size();
     while (totalSent < toSend) {
         const ssize_t sent =
-            send(_clientSocketFd, _responseBuffer.data() + totalSent, toSend - totalSent, 0);
+            send(_clientSocket->fd, _responseBuffer.data() + totalSent, toSend - totalSent, 0);
         if (sent == -1) {
             throw runtime_error(string("send() failed"));
             // TODO 48: probably should retry, not throw
@@ -141,7 +142,6 @@ void Connection::sendResponse() {
         totalSent += sent;
     }
     close(_clientSocket->fd);
-    _clientSocket->fd = -1;
 }
 
 void Connection::markResponseReadyForReturn() {
@@ -157,8 +157,8 @@ void Connection::handleRequest(const AppConfig* appConfig, bool shouldDeny) {
     bool requestTermination = false;
     try {
         // NOTE: DL should it be cout or clog? clog is usually used for errors?
-        std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocketFd << RESET
-                  << ":\n---\n"
+        std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocket->fd
+                  << RESET << ":\n---\n"
                   << _requestBuffer.str() << "---\n"
                   << endl;
         if (shouldDeny) {
@@ -202,9 +202,9 @@ void Connection::handleRequest(const AppConfig* appConfig, bool shouldDeny) {
 }
 
 Connection::~Connection() {
-    if (_clientSocketFd != -1) {
-        close(_clientSocketFd);
-        _clientSocketFd = -1;
+    if (_clientSocket->fd != -1) {
+        close(_clientSocket->fd);
+        _clientSocket->fd = -1;
     }
 }
 }  // namespace webserver

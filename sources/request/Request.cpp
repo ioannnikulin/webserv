@@ -1,5 +1,6 @@
 #include "Request.hpp"
 
+#include <cstddef>
 #include <map>
 #include <sstream>
 #include <string>
@@ -141,12 +142,12 @@ string Request::getHeader(std::string key) const {
 }
 
 bool Request::contentLengthSet() const {
-    return (getHeader("Content-Length") != "");
+    return (getHeader("Content-Length").empty());
 }
 
 size_t Request::getContentLength() const {
     const string str = getHeader("Content-Length");
-    if (str == "") {
+    if (str.empty()) {
         throw std::runtime_error("No Content-Length set for the request");
     }
     istringstream iss(str);

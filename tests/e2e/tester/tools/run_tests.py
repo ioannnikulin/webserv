@@ -7,11 +7,8 @@ import sys
 import time
 from pathlib import Path
 
-tester_id = None
-for arg in sys.argv:
-    if arg.startswith("--id="):
-        tester_id = arg[len("--id="):]
-        break
+print(sys.argv)
+tester_id = sys.argv[1]
 
 TEST_FILE = "/tests/tests.json"
 RESULT_FILE = f"/out/results_{tester_id}.json"
@@ -109,7 +106,7 @@ def wait_for_server(host, port, timeout=5):
         try:
             s = socket.create_connection((host, port), 1)
             s.close()
-            print(f"Connected to server at {host}:{port}, starting tests")
+            print(f"Connected to server at {host}:{port}")
             return True
         except:
             time.sleep(0.1)
@@ -124,6 +121,7 @@ def main():
     host = host.split(":")[0]
     wait_for_server(host, int(port))
 
+    print(f"Starting a suite of {len(tests.get("tests"))} tests")
     for test in tests.get("tests"):
         if test.get("tester") != tester_id:
             continue
