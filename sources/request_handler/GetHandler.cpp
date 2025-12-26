@@ -32,13 +32,11 @@ Response GetHandler::serveStatusPage(int statusCode) {
     return serveFile(path, statusCode);
 }
 
-Response GetHandler::handleRequest(string location, const AppConfig* appConfig) {
+Response GetHandler::handleRequest(string location, const Endpoint& configuration) {
     ostringstream oss;
-    oss << appConfig->getEndpoints().begin()->getRoute("/").getFolderConfig()->getRootPath() << "/";
+    oss << configuration.getRoute("/").getFolderConfig()->getRootPath() << "/";
     if (location == "/") {
-        oss << appConfig->getEndpoints()
-                   .begin()
-                   ->getRoute("/")
+        oss << configuration.getRoute("/")
                    .getFolderConfig()
                    ->getIndexPageFileLocation();
     } else {

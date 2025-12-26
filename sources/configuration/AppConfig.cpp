@@ -1,5 +1,6 @@
 #include "AppConfig.hpp"
 
+#include <stdexcept>
 #include <set>
 #include <string>
 #include <utility>
@@ -7,6 +8,7 @@
 #include "configuration/Endpoint.hpp"
 
 using std::pair;
+using std::runtime_error;
 using std::set;
 using std::string;
 
@@ -18,6 +20,14 @@ AppConfig::AppConfig(const AppConfig& other)
     : _endpoints(other._endpoints) {
 }
 
+AppConfig& AppConfig::operator=(const AppConfig& other) {
+    if (*this == other) {
+        return (*this);
+    }
+    _endpoints = other._endpoints;
+    return (*this);
+}
+
 AppConfig& AppConfig::addEndpoint(const Endpoint& tgt) {
     _endpoints.insert(Endpoint(tgt));
     return (*this);
@@ -27,17 +37,17 @@ bool AppConfig::operator==(const AppConfig& other) const {
     return (_endpoints == other._endpoints);
 }
 
-std::set<Endpoint> AppConfig::getEndpoints() const {
+const std::set<Endpoint>& AppConfig::getEndpoints() const {
     return (_endpoints);
 }
 
-set<pair<string, int> > AppConfig::getAllInterfacePortPairs(void) const {
-    set<pair<string, int> > result;
-
+const Endpoint& AppConfig::getEndpoint(string interface, int port) const {
     for (set<Endpoint>::const_iterator itr = _endpoints.begin(); itr != _endpoints.end(); itr++) {
-        result.insert(pair<string, int>(itr->getInterface(), itr->getPort()));
+        if (itr->getInterface() == interface && itr->getPort() == port) {
+            return (*itr);
+        }
     }
-    return (result);
+    throw runtime_error("Endpoint not configured");
 }
 
 AppConfig::~AppConfig() {

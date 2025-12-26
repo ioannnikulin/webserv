@@ -18,7 +18,7 @@ private:
 
 public:
     ~RequestHandler();
-    static std::string handleRequest(Request* request, const AppConfig* appConfig);
+    static std::string handleRequest(const Request& request, const Endpoint& configuration);
 };
 
 }  // namespace webserver

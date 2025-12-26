@@ -32,19 +32,12 @@ using std::string;
 using std::stringstream;
 
 namespace webserver {
-Connection::Connection()
+Connection::Connection(int listeningSocketFd, const Endpoint& configuration)
     : _state(NEWBORN)
     , _clientSocket(NULL)
-    , _clientSocketFd(0)
-    , _request(NULL) {
-}
-
-Connection::Connection(int listeningSocketFd)
-    : _state(NEWBORN)
-    , _clientSocket(NULL)
-    , _request(NULL)
     , _clientIp(0)
-    , _clientPort(0) {
+    , _clientPort(0) 
+    , _configuration(configuration) {
     const uint32_t SHIFT24 = 24;
     const uint32_t SHIFT16 = 16;
     const uint32_t SHIFT8 = 8;
@@ -91,6 +84,7 @@ bool Connection::fullRequestReceived() {
     if (pos == string::npos) {
         return (false);
     }
+    // NOTE: we have \r\n\r\n. for GET and DELETE this means the request is complete. for POST we have to check the body size.
     try {
         const webserver::Request tmp(requestBuffer);
         if (tmp.getType() == POST) {
@@ -99,7 +93,6 @@ bool Connection::fullRequestReceived() {
             }
             return (true);
         }
-        // NOTE: GET and DELETE end with \r\n\r\n, and we checked this earlier
         return (true);
     } catch (exception& e) {
         // NOTE: if the request wasn't parsed correctly, let's consider it complete to report an error on it
@@ -117,19 +110,17 @@ void Connection::receiveRequestContent() {
         // TODO 48: probably should retry, not throw
     }
     if (bytesRead == 0) {
-        close(_clientSocket->fd);
-        _clientSocket->fd = -1;
-        _state = CLOSED;
+        throw TerminatedByClient();
     } else {
         _requestBuffer << string(readBuffer, bytesRead);
         if (fullRequestReceived()) {
             _state = WRITING;
-            // close(_clientSocketFd);
         }
     }
 }
 
 void Connection::sendResponse() {
+    clog << "Sending response to fd " << _clientSocket->fd << endl; 
     size_t totalSent = 0;
     const size_t toSend = _responseBuffer.size();
     while (totalSent < toSend) {
@@ -145,10 +136,11 @@ void Connection::sendResponse() {
 }
 
 void Connection::markResponseReadyForReturn() {
+    clog << "Marked data on fd " << _clientSocket->fd << " ready for return" << endl;
     _clientSocket->events |= POLLOUT;
 }
 
-void Connection::handleRequest(const AppConfig* appConfig, bool shouldDeny) {
+void Connection::handleRequest(bool shouldDeny) {
     receiveRequestContent();
     if (_state == READING) {
         return;  // NOTE: still reading, wait for next poll
@@ -165,11 +157,12 @@ void Connection::handleRequest(const AppConfig* appConfig, bool shouldDeny) {
             throw ShuttingDown();
             // NOTE: another request said to shut down, we delegated handling here to reuse the response
         }
-        _request = new Request(_requestBuffer.str());
-        if (_request->getType() == SHUTDOWN) {
+        _request = Request(_requestBuffer.str());
+        if (_request.getType() == SHUTDOWN) {
+            _state = CLOSED;
             throw ShuttingDown();
         }
-        _responseBuffer = RequestHandler::handleRequest(_request, appConfig);
+        _responseBuffer = RequestHandler::handleRequest(_request, _configuration);
         // NOTE: doesn't send directly, have to get approval from MasterListener's poll first
     } catch (const HttpException& e) {
         ostringstream oss;
@@ -197,7 +190,7 @@ void Connection::handleRequest(const AppConfig* appConfig, bool shouldDeny) {
     }
     markResponseReadyForReturn();
     if (requestTermination) {
-        throw(ShuttingDown());
+        throw ShuttingDown();
     }
 }
 
@@ -206,5 +199,15 @@ Connection::~Connection() {
         close(_clientSocket->fd);
         _clientSocket->fd = -1;
     }
+}
+
+Connection::TerminatedByClient::TerminatedByClient() {
+}
+
+Connection::TerminatedByClient::~TerminatedByClient() throw() {
+}
+
+const char* Connection::TerminatedByClient::what() const throw() {
+    return ("Client terminated the connection");
 }
 }  // namespace webserver

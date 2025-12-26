@@ -21,11 +21,12 @@ private:
     int _port;
     int _listeningSocketFd;
     std::map<int, Connection*> _clientConnections;  // NOTE: client socket: connection
+    const Endpoint& _configuration;
 
     struct ::sockaddr_in resolveAddress() const;
 
 public:
-    Listener(const std::string& interface, int port);
+    Listener(const Endpoint& configuration);
 
     /* NOTE: a Connection creates a socket file descriptor on itself,
     * then we pass it up to MasterListener so that it can create a proper pollfd,
@@ -47,9 +48,10 @@ public:
 
     int acceptConnection();  // NOTE: returns client socket fd
     void
-    receiveRequest(const ::pollfd& clientSocketFd, const AppConfig* appConfig, bool shouldDeny);
+    receiveRequest(const ::pollfd& clientSocketFd, bool shouldDeny);
     void sendResponse(int clientSocketFd);
     void killConnection(int clientSocketFd);
+    int connectionCount() const;
 
     ~Listener();
 };

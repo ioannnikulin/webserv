@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include <connection/Connection.hpp>
 #include "configuration/AppConfig.hpp"
 #include "http_status/ShuttingDown.hpp"
 #include "listener/Listener.hpp"
@@ -28,10 +29,12 @@ using std::string;
 using std::vector;
 
 namespace {
+using webserver::Listener;
+
 int registerNewConnection(
     vector<struct ::pollfd>& pollFds,
     int listeningFd,
-    webserver::Listener* listener
+    Listener* listener
 ) {
     clog << B_YELLOW << "A new connection on socket fd " << listeningFd << endl << RESET;
     struct ::pollfd clientPfd;
@@ -44,8 +47,6 @@ int registerNewConnection(
          << endl;
     return (clientPfd.fd);
 }
-
-using webserver::Listener;
 
 Listener* findListener(map<int, Listener*> where, int byFd) {
     const map<int, Listener*>::const_iterator res = where.find(byFd);
@@ -67,23 +68,32 @@ void populateFdsFromListeners(
         pollFds.push_back(pfd);
     }
 }
-
 }  // namespace
 
 namespace webserver {
-MasterListener::MasterListener(const set<pair<string, int> >& interfacePortPairs) {
-    for (set<pair<string, int> >::const_iterator it = interfacePortPairs.begin();
-         it != interfacePortPairs.end();
-         ++it) {
-        Listener* newListener = new Listener(it->first, it->second);
+MasterListener::MasterListener(const AppConfig& configuration) {
+    const set<Endpoint>& endpoints = configuration.getEndpoints();
+    for (set<Endpoint>::const_iterator itr = endpoints.begin();
+         itr != endpoints.end();
+         ++itr) {
+        Listener* newListener = new Listener(*itr);
         _listeners[newListener->getListeningSocketFd()] = newListener;
     }
+}
+
+MasterListener& MasterListener::operator=(const MasterListener& other) {
+    if (this == &other) {
+        return (*this);
+    }
+    _pollFds = other._pollFds;
+    _listeners = other._listeners;
+    _clientListeners = other._clientListeners;
+    return (*this);
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void MasterListener::handleIncomingConnection(
     ::pollfd& activeFd,
-    const AppConfig* appConfig,
     bool shouldDeny
 ) {
     Listener* listener = findListener(_listeners, activeFd.fd);
@@ -100,16 +110,17 @@ void MasterListener::handleIncomingConnection(
         clog << "Existing client on socket fd " << activeFd.fd << " has sent data." << endl;
         bool requestTermination = false;
         try {
-            listener->receiveRequest(activeFd, appConfig, shouldDeny);
+            listener->receiveRequest(activeFd, shouldDeny);
+            clog << "Request received" << endl;
         } catch (const ShuttingDown& e) {
             requestTermination = true;
-        }
-        if (!listener->hasActiveClientSocket(activeFd.fd)) {
-            // NOTE: client disconnected so we remove him from existing sessions list
+        } catch (const Connection::TerminatedByClient& e) {
+            clog << "Client disconnected, terminating" << endl;
+            listener->killConnection(activeFd.fd);
             _clientListeners.erase(_clientListeners.find(activeFd.fd));
         }
         if (requestTermination) {
-            throw(ShuttingDown());
+            throw ShuttingDown();
         }
         return;
     }
@@ -119,7 +130,8 @@ void MasterListener::handleIncomingConnection(
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) const {
+void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
+    clog << "Starting sending response back to " << activeFd.fd << endl;
     Listener* listener = findListener(_clientListeners, activeFd.fd);
 
     if (listener == NULL) {
@@ -131,18 +143,18 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) const {
     listener->sendResponse(activeFd.fd);
     // NOTE: no keep-alive in HTTP 1.0, so killing right away
     // NOTE: if he wants to go on, he'd have to go to listening socket again
-    listener->killConnection(activeFd.fd);
     utils::printSeparator();
     utils::setColor(B_GREEN);
     std::cout << "📨 Sent response to socket fd " << activeFd.fd << endl;
     utils::resetColor();
     utils::printSeparator();
+    _clientListeners.erase(_clientListeners.find(activeFd.fd));
+    listener->killConnection(activeFd.fd);
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void MasterListener::listenAndHandle(
-    volatile __sig_atomic_t& isRunning,
-    const AppConfig* appConfig
+    volatile __sig_atomic_t& isRunning
 ) {
     populateFdsFromListeners(_pollFds, _listeners);
 
@@ -159,7 +171,7 @@ void MasterListener::listenAndHandle(
             if ((_pollFds[i].revents & POLLIN) > 0) {
                 // NOTE: something happened on that listening socket, let's dive in
                 try {
-                    handleIncomingConnection(_pollFds[i], appConfig, isRunning == 0);
+                    handleIncomingConnection(_pollFds[i], isRunning == 0);
                 } catch (const ShuttingDown& e) {
                     isRunning = 0;
                 }

@@ -9,11 +9,11 @@
 namespace webserver {
 class WebServer {
 private:
-    AppConfig* _appConfig;
+    AppConfig _appConfig;
     // NOTE: DL: __sig_atomic_t is a special int type guaranteed to be writable in one atomic CPU operation & safe to modify inside a signal handler
     // NOTE: DL: volatile tells the compiler: “Don’t optimize access to this variable. Always read/write it directly from memory.”
     volatile __sig_atomic_t _isRunning;
-    MasterListener* _masterListener;
+    MasterListener _masterListener;
 
     WebServer();
     // NOTE: DL: The keyword explicit is used to prevent implicit (automatic) type conversions when calling a constructor.

@@ -22,10 +22,8 @@ WebServer& WebServer::operator=(const WebServer& other) {
     if (&other == this) {
         return (*this);
     }
-    cerr << "Unexpected stub assignment operator called for WebServer." << endl;
-    _appConfig = new AppConfig(other.getAppConfig());
+    _appConfig = AppConfig(other.getAppConfig());
     _isRunning = 0;
-    _masterListener = NULL;
     return (*this);
 }
 
@@ -43,19 +41,15 @@ void WebServer::handleSignals() {
 }
 
 AppConfig WebServer::getAppConfig() const {
-    if (_appConfig == NULL) {
-        throw std::runtime_error("Configuration uninitialized");
-    }
-    return (*_appConfig);
+    return (_appConfig);
 }
 
 WebServer::WebServer(const std::string& configFilePath)
-    : _isRunning(0) {
+    : _appConfig(ConfigParser().parse(configFilePath))
+    , _isRunning(0)
+    , _masterListener(_appConfig) {
     HttpStatus::initStatusMap();
-    ConfigParser parser;
-    _appConfig = new AppConfig(parser.parse(configFilePath));
     handleSignals();
-    _masterListener = new MasterListener(_appConfig->getAllInterfacePortPairs());
 }
 
 WebServer& WebServer::getInstance(const string& configFilePath) {
@@ -64,12 +58,11 @@ WebServer& WebServer::getInstance(const string& configFilePath) {
 }
 
 WebServer::~WebServer() {
-    delete _appConfig;
 }
 
 void WebServer::start() {
     _isRunning = 1;
-    _masterListener->listenAndHandle(_isRunning, _appConfig);
+    _masterListener.listenAndHandle(_isRunning);
 }
 
 void WebServer::stop() {
