@@ -10,6 +10,7 @@
 #include <cerrno>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -21,6 +22,7 @@
 using std::cerr;
 using std::clog;
 using std::endl;
+using std::map;
 using std::runtime_error;
 using std::strerror;
 using std::string;
@@ -94,10 +96,11 @@ struct ::sockaddr_in Listener::resolveAddress() const {
     return (addr);
 }
 
-Listener::Listener(const std::string& interface, int port)
-    : _interface(interface)
-    , _port(port)
-    , _listeningSocketFd(-1) {
+Listener::Listener(const Endpoint& configuration)
+    : _interface(configuration.getInterface())
+    , _port(configuration.getPort())
+    , _listeningSocketFd(-1)
+    , _configuration(configuration) {
     _listeningSocketFd = setupSocket();
     struct sockaddr_in addr = resolveAddress();
 
@@ -138,17 +141,16 @@ bool Listener::hasActiveClientSocket(int clientSocketFd) const {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 int Listener::acceptConnection() {
-    Connection* nconn = new Connection(_listeningSocketFd);
+    Connection* nconn = new Connection(_listeningSocketFd, _configuration);
     _clientConnections[nconn->getClientSocketFd()] = nconn;
     return (nconn->getClientSocketFd());
 }
 
 void Listener::receiveRequest(
     const ::pollfd& clientSocketFd,
-    const AppConfig* appConfig,
     bool shouldDeny
 ) {
-    _clientConnections.at(clientSocketFd.fd)->handleRequest(appConfig, shouldDeny);
+    _clientConnections.at(clientSocketFd.fd)->handleRequest(shouldDeny);
 }
 
 void Listener::sendResponse(int clientSocketFd) {
@@ -156,13 +158,27 @@ void Listener::sendResponse(int clientSocketFd) {
 }
 
 void Listener::killConnection(int clientSocketFd) {
-    _clientConnections.erase(_clientConnections.find(clientSocketFd));
+    map<int, Connection*>::iterator itr = _clientConnections.find(clientSocketFd);
+    delete itr->second;
+    _clientConnections.erase(itr);
+    close(clientSocketFd);
 }
 
 Listener::~Listener() {
+    clog << "Destroying listener" << endl;
     if (_listeningSocketFd != -1) {
         close(_listeningSocketFd);
         _listeningSocketFd = -1;
     }
+    for (map<int, Connection*>::iterator itr = _clientConnections.begin(); itr != _clientConnections.end(); itr ++) {
+        clog << "Closing fd " << itr->first << endl;
+        close(itr->first);
+        delete itr->second;
+    }
+    _clientConnections.clear();
+}
+
+int Listener::connectionCount() const {
+    return (_clientConnections.size());
 }
 }  // namespace webserver

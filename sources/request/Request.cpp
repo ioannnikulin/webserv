@@ -49,6 +49,9 @@ Request::Request(string raw) {
     }
     parseFirstLine(raw.substr(0, endOfFirstLine));
     const string::size_type endOfHeaders = raw.find("\r\n\r\n");
+    if (endOfHeaders == string::npos) {
+        throw BadRequest("no formal end of headers");
+    }
     parseHeaders(raw.substr(endOfFirstLine + 2, endOfHeaders - endOfFirstLine - 2));
     parseBody(endOfHeaders != string::npos ? raw.substr(endOfHeaders + 4) : string());
 }
@@ -91,6 +94,20 @@ void Request::parseHeaders(std::string rawHeaders) {
 
 void Request::parseBody(std::string body) {
     _body = body;
+}
+
+Request& Request::operator=(const Request& other) {
+    if (other == *this) {
+        return (*this);
+    }
+    _method = other._method;
+    _requestTarget = other._requestTarget;
+    _path = other._path;
+    _query = other._query;
+    _protocolVersion = other._protocolVersion;
+    _headers = other._headers;
+    _body = other._body;
+    return (*this);
 }
 
 bool Request::operator==(const Request& other) const {
@@ -142,7 +159,7 @@ string Request::getHeader(std::string key) const {
 }
 
 bool Request::contentLengthSet() const {
-    return (getHeader("Content-Length").empty());
+    return (!getHeader("Content-Length").empty());
 }
 
 size_t Request::getContentLength() const {

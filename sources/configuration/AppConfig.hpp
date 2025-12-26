@@ -12,16 +12,15 @@ class AppConfig {
 private:
     std::set<Endpoint> _endpoints;
 
-    AppConfig& operator=(const AppConfig& other);
-
 public:
     AppConfig();
     AppConfig(const AppConfig& other);
+    AppConfig& operator=(const AppConfig& other);
     ~AppConfig();
 
-    std::set<std::pair<std::string, int> > getAllInterfacePortPairs(void) const;
     AppConfig& addEndpoint(const Endpoint& tgt);
-    std::set<Endpoint> getEndpoints() const;
+    const std::set<Endpoint>& getEndpoints() const;
+    const Endpoint& getEndpoint(std::string interface, int port) const;
 
     bool operator==(const AppConfig& other) const;
 };

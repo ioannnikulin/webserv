@@ -7,8 +7,11 @@ import sys
 import time
 from pathlib import Path
 
-print(sys.argv)
-tester_id = sys.argv[1]
+tester_id = None
+for arg in sys.argv:
+    if arg.startswith("--id="):
+        tester_id = arg[len("--id="):]
+        break
 
 TEST_FILE = "/tests/tests.json"
 RESULT_FILE = f"/out/results_{tester_id}.json"

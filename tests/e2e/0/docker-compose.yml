@@ -39,4 +39,4 @@ services:
       - ./requirements/tester0/logs:/logs
     depends_on:
       - webserv
-    command: ["tester0"]
+    command: ["--id=tester0"]

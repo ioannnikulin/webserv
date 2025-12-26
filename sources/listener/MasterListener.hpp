@@ -14,9 +14,7 @@
 namespace webserver {
 class MasterListener {
 private:
-    MasterListener();
     MasterListener(const MasterListener& other);
-    MasterListener& operator=(const MasterListener& other);
 
     std::vector<struct ::pollfd> _pollFds;
     /* NOTE:
@@ -30,12 +28,14 @@ private:
     std::map<int, Listener*> _listeners;        // NOTE: listening socket fd: Listener
     std::map<int, Listener*> _clientListeners;  // NOTE: client socket fd: Listener
 
-    void handleIncomingConnection(::pollfd& activeFd, const AppConfig* appConfig, bool shouldDeny);
-    void handleOutgoingConnection(const ::pollfd& activeFd) const;
+    void handleIncomingConnection(::pollfd& activeFd, bool shouldDeny);
+    void handleOutgoingConnection(const ::pollfd& activeFd);
 
 public:
-    explicit MasterListener(const std::set<std::pair<std::string, int> >& interfacePortPairs);
-    void listenAndHandle(volatile __sig_atomic_t& isRunning, const AppConfig* appConfig);
+    MasterListener();
+    explicit MasterListener(const AppConfig& configuration);
+    MasterListener& operator=(const MasterListener& other);
+    void listenAndHandle(volatile __sig_atomic_t& isRunning);
     ~MasterListener();
 };
 }  // namespace webserver

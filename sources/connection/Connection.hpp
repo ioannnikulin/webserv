@@ -17,14 +17,15 @@ private:
     enum State { NEWBORN, READING, WRITING, CLOSED };
     State _state;
     ::pollfd* _clientSocket;  // NOTE: do not delete it here! it's managed by MasterListener
-    int _clientSocketFd;      // NOTE: acquired here, then passed to pollfd up in MasterListener
-    // NOTE: DO NOT use it! use _clientSocket.fd instead!
+    int _clientSocketFd; // NOTE: acquired here, then passed to pollfd up in MasterListener
     std::string _responseBuffer;
     std::ostringstream _requestBuffer;
-    Request* _request;
+    Request _request;
     uint32_t _clientIp;
     uint16_t _clientPort;
+    const Endpoint& _configuration;
 
+    Connection();
     Connection(const Connection& other);
     Connection& operator=(const Connection& other);
 
@@ -33,8 +34,17 @@ private:
     void markResponseReadyForReturn();
 
 public:
-    Connection();
-    explicit Connection(int listeningSocketFd);
+	class TerminatedByClient: public std::exception {
+    private:
+        TerminatedByClient& operator=(const TerminatedByClient& other);
+
+    public:
+        TerminatedByClient();
+        TerminatedByClient(const TerminatedByClient& other);
+        ~TerminatedByClient() throw();
+        const char* what() const throw();
+    };
+    explicit Connection(int listeningSocketFd, const Endpoint& configuration);
     ~Connection();
 
     int getClientSocketFd() const;
@@ -42,7 +52,7 @@ public:
     Connection& setResponseBuffer(std::string buffer);
     std::string getResponseBuffer() const;
 
-    void handleRequest(const AppConfig* appConfig, bool shouldDeny);
+    void handleRequest(bool shouldDeny);
     void sendResponse();
 };
 }  // namespace webserver
