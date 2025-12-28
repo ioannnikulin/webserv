@@ -1,9 +1,7 @@
 #include "WebServer.hpp"
 
 #include <csignal>
-#include <cstddef>
 #include <iostream>
-#include <stdexcept>
 #include <string>
 
 #include "configuration/AppConfig.hpp"
@@ -11,10 +9,7 @@
 #include "http_status/HttpStatus.hpp"
 #include "listener/MasterListener.hpp"
 #include "utils/colors.hpp"
-#include "utils/utils.hpp"
 
-using std::cerr;
-using std::endl;
 using std::string;
 
 namespace webserver {

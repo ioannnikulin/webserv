@@ -15,7 +15,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "configuration/AppConfig.hpp"
+#include "configuration/Endpoint.hpp"
 #include "utils/colors.hpp"
 #include "utils/utils.hpp"
 
@@ -119,9 +119,8 @@ Listener::Listener(const Endpoint& configuration)
         throw runtime_error(string("listen() failed: ") + strerror(errno));
     }
 
-    clog << utils::separator() << "Listening on " << B_GREEN << "http:/"
-         << "/" << _interface << ":" << _port << RESET_COLOR << " via socket " << _listeningSocketFd
-         << endl
+    clog << utils::separator() << "Listening on " << B_GREEN << "http:/" << "/" << _interface << ":"
+         << _port << RESET_COLOR << " via socket " << _listeningSocketFd << endl
          << utils::separator();
 }
 
@@ -164,7 +163,7 @@ void Listener::sendResponse(int clientSocketFd) {
 void Listener::killConnection(int clientSocketFd) {
     clog << "Killing connection " << clientSocketFd << endl;
     close(clientSocketFd);
-    map<int, Connection*>::iterator itr = _clientConnections.find(clientSocketFd);
+    const map<int, Connection*>::iterator itr = _clientConnections.find(clientSocketFd);
     delete itr->second;
     _clientConnections.erase(itr);
 }
@@ -177,7 +176,7 @@ Listener::~Listener() {
     }
 }
 
-int Listener::connectionCount() const {
+unsigned long Listener::connectionCount() const {
     return (_clientConnections.size());
 }
 }  // namespace webserver

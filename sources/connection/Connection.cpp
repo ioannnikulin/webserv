@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 #include <cstring>
 #include <exception>
@@ -14,11 +13,10 @@
 #include <stdexcept>
 #include <string>
 
-#include "configuration/AppConfig.hpp"
+#include "configuration/Endpoint.hpp"
 #include "http_methods/HttpMethodType.hpp"
 #include "http_status/HttpException.hpp"
 #include "http_status/HttpStatus.hpp"
-#include "http_status/ShuttingDown.hpp"
 #include "request/Request.hpp"
 #include "request_handler/RequestHandler.hpp"
 #include "utils/colors.hpp"
