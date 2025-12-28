@@ -39,6 +39,10 @@ private:
     registerResponseWorker(int controlPipeReadingEnd, int responsePipeReadingEnd, int clientFd);
     void markResponseReadyForReturn(int clientFd);
     Connection::State generateResponse(Listener* listener, ::pollfd& activeFd);
+    Connection::State isItANewConnectionOnAListeningSocket(::pollfd& activeFd);
+    Connection::State isItADataRequestOnAClientSocketFromARegisteredClient(::pollfd& activeFd);
+    Connection::State isItAControlMessageFromAResponseGeneratorWorker(::pollfd& activeFd);
+    Connection::State isItAResponseFromAResponseGeneratorWorker(::pollfd& activeFd);
     Connection::State handleIncomingConnection(::pollfd& activeFd, bool acceptingNewConnections);
     void handleOutgoingConnection(const ::pollfd& activeFd);
     static void reapChildren();

@@ -171,8 +171,7 @@ Connection::State MasterListener::generateResponse(Listener* listener, ::pollfd&
             const_cast<char*>("/bin/sh"),
             const_cast<char*>("-c"),
             const_cast<char*>("exit 0"),
-            NULL
-        };
+            NULL};
         char* envp[] = {NULL};
         execve("/bin/sh", argv, envp);
         // NOTE: should not get to this point, but if it got here, it's a zombie that the parent can kill
@@ -200,60 +199,87 @@ void MasterListener::removePollFd(int fdesc) {
     }
 }
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-Connection::State
-MasterListener::handleIncomingConnection(::pollfd& activeFd, bool acceptingNewConnections) {
+Connection::State MasterListener::isItANewConnectionOnAListeningSocket(::pollfd& activeFd) {
     Listener* listener = findListener(_listeners, activeFd.fd);
-    // NOTE: is it a request on a LISTENING socket? so a request for a new connection?
-    if (acceptingNewConnections && listener != NULL) {
-        const int clientSocket = registerNewConnection(activeFd.fd, listener);
-        _clientListeners[clientSocket] = listener;
-        return (Connection::NEWBORN);
+    if (listener == NULL) {
+        return (Connection::IGNORED);
     }
-    // NOTE: if not, maybe this is a request on an existing connection,
-    // NOTE: so on a CLIENT socket?
-    listener = findListener(_clientListeners, activeFd.fd);
-    if (listener != NULL) {
-        clog << "Existing client on socket fd " << activeFd.fd << " has sent data." << endl;
-        const Connection::State connState = listener->receiveRequest(activeFd.fd);
-        if (connState == Connection::READING_COMPLETE) {
-            markConnectionClosedToAvoidRequestOverlapping(activeFd);
-            generateResponse(listener, activeFd);
-            return (Connection::WRITING);
-        }
-        return (connState);
+    const int clientSocket = registerNewConnection(activeFd.fd, listener);
+    _clientListeners[clientSocket] = listener;
+    return (Connection::NEWBORN);
+}
+
+Connection::State MasterListener::isItADataRequestOnAClientSocketFromARegisteredClient(
+    ::pollfd& activeFd
+) {
+    Listener* listener = findListener(_clientListeners, activeFd.fd);
+    if (listener == NULL) {
+        return (Connection::IGNORED);
     }
-    // NOTE: if not, maybe a child process just finished generating a potentially blocking response
-    // NOTE: and reports about his (child's) state so that we can terminate the server if necessary?
+    clog << "Existing client on socket fd " << activeFd.fd << " has sent data." << endl;
+    const Connection::State connState = listener->receiveRequest(activeFd.fd);
+    if (connState == Connection::READING_COMPLETE) {
+        markConnectionClosedToAvoidRequestOverlapping(activeFd);
+        generateResponse(listener, activeFd);
+        return (Connection::WRITING);
+    }
+    return (connState);
+}
+
+Connection::State MasterListener::isItAControlMessageFromAResponseGeneratorWorker(::pollfd& activeFd
+) {
     const map<int, int>::iterator controlMessageReadyFor =
         _responseWorkerControls.find(activeFd.fd);
-    if (controlMessageReadyFor != _responseWorkerControls.end()) {
-        const Connection::State connState =
-            readControlMessageAndClose(controlMessageReadyFor->first);
-        clog << "Worker on fd " << controlMessageReadyFor->first << " reported status " << connState
-             << endl;
-        removePollFd(controlMessageReadyFor->first);
-        _responseWorkerControls.erase(controlMessageReadyFor);
-        return (connState);
+    if (controlMessageReadyFor == _responseWorkerControls.end()) {
+        return (Connection::IGNORED);
     }
-    // NOTE: if not, maybe a child process just finished generating a potentially blocking response
-    // NOTE: and requests it to be picked up in the main thread?
+    const Connection::State connState = readControlMessageAndClose(controlMessageReadyFor->first);
+    clog << "Worker on fd " << controlMessageReadyFor->first << " reported status " << connState
+         << endl;
+    removePollFd(controlMessageReadyFor->first);
+    _responseWorkerControls.erase(controlMessageReadyFor);
+    return (connState);
+}
+
+Connection::State MasterListener::isItAResponseFromAResponseGeneratorWorker(::pollfd& activeFd) {
     const map<int, int>::iterator responseReadyFor = _responseWorkers.find(activeFd.fd);
-    if (responseReadyFor != _responseWorkers.end()) {
-        clog << "Response for " << responseReadyFor->second << " made by worker on fd "
-             << responseReadyFor->first << " is being picked up by main thread" << endl;
-        const string response = readStringAndClose(responseReadyFor->first);
-        clog << GREY << response << RESET_COLOR << endl;
-        _clientListeners.at(responseReadyFor->second)
-            ->setResponse(responseReadyFor->second, response);
-        markResponseReadyForReturn(responseReadyFor->second);
-        removePollFd(responseReadyFor->first);
-        _responseWorkers.erase(responseReadyFor);
-        return (Connection::WRITING_COMPLETE);
+    if (responseReadyFor == _responseWorkers.end()) {
+        return (Connection::IGNORED);
     }
-    // NOTE: this should never happen in theory, since all sockets come from listening or client lists
-    // NOTE: maybe sending data after a timeout, when the connection was closed already or smth
-    cerr << "Unknown socket fd " << activeFd.fd << " has sent data, ignoring." << endl;
+    clog << "Response for " << responseReadyFor->second << " made by worker on fd "
+         << responseReadyFor->first << " is being picked up by main thread" << endl;
+    const string response = readStringAndClose(responseReadyFor->first);
+    clog << GREY << response << RESET_COLOR << endl;
+    _clientListeners.at(responseReadyFor->second)->setResponse(responseReadyFor->second, response);
+    markResponseReadyForReturn(responseReadyFor->second);
+    removePollFd(responseReadyFor->first);
+    _responseWorkers.erase(responseReadyFor);
+    return (Connection::WRITING_COMPLETE);
+}
+
+Connection::State
+MasterListener::handleIncomingConnection(::pollfd& activeFd, bool acceptingNewConnections) {
+    Connection::State ret;
+    if (acceptingNewConnections) {
+        ret = isItANewConnectionOnAListeningSocket(activeFd);
+        if (ret != Connection::IGNORED) {
+            return (ret);
+        }
+    }
+    ret = isItADataRequestOnAClientSocketFromARegisteredClient(activeFd);
+    if (ret != Connection::IGNORED) {
+        return (ret);
+    }
+    ret = isItAControlMessageFromAResponseGeneratorWorker(activeFd);
+    if (ret != Connection::IGNORED) {
+        return (ret);
+    }
+    ret = isItAResponseFromAResponseGeneratorWorker(activeFd);
+    if (ret != Connection::IGNORED) {
+        return (ret);
+    }
+    cerr << RED << "Unknown socket fd " << activeFd.fd << " has sent data, ignoring." << RESET_COLOR
+         << endl;
     return (Connection::IGNORED);
 }
 
@@ -275,7 +301,6 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
          << RESET_COLOR << endl
          << utils::separator();
     _clientListeners.erase(_clientListeners.find(activeFd.fd));
-    clog << _clientListeners.size() << endl;
     listener->killConnection(activeFd.fd);
     removePollFd(activeFd.fd);
 }
