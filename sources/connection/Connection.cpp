@@ -138,7 +138,7 @@ Connection::State Connection::generateResponse() {
         _request = Request(_requestBuffer.str());
         if (_request.getType() == SHUTDOWN) {
             _state = SERVER_SHUTTING_DOWN;
-            // NOTE: this response is not used currently, but let's see how it goes
+            // NOTE: sent only in response to a SHUTDOWN request as of now
             _responseBuffer =
                 "HTTP/1.0 503 Service Unavailable\r\n"
                 "Content-Length: 25\r\n"
