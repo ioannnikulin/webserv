@@ -20,7 +20,7 @@ private:
     std::string _interface;
     int _port;
     int _listeningSocketFd;
-    std::map<int, Connection*> _clientConnections;  // NOTE: client socket: connection
+    std::map<int, Connection*> _clientConnections;  // NOTE: client socket file descriptor: connection
     const Endpoint& _configuration;
 
     struct ::sockaddr_in resolveAddress() const;
@@ -47,7 +47,7 @@ public:
     bool hasActiveClientSocket(int clientSocketFd) const;
 
     int acceptConnection();  // NOTE: returns client socket fd
-    void
+    Connection::State
     receiveRequest(const ::pollfd& clientSocketFd, bool shouldDeny);
     void sendResponse(int clientSocketFd);
     void killConnection(int clientSocketFd);

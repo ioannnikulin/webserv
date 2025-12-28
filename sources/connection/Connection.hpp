@@ -13,10 +13,11 @@
 
 namespace webserver {
 class Connection {
+public:
+    enum State { NEWBORN, READING, WRITING, RESPONSE_READY, CLOSED, TERMINATE };
+
 private:
-    enum State { NEWBORN, READING, WRITING, CLOSED };
     State _state;
-    ::pollfd* _clientSocket;  // NOTE: do not delete it here! it's managed by MasterListener
     int _clientSocketFd; // NOTE: acquired here, then passed to pollfd up in MasterListener
     std::string _responseBuffer;
     std::ostringstream _requestBuffer;
@@ -34,6 +35,7 @@ private:
     void markResponseReadyForReturn();
 
 public:
+
 	class TerminatedByClient: public std::exception {
     private:
         TerminatedByClient& operator=(const TerminatedByClient& other);
@@ -48,11 +50,10 @@ public:
     ~Connection();
 
     int getClientSocketFd() const;
-    Connection& setClientSocket(::pollfd* clientSocket);
     Connection& setResponseBuffer(std::string buffer);
     std::string getResponseBuffer() const;
 
-    void handleRequest(bool shouldDeny);
+    State handleRequest(bool shouldDeny);
     void sendResponse();
 };
 }  // namespace webserver
