@@ -81,7 +81,7 @@ void Response::setHeader(const std::string& key, const std::string& value) {
 }
 
 string Response::serialize(void) const {
-    std::clog << B_YELLOW << "Serializing the HTTP response..." << RESET << std::endl;
+    std::clog << B_YELLOW << "Serializing the HTTP response..." << RESET_COLOR << std::endl;
 
     std::ostringstream resp;
 
@@ -101,7 +101,7 @@ string Response::serialize(void) const {
     // NOTE: BODY
     resp << _body;
 
-    std::clog << B_GREEN << "✅ HTTP response serialized!" << RESET << std::endl;
+    std::clog << B_GREEN << "✅ HTTP response serialized!" << RESET_COLOR << std::endl;
 
     return (resp.str());
 }

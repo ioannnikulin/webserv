@@ -19,6 +19,6 @@
 #define B_MAGENTA "\033[95m"
 #define B_CYAN "\033[96m"
 #define B_WHITE "\033[97m"
-#define RESET "\033[0m"
+#define RESET_COLOR "\033[0m"
 
 #endif

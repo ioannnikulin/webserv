@@ -73,7 +73,7 @@ int Connection::getClientSocketFd() const {
 
 bool Connection::fullRequestReceived() {
     const string requestBuffer = _requestBuffer.str();
-    clog << "checking [" << requestBuffer << "]" << endl;
+    clog << GREY << "checking [" << requestBuffer << "]" << RESET_COLOR << endl;
     try {
         const webserver::Request tmp(requestBuffer);
         return (true);
@@ -133,8 +133,8 @@ Connection::State Connection::generateResponse() {
 
     try {
         // NOTE: DL should it be cout or clog? clog is usually used for errors?
-        std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocketFd << RESET
-                  << ":\n---\n"
+        std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocketFd
+                  << RESET_COLOR << ":\n---\n"
                   << _requestBuffer.str() << "---\n"
                   << endl;
         _request = Request(_requestBuffer.str());
@@ -143,10 +143,10 @@ Connection::State Connection::generateResponse() {
             // NOTE: this response is not used currently, but let's see how it goes
             _responseBuffer =
                 "HTTP/1.0 503 Service Unavailable\r\n"
-                "Content-Length: 19\r\n"
+                "Content-Length: 25\r\n"
                 "Connection: close\r\n"
                 "\r\n"
-                "Server is shutting down";
+                "Server is shutting down\r\n";
             return (_state);
         }
         _responseBuffer = RequestHandler::handleRequest(_request, _configuration);

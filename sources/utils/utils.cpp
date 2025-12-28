@@ -12,19 +12,11 @@
 #define SEPARATOR_COLOR CYAN
 
 namespace utils {
-void setColor(std::string color) {
-    std::cout << color;
-}
-
-void resetColor(void) {
-    std::cout << RESET;
-}
-
-void printSeparator(void) {
-    setColor(SEPARATOR_COLOR);
-    std::cout << std::string(SEPARATOR_WIDTH, SEPARATOR_CHAR);
-    resetColor();
-    std::cout << std::endl;
+std::string separator(void) {
+    std::ostringstream oss;
+    oss << SEPARATOR_COLOR << std::string(SEPARATOR_WIDTH, SEPARATOR_CHAR) << RESET_COLOR
+        << std::endl;
+    return (oss.str());
 }
 
 std::string toString(int value) {

@@ -4,9 +4,7 @@
 #include <string>
 
 namespace utils {
-void printSeparator(void);
-void setColor(std::string color);
-void resetColor(void);
+std::string separator(void);
 
 std::string toString(int value);
 std::string toString(std::size_t value);

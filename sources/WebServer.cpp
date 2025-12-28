@@ -31,9 +31,7 @@ extern "C" void handleSigint(int signum) {
     (void)signum;
     WebServer& server = WebServer::getInstance("");
     server.stop();
-    utils::setColor(B_RED);
-    std::cout << "\n❌ Webserver stopped after Ctrl+C." << std::endl;
-    utils::resetColor();
+    std::cout << B_RED << "\n❌ Webserver stopped after Ctrl+C." << RESET_COLOR << std::endl;
 }
 
 void WebServer::handleSignals() {
