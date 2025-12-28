@@ -35,7 +35,7 @@ namespace webserver {
 Connection::Connection(int listeningSocketFd, const Endpoint& configuration)
     : _state(NEWBORN)
     , _clientIp(0)
-    , _clientPort(0) 
+    , _clientPort(0)
     , _configuration(configuration) {
     const uint32_t SHIFT24 = 24;
     const uint32_t SHIFT16 = 16;
@@ -74,19 +74,8 @@ int Connection::getClientSocketFd() const {
 bool Connection::fullRequestReceived() {
     const string requestBuffer = _requestBuffer.str();
     clog << "checking [" << requestBuffer << "]" << endl;
-    const size_t pos = requestBuffer.find("\r\n\r\n");
-    if (pos == string::npos) {
-        return (false);
-    }
-    // NOTE: we have \r\n\r\n. for GET and DELETE this means the request is complete. for POST we have to check the body size.
     try {
         const webserver::Request tmp(requestBuffer);
-        if (tmp.getType() == POST) {
-            if (!tmp.contentLengthSet() || tmp.getContentLength() != tmp.getBody().length()) {
-                return (false);
-            }
-            return (true);
-        }
         return (true);
     } catch (exception& e) {
         // NOTE: if the request wasn't parsed correctly, let's consider it complete to report an error on it
@@ -94,27 +83,33 @@ bool Connection::fullRequestReceived() {
     }
 }
 
-void Connection::receiveRequestContent() {
+Connection::State Connection::receiveRequestContent() {
     _state = READING;
     const int READ_BUFFER_SIZE = 4096;
     char readBuffer[READ_BUFFER_SIZE];
+    /* NOTE: no loop here, otherwise this would be a blocking socket
+    * we read one full buffer and then wait for this socket to come up in poll again
+    */
     const ssize_t bytesRead = recv(_clientSocketFd, readBuffer, sizeof(readBuffer), 0);
     if (bytesRead == -1) {
         throw runtime_error(string("recv() failed"));
         // TODO 48: probably should retry, not throw
     }
     if (bytesRead == 0) {
-        throw TerminatedByClient();
+        // NOTE: client closed the connection himself, no way to send response
+        _state = CLOSED_BY_CLIENT;
     } else {
         _requestBuffer << string(readBuffer, bytesRead);
         if (fullRequestReceived()) {
-            _state = WRITING;
+            _state = READING_COMPLETE;
         }
     }
+    // NOTE: state stays in READING by default, that is, we still have content to receive
+    return (_state);
 }
 
 void Connection::sendResponse() {
-    clog << "Sending response to fd " << _clientSocketFd << endl; 
+    clog << "Sending response to fd " << _clientSocketFd << endl;
     size_t totalSent = 0;
     const size_t toSend = _responseBuffer.size();
     while (totalSent < toSend) {
@@ -126,32 +121,37 @@ void Connection::sendResponse() {
         }
         totalSent += sent;
     }
-    close(_clientSocketFd);
+    _state = RESPONSE_SENT;
 }
 
-Connection::State Connection::handleRequest(bool shouldDeny) {
-    receiveRequestContent();
-    if (_state == READING) {
-        return (READING);  // NOTE: still reading, wait for next poll
+Connection::State Connection::generateResponse() {
+    // NOTE: called only in child process
+    if (_state != READING_COMPLETE) {
+        // NOTE: how did you call this? this is a wrong time to call response generator
+        return (_state);
     }
 
     try {
         // NOTE: DL should it be cout or clog? clog is usually used for errors?
-        std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocketFd
-                  << RESET << ":\n---\n"
+        std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocketFd << RESET
+                  << ":\n---\n"
                   << _requestBuffer.str() << "---\n"
                   << endl;
-        if (shouldDeny) {
-            return (TERMINATE);
-            // NOTE: another request said to shut down, we delegated handling here to reuse the response
-        }
         _request = Request(_requestBuffer.str());
         if (_request.getType() == SHUTDOWN) {
-            _state = CLOSED;
-            return (TERMINATE);
+            _state = SERVER_SHUTTING_DOWN;
+            // NOTE: this response is not used currently, but let's see how it goes
+            _responseBuffer =
+                "HTTP/1.0 503 Service Unavailable\r\n"
+                "Content-Length: 19\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "Server is shutting down";
+            return (_state);
         }
         _responseBuffer = RequestHandler::handleRequest(_request, _configuration);
     } catch (const HttpException& e) {
+        // NOTE: webserver-logic-related errors
         ostringstream oss;
         oss << "HTTP/1.0 " << e.getCode() << " " << HttpStatus::getReasonPhrase(e.getCode())
             << "\r\n"
@@ -159,15 +159,8 @@ Connection::State Connection::handleRequest(bool shouldDeny) {
             << "Connection: close\r\n\r\n"
             << e.what();
         _responseBuffer = oss.str();
-    } catch (const ShuttingDown& e) {
-        _responseBuffer =
-            "HTTP/1.0 503 Service Unavailable\r\n"
-            "Content-Length: 19\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "Server is shutting down";
-            return (TERMINATE);
     } catch (const exception& e) {
+        // NOTE: system call failures
         _responseBuffer =
             "HTTP/1.0 500 Internal Server Error\r\n"
             "Content-Length: 21\r\n"
@@ -175,19 +168,11 @@ Connection::State Connection::handleRequest(bool shouldDeny) {
             "\r\n"
             "Internal Server Error";
     }
-    return (RESPONSE_READY);
+    _state = WRITING_COMPLETE;
+    return (_state);
 }
 
 Connection::~Connection() {
 }
 
-Connection::TerminatedByClient::TerminatedByClient() {
-}
-
-Connection::TerminatedByClient::~TerminatedByClient() throw() {
-}
-
-const char* Connection::TerminatedByClient::what() const throw() {
-    return ("Client terminated the connection");
-}
 }  // namespace webserver

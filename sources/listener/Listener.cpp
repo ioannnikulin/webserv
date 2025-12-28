@@ -127,6 +127,15 @@ Listener::Listener(const Endpoint& configuration)
     utils::printSeparator();
 }
 
+string Listener::getResponse(int clientSocketFd) const {
+    return (_clientConnections.at(clientSocketFd)->getResponseBuffer());
+}
+
+Listener& Listener::setResponse(int clientSocketFd, string response) {
+    _clientConnections.at(clientSocketFd)->setResponseBuffer(response);
+    return (*this);
+}
+
 int Listener::getListeningSocketFd() const {
     return (_listeningSocketFd);
 }
@@ -142,11 +151,12 @@ int Listener::acceptConnection() {
     return (nconn->getClientSocketFd());
 }
 
-Connection::State Listener::receiveRequest(
-    const ::pollfd& clientSocketFd,
-    bool shouldDeny
-) {
-    return (_clientConnections.at(clientSocketFd.fd)->handleRequest(shouldDeny));
+Connection::State Listener::receiveRequest(int clientSocketFd) {
+    return (_clientConnections.at(clientSocketFd)->receiveRequestContent());
+}
+
+Connection::State Listener::generateResponse(int clientSocketFd) {
+    return (_clientConnections.at(clientSocketFd)->generateResponse());
 }
 
 void Listener::sendResponse(int clientSocketFd) {
@@ -154,10 +164,11 @@ void Listener::sendResponse(int clientSocketFd) {
 }
 
 void Listener::killConnection(int clientSocketFd) {
+    clog << "Killing connection " << clientSocketFd << endl;
+    close(clientSocketFd);
     map<int, Connection*>::iterator itr = _clientConnections.find(clientSocketFd);
     delete itr->second;
     _clientConnections.erase(itr);
-    close(clientSocketFd);
 }
 
 Listener::~Listener() {
@@ -166,12 +177,6 @@ Listener::~Listener() {
         close(_listeningSocketFd);
         _listeningSocketFd = -1;
     }
-    for (map<int, Connection*>::iterator itr = _clientConnections.begin(); itr != _clientConnections.end(); itr ++) {
-        clog << "Closing fd " << itr->first << endl;
-        close(itr->first);
-        delete itr->second;
-    }
-    _clientConnections.clear();
 }
 
 int Listener::connectionCount() const {

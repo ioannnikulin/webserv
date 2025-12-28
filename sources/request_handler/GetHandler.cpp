@@ -36,9 +36,7 @@ Response GetHandler::handleRequest(string location, const Endpoint& configuratio
     ostringstream oss;
     oss << configuration.getRoute("/").getFolderConfig()->getRootPath() << "/";
     if (location == "/") {
-        oss << configuration.getRoute("/")
-                   .getFolderConfig()
-                   ->getIndexPageFileLocation();
+        oss << configuration.getRoute("/").getFolderConfig()->getIndexPageFileLocation();
     } else {
         if (!location.empty() && location[0] == '/') {
             location = location.substr(1);

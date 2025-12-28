@@ -197,6 +197,7 @@ build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
 
 VALGRIND=@valgrind \
 		--leak-check=full --show-leak-kinds=all --track-fds=yes \
+		--child-silent-after-fork=yes \
 		--error-exitcode=1 \
 
 
@@ -205,6 +206,9 @@ test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
 
 run: $(MAIN_EXECUTABLE)
 	@./$(MAIN_EXECUTABLE) ./tests/config_files/local_run.conf
+
+debug: $(MAIN_EXECUTABLE)
+	@gdbtui --args ./$(MAIN_EXECUTABLE) ./tests/config_files/local_run.conf
 
 valgrind: $(MAIN_EXECUTABLE)
 	$(VALGRIND) ./$(MAIN_EXECUTABLE) ./tests/config_files/local_run.conf 2>&1 | tee valgrind.log

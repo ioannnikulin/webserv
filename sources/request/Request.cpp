@@ -54,6 +54,9 @@ Request::Request(string raw) {
     }
     parseHeaders(raw.substr(endOfFirstLine + 2, endOfHeaders - endOfFirstLine - 2));
     parseBody(endOfHeaders != string::npos ? raw.substr(endOfHeaders + 4) : string());
+    if (getType() == POST && (!contentLengthSet() || getContentLength() != getBody().length())) {
+        throw BadRequest("actual received body length does not match the declared Content-Length");
+    }
 }
 
 void Request::parseFirstLine(std::string firstLine) {

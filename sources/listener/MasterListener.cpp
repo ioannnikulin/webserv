@@ -2,16 +2,19 @@
 
 #include <poll.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include <cerrno>
+#include <connection/Connection.hpp>
 #include <iostream>
 #include <map>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#include <connection/Connection.hpp>
 #include "configuration/AppConfig.hpp"
 #include "http_status/ShuttingDown.hpp"
 #include "listener/Listener.hpp"
@@ -22,6 +25,7 @@ using std::cerr;
 using std::clog;
 using std::endl;
 using std::map;
+using std::ostringstream;
 using std::pair;
 using std::runtime_error;
 using std::set;
@@ -29,23 +33,8 @@ using std::string;
 using std::vector;
 
 namespace {
+using webserver::Connection;
 using webserver::Listener;
-
-int registerNewConnection(
-    vector<struct ::pollfd>& pollFds,
-    int listeningFd,
-    Listener* listener
-) {
-    clog << B_YELLOW << "A new connection on socket fd " << listeningFd << endl << RESET;
-    struct ::pollfd clientPfd;
-    clientPfd.fd = listener->acceptConnection();
-    clientPfd.events = POLLIN;
-    clientPfd.revents = 0;
-    pollFds.push_back(clientPfd);
-    clog << "Connection accepted, client socket " << clientPfd.fd << " assigned to this client."
-         << endl;
-    return (clientPfd.fd);
-}
 
 Listener* findListener(map<int, Listener*> where, int byFd) {
     const map<int, Listener*>::const_iterator res = where.find(byFd);
@@ -55,26 +44,38 @@ Listener* findListener(map<int, Listener*> where, int byFd) {
     return (res->second);
 }
 
-void populateFdsFromListeners(
-    vector<struct ::pollfd>& pollFds,
-    const map<int, Listener*>& listeners
-) {
-    for (map<int, Listener*>::const_iterator it = listeners.begin(); it != listeners.end(); ++it) {
-        struct ::pollfd pfd;
-        pfd.fd = it->first;
-        pfd.events = POLLIN;
-        pfd.revents = 0;
-        pollFds.push_back(pfd);
+void markConnectionClosedToAvoidRequestOverlapping(::pollfd& activeFd) {
+    activeFd.events = 0;
+}
+
+Connection::State readControlMessageAndClose(int pipeFd) {
+    Connection::State state;
+    if (read(pipeFd, &state, sizeof(state)) == -1) {
+        throw runtime_error("Failed to read from control pipe");
     }
+    close(pipeFd);
+    return (state);
+}
+
+string readStringAndClose(int pipeFd) {
+    char buffer[4096];
+    ostringstream oss;
+    int bytesRead = 0;
+    while ((bytesRead = read(pipeFd, buffer, sizeof(buffer))) > 0) {
+        oss << string(buffer, bytesRead);
+    }
+    if (bytesRead == -1) {
+        throw runtime_error("Failed to read from response pipe");
+    }
+    close(pipeFd);
+    return (oss.str());
 }
 }  // namespace
 
 namespace webserver {
 MasterListener::MasterListener(const AppConfig& configuration) {
     const set<Endpoint>& endpoints = configuration.getEndpoints();
-    for (set<Endpoint>::const_iterator itr = endpoints.begin();
-         itr != endpoints.end();
-         ++itr) {
+    for (set<Endpoint>::const_iterator itr = endpoints.begin(); itr != endpoints.end(); ++itr) {
         Listener* newListener = new Listener(*itr);
         _listeners[newListener->getListeningSocketFd()] = newListener;
     }
@@ -90,47 +91,147 @@ MasterListener& MasterListener::operator=(const MasterListener& other) {
     return (*this);
 }
 
-void MasterListener::markResponseReadyForReturn(::pollfd& activeFd) {
-    activeFd.events |= POLLOUT;
+int MasterListener::registerNewConnection(int listeningFd, Listener* listener) {
+    clog << B_YELLOW << "A new connection on socket fd " << listeningFd << endl << RESET;
+    struct ::pollfd clientPfd;
+    clientPfd.fd = listener->acceptConnection();
+    clientPfd.events = POLLIN;
+    clientPfd.revents = 0;
+    _pollFds.push_back(clientPfd);
+    clog << "Connection accepted, client socket " << clientPfd.fd << " assigned to this client."
+         << endl;
+    return (clientPfd.fd);
+}
+
+void MasterListener::populateFdsFromListeners() {
+    for (map<int, Listener*>::const_iterator it = _listeners.begin(); it != _listeners.end();
+         ++it) {
+        struct ::pollfd pfd;
+        pfd.fd = it->first;
+        pfd.events = POLLIN;
+        pfd.revents = 0;
+        _pollFds.push_back(pfd);
+    }
+}
+
+void MasterListener::registerResponseWorker(int controlPipeReadingEnd, int responsePipeReadingEnd, int clientFd) {
+    struct ::pollfd controlPipePollFd;
+    controlPipePollFd.fd = controlPipeReadingEnd;
+    controlPipePollFd.events = POLLIN;
+    controlPipePollFd.revents = 0;
+    _pollFds.push_back(controlPipePollFd);
+    struct ::pollfd responsePipePollFd;
+    responsePipePollFd.fd = responsePipeReadingEnd;
+    responsePipePollFd.events = POLLIN;
+    responsePipePollFd.revents = 0;
+    _pollFds.push_back(responsePipePollFd);
+    _responseWorkerControls[controlPipeReadingEnd] = clientFd;
+    _responseWorkers[responsePipeReadingEnd] = clientFd;
+}
+
+void MasterListener::markResponseReadyForReturn(int clientFd) {
+    for (vector<struct ::pollfd>::iterator itr = _pollFds.begin(); itr != _pollFds.end(); itr++) {
+        if (itr->fd == clientFd) {
+            itr->events = POLLOUT;
+            return;
+        }
+    }
+}
+
+Connection::State
+MasterListener::generateResponse(Listener* listener, ::pollfd& activeFd) {
+    const int READING_PIPE_END = 0;
+    const int WRITING_PIPE_END = 1;
+    int responsePipe[2];
+    int controlPipe[2];
+    if (pipe(responsePipe) == -1 || pipe(controlPipe) == -1) {
+        throw runtime_error("pipe() failed");
+    }
+    int pid = fork();
+    if (pid == -1) {
+        throw runtime_error("fork() failed");
+    }
+    if (pid == 0) {
+        // NOTE: child; generates response and sends it to pipe for the parent to fetch and dispatch
+        close(responsePipe[READING_PIPE_END]);
+        close(controlPipe[READING_PIPE_END]);
+        Connection::State connState = listener->generateResponse(activeFd.fd);
+        if (connState != Connection::WRITING_COMPLETE && connState != Connection::SERVER_SHUTTING_DOWN) {
+            throw runtime_error("Unexpected failure in response generation");
+        }
+        if (write(controlPipe[WRITING_PIPE_END], &connState, sizeof(connState)) == -1) {
+            throw runtime_error(
+                "write() failed to send control message from child worker to parent dispatcher process"
+            );
+        }
+        string response = listener->getResponse(activeFd.fd);
+        if (write(responsePipe[WRITING_PIPE_END], response.data(), response.size()) == -1) {
+            throw runtime_error(
+                "write() failed to send response from child worker to parent dispatcher process"
+            );
+        }
+        close(controlPipe[WRITING_PIPE_END]);
+        close(responsePipe[WRITING_PIPE_END]);
+        _exit(0);
+    } else {
+        // NOTE: parent; registers the reading pipe of the pipe in the common poll() queue
+        close(controlPipe[WRITING_PIPE_END]);
+        close(responsePipe[WRITING_PIPE_END]);
+        registerResponseWorker(controlPipe[READING_PIPE_END], responsePipe[READING_PIPE_END], activeFd.fd);
+    }
+    return (Connection::WRITING_COMPLETE);
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-void MasterListener::handleIncomingConnection(
-    ::pollfd& activeFd,
-    bool shouldDeny
-) {
+Connection::State MasterListener::handleIncomingConnection(::pollfd& activeFd, bool acceptingNewConnections) {
     Listener* listener = findListener(_listeners, activeFd.fd);
     // NOTE: is it a request on a LISTENING socket? so a request for a new connection?
-    if (listener != NULL) {
-        const int clientSocket = registerNewConnection(_pollFds, activeFd.fd, listener);
+    if (acceptingNewConnections && listener != NULL) {
+        const int clientSocket = registerNewConnection(activeFd.fd, listener);
         _clientListeners[clientSocket] = listener;
-        return;
+        return (Connection::NEWBORN);
     }
     // NOTE: if not, maybe this is a request on an existing connection,
     // NOTE: so on a CLIENT socket?
     listener = findListener(_clientListeners, activeFd.fd);
     if (listener != NULL) {
         clog << "Existing client on socket fd " << activeFd.fd << " has sent data." << endl;
-        Connection::State connState = listener->receiveRequest(activeFd, shouldDeny);
-        switch (connState) {
-            case Connection::RESPONSE_READY:
-                markResponseReadyForReturn(activeFd);
-                break;
-            case Connection::CLOSED:
-                clog << "Client disconnected, terminating" << endl;
-                listener->killConnection(activeFd.fd);
-                _clientListeners.erase(_clientListeners.find(activeFd.fd));
-                break;
-            case Connection::TERMINATE:
-                throw ShuttingDown();
-                break;
-            default:
-                break;
+        const Connection::State connState = listener->receiveRequest(activeFd.fd);
+        if (connState == Connection::READING_COMPLETE) {
+            markConnectionClosedToAvoidRequestOverlapping(activeFd);
+            generateResponse(listener, activeFd);
+            return (Connection::WRITING);
+        } else {
+            return (connState);
         }
+    }
+    // NOTE: if not, maybe a child process just finished generating a potentially blocking response
+    // NOTE: and reports about his (child's) state so that we can terminate the server if necessary?
+    const map<int, int>::iterator controlMessageReadyFor = _responseWorkerControls.find(activeFd.fd);
+    if (controlMessageReadyFor != _responseWorkerControls.end()) {
+        const Connection::State connState = readControlMessageAndClose(controlMessageReadyFor->first);
+        clog << "Worker on fd " << controlMessageReadyFor->first << " reported status " << connState << endl;
+        if (connState == Connection::SERVER_SHUTTING_DOWN) {
+            return (Connection::SERVER_SHUTTING_DOWN);
+        }
+    }
+    // NOTE: if not, maybe a child process just finished generating a potentially blocking response
+    // NOTE: and requests it to be picked up in the main thread?
+    const map<int, int>::iterator responseReadyFor = _responseWorkers.find(activeFd.fd);
+    if (responseReadyFor != _responseWorkers.end()) {
+        clog << "Response for " << responseReadyFor->second << " made by worker on fd " << responseReadyFor->first << " is being picked up by main thread" << endl;
+        string response = readStringAndClose(responseReadyFor->first);
+        clog << response << endl;
+        _clientListeners.at(responseReadyFor->second)
+            ->setResponse(responseReadyFor->second, response);
+        markResponseReadyForReturn(responseReadyFor->second);
+        _responseWorkers.erase(responseReadyFor);
+        return (Connection::WRITING_COMPLETE);
     }
     // NOTE: this should never happen in theory, since all sockets come from listening or client lists
     // NOTE: maybe sending data after a timeout, when the connection was closed already or smth
     cerr << "Unknown socket fd " << activeFd.fd << " has sent data, ignoring." << endl;
+    return (Connection::IGNORED);
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
@@ -157,29 +258,26 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-void MasterListener::listenAndHandle(
-    volatile __sig_atomic_t& isRunning
-) {
-    populateFdsFromListeners(_pollFds, _listeners);
+void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
+    populateFdsFromListeners();
+    bool acceptingNewConnections = true;
 
     while (isRunning == 1) {
-        const int ret =
-            poll(_pollFds.data(), _pollFds.size(), -1);  // NOTE: POLL! the one and only!
+        const int ret = poll(_pollFds.data(), _pollFds.size(), -1);
         if (ret == -1) {
             if (errno == EINTR) {
                 continue;  // NOTE: interrupted by signal, retry
             }
             throw runtime_error(string("poll() failed: ") + strerror(errno));
         }
-        for (size_t i = 0; i < _pollFds.size();) {
+        reapChildren(acceptingNewConnections);
+        for (size_t i = 0; i < _pollFds.size(); i++) {
             if ((_pollFds[i].revents & POLLIN) > 0) {
                 // NOTE: something happened on that listening socket, let's dive in
-                try {
-                    handleIncomingConnection(_pollFds[i], isRunning == 0);
-                } catch (const ShuttingDown& e) {
-                    isRunning = 0;
+                Connection::State connState = handleIncomingConnection(_pollFds[i], acceptingNewConnections);
+                if (connState == Connection::SERVER_SHUTTING_DOWN) {
+                    acceptingNewConnections = false;
                 }
-                i++;
                 continue;
             }
             if ((_pollFds[i].revents & POLLOUT) > 0) {
@@ -188,9 +286,28 @@ void MasterListener::listenAndHandle(
                 _pollFds.erase(
                     _pollFds.begin() + static_cast<std::vector<struct ::pollfd>::difference_type>(i)
                 );
+                i--;
                 continue;
             }
-            i++;
+            if (!acceptingNewConnections && _clientListeners.empty()) {
+                isRunning = 0;
+            }
+        }
+    }
+}
+
+void MasterListener::reapChildren(bool& acceptingNewConnections) {
+    int status = 0;
+    pid_t pid;
+
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        if (WIFEXITED(status)) {
+            clog << "Child " << pid << " exited with code " << WEXITSTATUS(status) << endl;
+            if (WEXITSTATUS(status) == 503) {
+                acceptingNewConnections = false;
+            }
+        } else if (WIFSIGNALED(status)) {
+            clog << "Child " << pid << " killed by signal " << WTERMSIG(status) << endl;
         }
     }
 }
@@ -200,7 +317,5 @@ MasterListener::~MasterListener() {
          ++it) {
         delete it->second;
     }  // NOTE: deleting from listeners only, clientListeners contains pointers to the same Listener objects
-    // NOTE: should probably set them to nullptr there though
-    // TODO 56: check with valgrind
 }
 }  // namespace webserver
