@@ -119,9 +119,8 @@ Listener::Listener(const Endpoint& configuration)
         throw runtime_error(string("listen() failed: ") + strerror(errno));
     }
 
-    clog << utils::separator() << "Listening on " << B_GREEN << "http:/"
-         << "/" << _interface << ":" << _port << RESET_COLOR << " via socket " << _listeningSocketFd
-         << endl
+    clog << utils::separator() << "Listening on " << B_GREEN << "http:/" << "/" << _interface << ":"
+         << _port << RESET_COLOR << " via socket " << _listeningSocketFd << endl
          << utils::separator();
 }
 
