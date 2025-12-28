@@ -171,8 +171,10 @@ Connection::State MasterListener::generateResponse(Listener* listener, ::pollfd&
             const_cast<char*>("/bin/sh"),
             const_cast<char*>("-c"),
             const_cast<char*>("exit 0"),
+            // clang-format off
             NULL
         };
+        // clang-format on
         char* envp[] = {NULL};
         execve("/bin/sh", argv, envp);
         // NOTE: should not get to this point, but if it got here, it's a zombie that the parent can kill
