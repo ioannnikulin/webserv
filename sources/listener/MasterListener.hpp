@@ -30,7 +30,7 @@ private:
 
     void handleIncomingConnection(::pollfd& activeFd, bool shouldDeny);
     void handleOutgoingConnection(const ::pollfd& activeFd);
-
+    void markResponseReadyForReturn(::pollfd& activeFd);
 public:
     MasterListener();
     explicit MasterListener(const AppConfig& configuration);

@@ -127,10 +127,6 @@ Listener::Listener(const Endpoint& configuration)
     utils::printSeparator();
 }
 
-void Listener::setClientSocket(::pollfd* clientSocket) {
-    _clientConnections.at(clientSocket->fd)->setClientSocket(clientSocket);
-}
-
 int Listener::getListeningSocketFd() const {
     return (_listeningSocketFd);
 }
@@ -146,11 +142,11 @@ int Listener::acceptConnection() {
     return (nconn->getClientSocketFd());
 }
 
-void Listener::receiveRequest(
+Connection::State Listener::receiveRequest(
     const ::pollfd& clientSocketFd,
     bool shouldDeny
 ) {
-    _clientConnections.at(clientSocketFd.fd)->handleRequest(shouldDeny);
+    return (_clientConnections.at(clientSocketFd.fd)->handleRequest(shouldDeny));
 }
 
 void Listener::sendResponse(int clientSocketFd) {
