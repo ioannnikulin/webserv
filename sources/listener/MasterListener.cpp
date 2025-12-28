@@ -23,6 +23,7 @@
 
 using std::cerr;
 using std::clog;
+using std::cout;
 using std::endl;
 using std::map;
 using std::ostringstream;
@@ -92,7 +93,7 @@ MasterListener& MasterListener::operator=(const MasterListener& other) {
 }
 
 int MasterListener::registerNewConnection(int listeningFd, Listener* listener) {
-    clog << B_YELLOW << "A new connection on socket fd " << listeningFd << endl << RESET;
+    clog << B_YELLOW << "A new connection on socket fd " << listeningFd << endl << RESET_COLOR;
     struct ::pollfd clientPfd;
     clientPfd.fd = listener->acceptConnection();
     clientPfd.events = POLLIN;
@@ -114,7 +115,11 @@ void MasterListener::populateFdsFromListeners() {
     }
 }
 
-void MasterListener::registerResponseWorker(int controlPipeReadingEnd, int responsePipeReadingEnd, int clientFd) {
+void MasterListener::registerResponseWorker(
+    int controlPipeReadingEnd,
+    int responsePipeReadingEnd,
+    int clientFd
+) {
     struct ::pollfd controlPipePollFd;
     controlPipePollFd.fd = controlPipeReadingEnd;
     controlPipePollFd.events = POLLIN;
@@ -138,8 +143,7 @@ void MasterListener::markResponseReadyForReturn(int clientFd) {
     }
 }
 
-Connection::State
-MasterListener::generateResponse(Listener* listener, ::pollfd& activeFd) {
+Connection::State MasterListener::generateResponse(Listener* listener, ::pollfd& activeFd) {
     const int READING_PIPE_END = 0;
     const int WRITING_PIPE_END = 1;
     int responsePipe[2];
@@ -156,12 +160,14 @@ MasterListener::generateResponse(Listener* listener, ::pollfd& activeFd) {
         close(responsePipe[READING_PIPE_END]);
         close(controlPipe[READING_PIPE_END]);
         Connection::State connState = listener->generateResponse(activeFd.fd);
-        if (connState != Connection::WRITING_COMPLETE && connState != Connection::SERVER_SHUTTING_DOWN) {
+        if (connState != Connection::WRITING_COMPLETE &&
+            connState != Connection::SERVER_SHUTTING_DOWN) {
             throw runtime_error("Unexpected failure in response generation");
         }
         if (write(controlPipe[WRITING_PIPE_END], &connState, sizeof(connState)) == -1) {
             throw runtime_error(
-                "write() failed to send control message from child worker to parent dispatcher process"
+                "write() failed to send control message from child worker to parent dispatcher "
+                "process"
             );
         }
         string response = listener->getResponse(activeFd.fd);
@@ -177,13 +183,27 @@ MasterListener::generateResponse(Listener* listener, ::pollfd& activeFd) {
         // NOTE: parent; registers the reading pipe of the pipe in the common poll() queue
         close(controlPipe[WRITING_PIPE_END]);
         close(responsePipe[WRITING_PIPE_END]);
-        registerResponseWorker(controlPipe[READING_PIPE_END], responsePipe[READING_PIPE_END], activeFd.fd);
+        registerResponseWorker(
+            controlPipe[READING_PIPE_END],
+            responsePipe[READING_PIPE_END],
+            activeFd.fd
+        );
     }
     return (Connection::WRITING_COMPLETE);
 }
 
+void MasterListener::removePollFd(int fd) {
+    for (vector<pollfd>::iterator it = _pollFds.begin(); it != _pollFds.end(); ++it) {
+        if (it->fd == fd) {
+            _pollFds.erase(it);
+            return;
+        }
+    }
+}
+
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-Connection::State MasterListener::handleIncomingConnection(::pollfd& activeFd, bool acceptingNewConnections) {
+Connection::State
+MasterListener::handleIncomingConnection(::pollfd& activeFd, bool acceptingNewConnections) {
     Listener* listener = findListener(_listeners, activeFd.fd);
     // NOTE: is it a request on a LISTENING socket? so a request for a new connection?
     if (acceptingNewConnections && listener != NULL) {
@@ -207,24 +227,29 @@ Connection::State MasterListener::handleIncomingConnection(::pollfd& activeFd, b
     }
     // NOTE: if not, maybe a child process just finished generating a potentially blocking response
     // NOTE: and reports about his (child's) state so that we can terminate the server if necessary?
-    const map<int, int>::iterator controlMessageReadyFor = _responseWorkerControls.find(activeFd.fd);
+    const map<int, int>::iterator controlMessageReadyFor =
+        _responseWorkerControls.find(activeFd.fd);
     if (controlMessageReadyFor != _responseWorkerControls.end()) {
-        const Connection::State connState = readControlMessageAndClose(controlMessageReadyFor->first);
-        clog << "Worker on fd " << controlMessageReadyFor->first << " reported status " << connState << endl;
-        if (connState == Connection::SERVER_SHUTTING_DOWN) {
-            return (Connection::SERVER_SHUTTING_DOWN);
-        }
+        const Connection::State connState =
+            readControlMessageAndClose(controlMessageReadyFor->first);
+        clog << "Worker on fd " << controlMessageReadyFor->first << " reported status " << connState
+             << endl;
+        removePollFd(controlMessageReadyFor->first);
+        _responseWorkerControls.erase(controlMessageReadyFor);
+        return (connState);
     }
     // NOTE: if not, maybe a child process just finished generating a potentially blocking response
     // NOTE: and requests it to be picked up in the main thread?
     const map<int, int>::iterator responseReadyFor = _responseWorkers.find(activeFd.fd);
     if (responseReadyFor != _responseWorkers.end()) {
-        clog << "Response for " << responseReadyFor->second << " made by worker on fd " << responseReadyFor->first << " is being picked up by main thread" << endl;
+        clog << "Response for " << responseReadyFor->second << " made by worker on fd "
+             << responseReadyFor->first << " is being picked up by main thread" << endl;
         string response = readStringAndClose(responseReadyFor->first);
-        clog << response << endl;
+        clog << GREY << response << RESET_COLOR << endl;
         _clientListeners.at(responseReadyFor->second)
             ->setResponse(responseReadyFor->second, response);
         markResponseReadyForReturn(responseReadyFor->second);
+        removePollFd(responseReadyFor->first);
         _responseWorkers.erase(responseReadyFor);
         return (Connection::WRITING_COMPLETE);
     }
@@ -242,19 +267,19 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
     if (listener == NULL) {
         cerr << B_RED << "Tried to send data to an unknown socket fd " << activeFd.fd
              << ", ignoring." << endl
-             << RESET;
+             << RESET_COLOR;
         return;
     }
     listener->sendResponse(activeFd.fd);
     // NOTE: no keep-alive in HTTP 1.0, so killing right away
     // NOTE: if he wants to go on, he'd have to go to listening socket again
-    utils::printSeparator();
-    utils::setColor(B_GREEN);
-    std::cout << "📨 Sent response to socket fd " << activeFd.fd << endl;
-    utils::resetColor();
-    utils::printSeparator();
+    cout << utils::separator() << B_GREEN << "📨 Sent response to socket fd " << activeFd.fd
+         << RESET_COLOR << endl
+         << utils::separator();
     _clientListeners.erase(_clientListeners.find(activeFd.fd));
+    clog << _clientListeners.size() << endl;
     listener->killConnection(activeFd.fd);
+    removePollFd(activeFd.fd);
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
@@ -274,7 +299,8 @@ void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
         for (size_t i = 0; i < _pollFds.size(); i++) {
             if ((_pollFds[i].revents & POLLIN) > 0) {
                 // NOTE: something happened on that listening socket, let's dive in
-                Connection::State connState = handleIncomingConnection(_pollFds[i], acceptingNewConnections);
+                Connection::State connState =
+                    handleIncomingConnection(_pollFds[i], acceptingNewConnections);
                 if (connState == Connection::SERVER_SHUTTING_DOWN) {
                     acceptingNewConnections = false;
                 }
@@ -283,15 +309,11 @@ void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
             if ((_pollFds[i].revents & POLLOUT) > 0) {
                 // NOTE: the response is ready to be sent back
                 handleOutgoingConnection(_pollFds[i]);
-                _pollFds.erase(
-                    _pollFds.begin() + static_cast<std::vector<struct ::pollfd>::difference_type>(i)
-                );
-                i--;
                 continue;
             }
-            if (!acceptingNewConnections && _clientListeners.empty()) {
-                isRunning = 0;
-            }
+        }
+        if (!acceptingNewConnections && _clientListeners.empty()) {
+            isRunning = 0;
         }
     }
 }
