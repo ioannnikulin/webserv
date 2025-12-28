@@ -27,10 +27,20 @@ private:
 	*/
     std::map<int, Listener*> _listeners;        // NOTE: listening socket fd: Listener
     std::map<int, Listener*> _clientListeners;  // NOTE: client socket fd: Listener
+    std::map<int, int> _responseWorkerControls;
+    // NOTE: reading pipe end fd with an expected control message: client socket fd
+    std::map<int, int> _responseWorkers;
+    // NOTE: reading pipe end fd with an expected generated response: client socket fd
 
-    void handleIncomingConnection(::pollfd& activeFd, bool shouldDeny);
+    int registerNewConnection(int listeningFd, Listener* listener);
+    void populateFdsFromListeners();
+    void registerResponseWorker(int controlPipeReadingEnd, int responsePipeReadingEnd, int clientFd);
+    void markResponseReadyForReturn(int clientFd);
+    Connection::State generateResponse(Listener* listener, ::pollfd& activeFd);
+    Connection::State handleIncomingConnection(::pollfd& activeFd, bool acceptingNewConnections);
     void handleOutgoingConnection(const ::pollfd& activeFd);
-    void markResponseReadyForReturn(::pollfd& activeFd);
+    void reapChildren(bool& acceptingNewConnections);
+
 public:
     MasterListener();
     explicit MasterListener(const AppConfig& configuration);

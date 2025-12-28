@@ -10,6 +10,12 @@
         "status_code": 200,
         "body": "<html>\n<body>\n\t<h1>Hello World!</h1>\n\t<div>Sample page</div>\n</body>\n</html>"
       }
+    },
+    {
+      "name": "shutdown",
+      "tester": "tester0",
+      "method": "SHUTDOWN",
+      "url": "http://172.18.0.10:8080"
     }
   ]
 }

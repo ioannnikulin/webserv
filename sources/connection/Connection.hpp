@@ -14,12 +14,26 @@
 namespace webserver {
 class Connection {
 public:
-    enum State { NEWBORN, READING, WRITING, RESPONSE_READY, CLOSED, TERMINATE };
+    enum State {
+        NEWBORN,
+        READING,
+        READING_COMPLETE,
+        WRITING,
+        WRITING_COMPLETE,
+        RESPONSE_SENT,
+        CLOSED_BY_CLIENT,
+        SERVER_SHUTTING_DOWN,
+        IGNORED
+    };
 
 private:
     State _state;
-    int _clientSocketFd; // NOTE: acquired here, then passed to pollfd up in MasterListener
+    int _clientSocketFd;  // NOTE: acquired here, then passed to pollfd up in MasterListener
     std::string _responseBuffer;
+    /* NOTE: buffer used for construction in a forked process,
+    * then read in MasterListener via getResponseBuffer + responsePipe 
+    * and reset into the main thread's Connection for dispatching.
+    */
     std::ostringstream _requestBuffer;
     Request _request;
     uint32_t _clientIp;
@@ -31,21 +45,8 @@ private:
     Connection& operator=(const Connection& other);
 
     bool fullRequestReceived();
-    void receiveRequestContent();
-    void markResponseReadyForReturn();
 
 public:
-
-	class TerminatedByClient: public std::exception {
-    private:
-        TerminatedByClient& operator=(const TerminatedByClient& other);
-
-    public:
-        TerminatedByClient();
-        TerminatedByClient(const TerminatedByClient& other);
-        ~TerminatedByClient() throw();
-        const char* what() const throw();
-    };
     explicit Connection(int listeningSocketFd, const Endpoint& configuration);
     ~Connection();
 
@@ -53,7 +54,8 @@ public:
     Connection& setResponseBuffer(std::string buffer);
     std::string getResponseBuffer() const;
 
-    State handleRequest(bool shouldDeny);
+    State receiveRequestContent();
+    State generateResponse();
     void sendResponse();
 };
 }  // namespace webserver
