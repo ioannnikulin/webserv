@@ -34,7 +34,6 @@ using std::stringstream;
 namespace webserver {
 Connection::Connection(int listeningSocketFd, const Endpoint& configuration)
     : _state(NEWBORN)
-    , _clientSocket(NULL)
     , _clientIp(0)
     , _clientPort(0) 
     , _configuration(configuration) {
@@ -57,11 +56,6 @@ Connection::Connection(int listeningSocketFd, const Endpoint& configuration)
     clog << "Accepted connection from " << ((clientIp >> SHIFT24) & MASK8) << "."
          << ((clientIp >> SHIFT16) & MASK8) << "." << ((clientIp >> SHIFT8) & MASK8) << "."
          << (clientIp & MASK8) << ":" << _clientPort << endl;
-}
-
-Connection& Connection::setClientSocket(::pollfd* clientSocket) {
-    _clientSocket = clientSocket;
-    return (*this);
 }
 
 Connection& Connection::setResponseBuffer(string buffer) {
@@ -104,7 +98,7 @@ void Connection::receiveRequestContent() {
     _state = READING;
     const int READ_BUFFER_SIZE = 4096;
     char readBuffer[READ_BUFFER_SIZE];
-    const ssize_t bytesRead = recv(_clientSocket->fd, readBuffer, sizeof(readBuffer), 0);
+    const ssize_t bytesRead = recv(_clientSocketFd, readBuffer, sizeof(readBuffer), 0);
     if (bytesRead == -1) {
         throw runtime_error(string("recv() failed"));
         // TODO 48: probably should retry, not throw
@@ -120,50 +114,43 @@ void Connection::receiveRequestContent() {
 }
 
 void Connection::sendResponse() {
-    clog << "Sending response to fd " << _clientSocket->fd << endl; 
+    clog << "Sending response to fd " << _clientSocketFd << endl; 
     size_t totalSent = 0;
     const size_t toSend = _responseBuffer.size();
     while (totalSent < toSend) {
         const ssize_t sent =
-            send(_clientSocket->fd, _responseBuffer.data() + totalSent, toSend - totalSent, 0);
+            send(_clientSocketFd, _responseBuffer.data() + totalSent, toSend - totalSent, 0);
         if (sent == -1) {
             throw runtime_error(string("send() failed"));
             // TODO 48: probably should retry, not throw
         }
         totalSent += sent;
     }
-    close(_clientSocket->fd);
+    close(_clientSocketFd);
 }
 
-void Connection::markResponseReadyForReturn() {
-    clog << "Marked data on fd " << _clientSocket->fd << " ready for return" << endl;
-    _clientSocket->events |= POLLOUT;
-}
-
-void Connection::handleRequest(bool shouldDeny) {
+Connection::State Connection::handleRequest(bool shouldDeny) {
     receiveRequestContent();
     if (_state == READING) {
-        return;  // NOTE: still reading, wait for next poll
+        return (READING);  // NOTE: still reading, wait for next poll
     }
 
-    bool requestTermination = false;
     try {
         // NOTE: DL should it be cout or clog? clog is usually used for errors?
-        std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocket->fd
+        std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocketFd
                   << RESET << ":\n---\n"
                   << _requestBuffer.str() << "---\n"
                   << endl;
         if (shouldDeny) {
-            throw ShuttingDown();
+            return (TERMINATE);
             // NOTE: another request said to shut down, we delegated handling here to reuse the response
         }
         _request = Request(_requestBuffer.str());
         if (_request.getType() == SHUTDOWN) {
             _state = CLOSED;
-            throw ShuttingDown();
+            return (TERMINATE);
         }
         _responseBuffer = RequestHandler::handleRequest(_request, _configuration);
-        // NOTE: doesn't send directly, have to get approval from MasterListener's poll first
     } catch (const HttpException& e) {
         ostringstream oss;
         oss << "HTTP/1.0 " << e.getCode() << " " << HttpStatus::getReasonPhrase(e.getCode())
@@ -179,7 +166,7 @@ void Connection::handleRequest(bool shouldDeny) {
             "Connection: close\r\n"
             "\r\n"
             "Server is shutting down";
-        requestTermination = true;
+            return (TERMINATE);
     } catch (const exception& e) {
         _responseBuffer =
             "HTTP/1.0 500 Internal Server Error\r\n"
@@ -188,17 +175,10 @@ void Connection::handleRequest(bool shouldDeny) {
             "\r\n"
             "Internal Server Error";
     }
-    markResponseReadyForReturn();
-    if (requestTermination) {
-        throw ShuttingDown();
-    }
+    return (RESPONSE_READY);
 }
 
 Connection::~Connection() {
-    if (_clientSocket->fd != -1) {
-        close(_clientSocket->fd);
-        _clientSocket->fd = -1;
-    }
 }
 
 Connection::TerminatedByClient::TerminatedByClient() {
