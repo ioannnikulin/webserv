@@ -41,10 +41,10 @@ public:
     Connection::State receiveRequest(int clientSocketFd);
     Connection::State generateResponse(int clientSocketFd);
     std::string getResponse(int clientSocketFd) const;
-    Listener& setResponse(int clientSockerFd, std::string response);
+    Listener& setResponse(int clientSocketFd, std::string response);
     void sendResponse(int clientSocketFd);
     void killConnection(int clientSocketFd);
-    int connectionCount() const;
+    unsigned long connectionCount() const;
 
     ~Listener();
 };

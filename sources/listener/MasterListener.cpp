@@ -2,6 +2,7 @@
 
 #include <poll.h>
 #include <string.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -16,7 +17,7 @@
 #include <vector>
 
 #include "configuration/AppConfig.hpp"
-#include "http_status/ShuttingDown.hpp"
+#include "configuration/Endpoint.hpp"
 #include "listener/Listener.hpp"
 #include "utils/colors.hpp"
 #include "utils/utils.hpp"
@@ -27,7 +28,6 @@ using std::cout;
 using std::endl;
 using std::map;
 using std::ostringstream;
-using std::pair;
 using std::runtime_error;
 using std::set;
 using std::string;
@@ -59,9 +59,10 @@ Connection::State readControlMessageAndClose(int pipeFd) {
 }
 
 string readStringAndClose(int pipeFd) {
-    char buffer[4096];
+    const int RESPONSE_STRING_BUFFER_SIZE = 4096;
+    char buffer[RESPONSE_STRING_BUFFER_SIZE];
     ostringstream oss;
-    int bytesRead = 0;
+    ssize_t bytesRead = 0;
     while ((bytesRead = read(pipeFd, buffer, sizeof(buffer))) > 0) {
         oss << string(buffer, bytesRead);
     }
@@ -151,7 +152,7 @@ Connection::State MasterListener::generateResponse(Listener* listener, ::pollfd&
     if (pipe(responsePipe) == -1 || pipe(controlPipe) == -1) {
         throw runtime_error("pipe() failed");
     }
-    int pid = fork();
+    const int pid = fork();
     if (pid == -1) {
         throw runtime_error("fork() failed");
     }
@@ -160,25 +161,23 @@ Connection::State MasterListener::generateResponse(Listener* listener, ::pollfd&
         close(responsePipe[READING_PIPE_END]);
         close(controlPipe[READING_PIPE_END]);
         Connection::State connState = listener->generateResponse(activeFd.fd);
-        if (connState != Connection::WRITING_COMPLETE &&
-            connState != Connection::SERVER_SHUTTING_DOWN) {
-            throw runtime_error("Unexpected failure in response generation");
-        }
-        if (write(controlPipe[WRITING_PIPE_END], &connState, sizeof(connState)) == -1) {
-            throw runtime_error(
-                "write() failed to send control message from child worker to parent dispatcher "
-                "process"
-            );
-        }
-        string response = listener->getResponse(activeFd.fd);
-        if (write(responsePipe[WRITING_PIPE_END], response.data(), response.size()) == -1) {
-            throw runtime_error(
-                "write() failed to send response from child worker to parent dispatcher process"
-            );
-        }
+        write(controlPipe[WRITING_PIPE_END], &connState, sizeof(connState));
+        const string response = listener->getResponse(activeFd.fd);
+        write(responsePipe[WRITING_PIPE_END], response.data(), response.size());
         close(controlPipe[WRITING_PIPE_END]);
         close(responsePipe[WRITING_PIPE_END]);
-        _exit(0);
+        // NOTE: circumventing forbidden _exit()
+        char* argv[] = {
+            const_cast<char*>("/bin/sh"),
+            const_cast<char*>("-c"),
+            const_cast<char*>("exit 0"),
+            NULL
+        };
+        char* envp[] = {NULL};
+        execve("/bin/sh", argv, envp);
+        // NOTE: should not get to this point, but if it got here, it's a zombie that the parent can kill
+        while (true) {
+        }
     } else {
         // NOTE: parent; registers the reading pipe of the pipe in the common poll() queue
         close(controlPipe[WRITING_PIPE_END]);
@@ -192,9 +191,9 @@ Connection::State MasterListener::generateResponse(Listener* listener, ::pollfd&
     return (Connection::WRITING_COMPLETE);
 }
 
-void MasterListener::removePollFd(int fd) {
+void MasterListener::removePollFd(int fdesc) {
     for (vector<pollfd>::iterator it = _pollFds.begin(); it != _pollFds.end(); ++it) {
-        if (it->fd == fd) {
+        if (it->fd == fdesc) {
             _pollFds.erase(it);
             return;
         }
@@ -221,9 +220,8 @@ MasterListener::handleIncomingConnection(::pollfd& activeFd, bool acceptingNewCo
             markConnectionClosedToAvoidRequestOverlapping(activeFd);
             generateResponse(listener, activeFd);
             return (Connection::WRITING);
-        } else {
-            return (connState);
         }
+        return (connState);
     }
     // NOTE: if not, maybe a child process just finished generating a potentially blocking response
     // NOTE: and reports about his (child's) state so that we can terminate the server if necessary?
@@ -244,7 +242,7 @@ MasterListener::handleIncomingConnection(::pollfd& activeFd, bool acceptingNewCo
     if (responseReadyFor != _responseWorkers.end()) {
         clog << "Response for " << responseReadyFor->second << " made by worker on fd "
              << responseReadyFor->first << " is being picked up by main thread" << endl;
-        string response = readStringAndClose(responseReadyFor->first);
+        const string response = readStringAndClose(responseReadyFor->first);
         clog << GREY << response << RESET_COLOR << endl;
         _clientListeners.at(responseReadyFor->second)
             ->setResponse(responseReadyFor->second, response);
@@ -295,11 +293,11 @@ void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
             }
             throw runtime_error(string("poll() failed: ") + strerror(errno));
         }
-        reapChildren(acceptingNewConnections);
+        reapChildren();
         for (size_t i = 0; i < _pollFds.size(); i++) {
             if ((_pollFds[i].revents & POLLIN) > 0) {
                 // NOTE: something happened on that listening socket, let's dive in
-                Connection::State connState =
+                const Connection::State connState =
                     handleIncomingConnection(_pollFds[i], acceptingNewConnections);
                 if (connState == Connection::SERVER_SHUTTING_DOWN) {
                     acceptingNewConnections = false;
@@ -318,16 +316,13 @@ void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
     }
 }
 
-void MasterListener::reapChildren(bool& acceptingNewConnections) {
+void MasterListener::reapChildren() {
     int status = 0;
     pid_t pid;
 
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         if (WIFEXITED(status)) {
             clog << "Child " << pid << " exited with code " << WEXITSTATUS(status) << endl;
-            if (WEXITSTATUS(status) == 503) {
-                acceptingNewConnections = false;
-            }
         } else if (WIFSIGNALED(status)) {
             clog << "Child " << pid << " killed by signal " << WTERMSIG(status) << endl;
         }

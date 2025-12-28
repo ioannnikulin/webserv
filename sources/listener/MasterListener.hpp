@@ -33,7 +33,7 @@ private:
     // NOTE: reading pipe end fd with an expected generated response: client socket fd
 
     int registerNewConnection(int listeningFd, Listener* listener);
-    void removePollFd(int fd);
+    void removePollFd(int fdesc);
     void populateFdsFromListeners();
     void
     registerResponseWorker(int controlPipeReadingEnd, int responsePipeReadingEnd, int clientFd);
@@ -41,7 +41,7 @@ private:
     Connection::State generateResponse(Listener* listener, ::pollfd& activeFd);
     Connection::State handleIncomingConnection(::pollfd& activeFd, bool acceptingNewConnections);
     void handleOutgoingConnection(const ::pollfd& activeFd);
-    void reapChildren(bool& acceptingNewConnections);
+    static void reapChildren();
 
 public:
     MasterListener();

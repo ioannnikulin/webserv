@@ -3,10 +3,11 @@
 #include <iostream>
 #include <string>
 
-#include "configuration/AppConfig.hpp"
+#include "configuration/Endpoint.hpp"
 #include "request/Request.hpp"
 #include "request_handler/GetHandler.hpp"
 #include "response/Response.hpp"
+#include "utils/colors.hpp"
 #include "utils/utils.hpp"
 
 using std::string;
@@ -21,9 +22,8 @@ string RequestHandler::handleRequest(const Request& request, const Endpoint& con
     // NOTE: 2. After the response is formed, pass to response serializer
     const std::string resp = response.serialize();
     if (PRINT_RESPONSES) {
-        utils::printSeparator();
-        std::clog << resp << std::endl;
-        utils::printSeparator();
+        std::clog << utils::separator() << GREY << resp << RESET_COLOR << utils::separator()
+                  << std::endl;
     }
     return (resp);
 }

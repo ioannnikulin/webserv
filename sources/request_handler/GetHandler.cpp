@@ -4,7 +4,7 @@
 #include <sstream>
 #include <string>
 
-#include "configuration/AppConfig.hpp"
+#include "configuration/Endpoint.hpp"
 #include "file_system/FileSystem.hpp"
 #include "file_system/MimeTypes.hpp"
 #include "http_status/HttpStatus.hpp"
