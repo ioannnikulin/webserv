@@ -42,7 +42,6 @@ int registerNewConnection(
     clientPfd.events = POLLIN;
     clientPfd.revents = 0;
     pollFds.push_back(clientPfd);
-    listener->setClientSocket(&pollFds.back());
     clog << "Connection accepted, client socket " << clientPfd.fd << " assigned to this client."
          << endl;
     return (clientPfd.fd);
@@ -91,6 +90,10 @@ MasterListener& MasterListener::operator=(const MasterListener& other) {
     return (*this);
 }
 
+void MasterListener::markResponseReadyForReturn(::pollfd& activeFd) {
+    activeFd.events |= POLLOUT;
+}
+
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void MasterListener::handleIncomingConnection(
     ::pollfd& activeFd,
@@ -108,21 +111,22 @@ void MasterListener::handleIncomingConnection(
     listener = findListener(_clientListeners, activeFd.fd);
     if (listener != NULL) {
         clog << "Existing client on socket fd " << activeFd.fd << " has sent data." << endl;
-        bool requestTermination = false;
-        try {
-            listener->receiveRequest(activeFd, shouldDeny);
-            clog << "Request received" << endl;
-        } catch (const ShuttingDown& e) {
-            requestTermination = true;
-        } catch (const Connection::TerminatedByClient& e) {
-            clog << "Client disconnected, terminating" << endl;
-            listener->killConnection(activeFd.fd);
-            _clientListeners.erase(_clientListeners.find(activeFd.fd));
+        Connection::State connState = listener->receiveRequest(activeFd, shouldDeny);
+        switch (connState) {
+            case Connection::RESPONSE_READY:
+                markResponseReadyForReturn(activeFd);
+                break;
+            case Connection::CLOSED:
+                clog << "Client disconnected, terminating" << endl;
+                listener->killConnection(activeFd.fd);
+                _clientListeners.erase(_clientListeners.find(activeFd.fd));
+                break;
+            case Connection::TERMINATE:
+                throw ShuttingDown();
+                break;
+            default:
+                break;
         }
-        if (requestTermination) {
-            throw ShuttingDown();
-        }
-        return;
     }
     // NOTE: this should never happen in theory, since all sockets come from listening or client lists
     // NOTE: maybe sending data after a timeout, when the connection was closed already or smth
