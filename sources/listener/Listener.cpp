@@ -141,7 +141,6 @@ bool Listener::hasActiveClientSocket(int clientSocketFd) const {
     return (_clientConnections.find(clientSocketFd) != _clientConnections.end());
 }
 
-// NOLINTNEXTLINE(readability-make-member-function-const)
 int Listener::acceptConnection() {
     Connection* nconn = new Connection(_listeningSocketFd, _configuration);
     _clientConnections[nconn->getClientSocketFd()] = nconn;

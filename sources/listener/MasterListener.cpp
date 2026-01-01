@@ -311,7 +311,6 @@ MasterListener::handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewC
     return (Connection::IGNORED);
 }
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
     clog << "Starting sending response back to " << activeFd.fd << endl;
     Listener* listener = findListener(_clientListeners, activeFd.fd);
@@ -333,7 +332,6 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
     removePollFd(activeFd.fd);
 }
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
     populateFdsFromListeners();
     bool acceptingNewConnections = true;
