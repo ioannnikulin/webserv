@@ -7,6 +7,7 @@
 
 #include "http_methods/HttpMethodType.hpp"
 #include "http_status/BadRequest.hpp"
+#include "http_status/IncompleteRequest.hpp"
 
 using std::istringstream;
 using std::map;
@@ -38,24 +39,30 @@ const std::string Request::MALFORMED_FIRST_LINE =
 
 Request::Request(string raw) {
     if (raw.empty()) {
-        throw BadRequest("empty request");
+        throw IncompleteRequest("empty request");
     }
     const string::size_type endOfFirstLine = raw.find("\r\n");
     if (endOfFirstLine == string::npos) {
         if (raw.find('\n') != string::npos) {
             throw BadRequest("invalid line endings");
         }
-        throw BadRequest(MALFORMED_FIRST_LINE);
+        throw IncompleteRequest(MALFORMED_FIRST_LINE);
     }
     parseFirstLine(raw.substr(0, endOfFirstLine));
     const string::size_type endOfHeaders = raw.find("\r\n\r\n");
     if (endOfHeaders == string::npos) {
-        throw BadRequest("no formal end of headers");
+        throw IncompleteRequest("no formal end of headers");
     }
     parseHeaders(raw.substr(endOfFirstLine + 2, endOfHeaders - endOfFirstLine - 2));
-    parseBody(endOfHeaders != string::npos ? raw.substr(endOfHeaders + 4) : string());
-    if (getType() == POST && (!contentLengthSet() || getContentLength() != getBody().length())) {
-        throw BadRequest("actual received body length does not match the declared Content-Length");
+    if (getType() == POST) {
+        parseBody(endOfHeaders != string::npos ? raw.substr(endOfHeaders + 4) : string());
+        const string msg = "actual received body length does not match the declared Content-Length";
+        if (!contentLengthSet() || getBody().size() > getContentLength()) {
+            throw BadRequest(msg);
+        }
+        if (getBody().size() < getContentLength()) {
+            throw IncompleteRequest(msg);
+        }
     }
 }
 
@@ -178,6 +185,11 @@ size_t Request::getContentLength() const {
 
 string Request::getBody() const {
     return (_body);
+}
+
+Request& Request::setBody(std::string body) {
+    _body = body;
+    return (*this);
 }
 
 Request::~Request() {

@@ -5,20 +5,20 @@ set -e
 TESTDIR="$1"
 PROJECT_NAME="$(basename "$TESTDIR")"
 
-RESULTS_DIR="tests/e2e/$TESTDIR/results"
-mkdir -p "$RESULTS_DIR"
+REQ_DIR="tests/e2e/$TESTDIR/requirements"
+
+for node in "$REQ_DIR"/*; do
+    [ -d "$node" ] || continue
+    mkdir -p "$node/logs"
+    chown "$(id -u):$(id -g)" "$node/logs"
+    mkdir -p "$node/results"
+    chown "$(id -u):$(id -g)" "$node/results"
+done
 
 echo "Running test suite: $PROJECT_NAME"
 
 # when tester0 ends, everything ends, so for simultaneous connections make sure to assign the longest scenario to him
-docker compose -p "$PROJECT_NAME" -f "tests/e2e/$TESTDIR/docker-compose.yml" up \
+UID="$(id -u)" GID="$(id -g)" docker compose -p "$PROJECT_NAME" -f "tests/e2e/$TESTDIR/docker-compose.yml" up \
     --abort-on-container-exit tester0
 
-GLOBAL_RESULTS_DIR="tests/e2e/results"
-mkdir -p "${GLOBAL_RESULTS_DIR}"/"${PROJECT_NAME}"
-
-cp "$RESULTS_DIR"/* "${GLOBAL_RESULTS_DIR}"/"${PROJECT_NAME}"/
-
 docker compose -p "$PROJECT_NAME" -f "tests/e2e/$TESTDIR/docker-compose.yml" down -v > /dev/null 2>&1 || true
-
-echo "Results of test suite $PROJECT_NAME saved to $GLOBAL_RESULTS_DIR"

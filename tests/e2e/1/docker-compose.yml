@@ -9,6 +9,7 @@ services:
   webserv:
     container_name: webserv
     image: webserv:latest
+    user: "${UID:-1000}:${GID:-1000}"
     volumes:
       - ./requirements/webserv/conf/config.cnf:/usr/local/bin/config.cnf:ro
       - ./requirements/webserv/volume:/var/www/html
@@ -18,11 +19,12 @@ services:
         ipv4_address: 172.18.0.10
     ports:
       - "8080:8080"
-    command: ["valgrind"]
+    command: ["run"]
       
   tester0:
     container_name: tester0
     image: tester:latest
+    user: "${UID:-1000}:${GID:-1000}"
     networks:
       - net1
     volumes:

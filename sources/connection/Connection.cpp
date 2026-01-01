@@ -1,5 +1,6 @@
 #include "Connection.hpp"
 
+#include <errno.h>
 #include <netinet/in.h>
 #include <poll.h>
 #include <stdint.h>
@@ -15,8 +16,10 @@
 
 #include "configuration/Endpoint.hpp"
 #include "http_methods/HttpMethodType.hpp"
+#include "http_status/BadRequest.hpp"
 #include "http_status/HttpException.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "http_status/IncompleteRequest.hpp"
 #include "request/Request.hpp"
 #include "request_handler/RequestHandler.hpp"
 #include "utils/colors.hpp"
@@ -75,9 +78,10 @@ bool Connection::fullRequestReceived() {
     try {
         const webserver::Request tmp(requestBuffer);
         return (true);
-    } catch (exception& e) {
-        // NOTE: if the request wasn't parsed correctly, let's consider it complete to report an error on it
+    } catch (const IncompleteRequest& e) {
         return (false);
+    } catch (const BadRequest& e) {
+        return (true);
     }
 }
 
@@ -85,25 +89,29 @@ Connection::State Connection::receiveRequestContent() {
     _state = READING;
     const int READ_BUFFER_SIZE = 4096;
     char readBuffer[READ_BUFFER_SIZE];
-    /* NOTE: no loop here, otherwise this would be a blocking socket
-    * we read one full buffer and then wait for this socket to come up in poll again
-    */
-    const ssize_t bytesRead = recv(_clientSocketFd, readBuffer, sizeof(readBuffer), 0);
-    if (bytesRead == -1) {
+    ssize_t bytesRead;
+    while (true) {
+        bytesRead = recv(_clientSocketFd, readBuffer, sizeof(readBuffer), 0);
+        if (bytesRead > 0) {
+            _requestBuffer << string(readBuffer, bytesRead);
+            if (fullRequestReceived()) {
+                _state = READING_COMPLETE;
+                return (_state);
+            }
+        }
+        if (bytesRead == 0) {
+            // NOTE: client closed the connection himself, no way to send response
+            _state = CLOSED_BY_CLIENT;
+            return (_state);
+        }
+        // NOTE: bytesRead < 0
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return (_state);
+            // NOTE: will have to finish reading later on a separate poll(), no data available currently
+        }
         throw runtime_error(string("recv() failed"));
         // TODO 48: probably should retry, not throw
     }
-    if (bytesRead == 0) {
-        // NOTE: client closed the connection himself, no way to send response
-        _state = CLOSED_BY_CLIENT;
-    } else {
-        _requestBuffer << string(readBuffer, bytesRead);
-        if (fullRequestReceived()) {
-            _state = READING_COMPLETE;
-        }
-    }
-    // NOTE: state stays in READING by default, that is, we still have content to receive
-    return (_state);
 }
 
 void Connection::sendResponse() {

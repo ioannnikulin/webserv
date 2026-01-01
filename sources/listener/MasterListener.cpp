@@ -1,13 +1,12 @@
 #include "MasterListener.hpp"
 
-#include <poll.h>
 #include <string.h>
+#include <sys/poll.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include <cerrno>
-#include <connection/Connection.hpp>
 #include <iostream>
 #include <map>
 #include <set>
@@ -18,6 +17,7 @@
 
 #include "configuration/AppConfig.hpp"
 #include "configuration/Endpoint.hpp"
+#include "connection/Connection.hpp"
 #include "listener/Listener.hpp"
 #include "utils/colors.hpp"
 #include "utils/utils.hpp"
@@ -181,16 +181,18 @@ Connection::State MasterListener::generateResponse(Listener* listener, ::pollfd&
         while (true) {
         }
     } else {
-        // NOTE: parent; registers the reading pipe of the pipe in the common poll() queue
-        close(controlPipe[WRITING_PIPE_END]);
-        close(responsePipe[WRITING_PIPE_END]);
+        // NOTE: parent; registers the reading end of the pipe in the common poll() queue
+        if (close(controlPipe[WRITING_PIPE_END]) == -1 ||
+            close(responsePipe[WRITING_PIPE_END]) == -1) {
+            throw runtime_error("close() failed on parent's writing pipe ends");
+        }
         registerResponseWorker(
             controlPipe[READING_PIPE_END],
             responsePipe[READING_PIPE_END],
             activeFd.fd
         );
     }
-    return (Connection::WRITING_COMPLETE);
+    return (Connection::WRITING);
 }
 
 void MasterListener::removePollFd(int fdesc) {
@@ -221,12 +223,20 @@ Connection::State MasterListener::isItADataRequestOnAClientSocketFromARegistered
     }
     clog << "Existing client on socket fd " << activeFd.fd << " has sent data." << endl;
     const Connection::State connState = listener->receiveRequest(activeFd.fd);
+    if (connState == Connection::CLOSED_BY_CLIENT) {
+        cout << "Client on socket fd " << activeFd.fd
+             << " closed the connection before completing the request." << endl;
+        markConnectionClosedToAvoidRequestOverlapping(activeFd);
+        _clientListeners.erase(_clientListeners.find(activeFd.fd));
+        listener->killConnection(activeFd.fd);
+        removePollFd(activeFd.fd);
+        return (connState);
+    }
     if (connState == Connection::READING_COMPLETE) {
         markConnectionClosedToAvoidRequestOverlapping(activeFd);
-        generateResponse(listener, activeFd);
-        return (Connection::WRITING);
+        return (generateResponse(listener, activeFd));
     }
-    return (connState);
+    return (connState);  // NOTE: READING
 }
 
 Connection::State MasterListener::isItAControlMessageFromAResponseGeneratorWorker(::pollfd& activeFd
@@ -261,7 +271,7 @@ Connection::State MasterListener::isItAResponseFromAResponseGeneratorWorker(::po
 }
 
 Connection::State
-MasterListener::handleIncomingConnection(::pollfd& activeFd, bool acceptingNewConnections) {
+MasterListener::handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewConnections) {
     Connection::State ret;
     if (acceptingNewConnections) {
         ret = isItANewConnectionOnAListeningSocket(activeFd);
@@ -275,6 +285,9 @@ MasterListener::handleIncomingConnection(::pollfd& activeFd, bool acceptingNewCo
     }
     ret = isItAControlMessageFromAResponseGeneratorWorker(activeFd);
     if (ret != Connection::IGNORED) {
+        if (ret == Connection::SERVER_SHUTTING_DOWN) {
+            acceptingNewConnections = false;
+        }
         return (ret);
     }
     ret = isItAResponseFromAResponseGeneratorWorker(activeFd);
@@ -314,6 +327,9 @@ void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
     bool acceptingNewConnections = true;
 
     while (isRunning == 1) {
+        for (size_t i = 0; i < _pollFds.size(); ++i) {
+            _pollFds[i].revents = 0;
+        }
         const int ret = poll(_pollFds.data(), _pollFds.size(), -1);
         if (ret == -1) {
             if (errno == EINTR) {
@@ -325,16 +341,17 @@ void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
         for (size_t i = 0; i < _pollFds.size(); i++) {
             if ((_pollFds[i].revents & POLLIN) > 0) {
                 // NOTE: something happened on that listening socket, let's dive in
-                const Connection::State connState =
-                    handleIncomingConnection(_pollFds[i], acceptingNewConnections);
-                if (connState == Connection::SERVER_SHUTTING_DOWN) {
-                    acceptingNewConnections = false;
-                }
+                handleIncomingConnection(_pollFds[i], acceptingNewConnections);
                 continue;
             }
             if ((_pollFds[i].revents & POLLOUT) > 0) {
                 // NOTE: the response is ready to be sent back
                 handleOutgoingConnection(_pollFds[i]);
+                continue;
+            }
+            if ((_pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) > 0) {
+                close(_pollFds[i].fd);
+                removePollFd(_pollFds[i].fd);
                 continue;
             }
         }

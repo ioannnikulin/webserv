@@ -44,7 +44,6 @@ public:
     Listener& setResponse(int clientSocketFd, std::string response);
     void sendResponse(int clientSocketFd);
     void killConnection(int clientSocketFd);
-    unsigned long connectionCount() const;
 
     ~Listener();
 };

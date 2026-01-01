@@ -14,6 +14,7 @@ services:
   webserv:
     container_name: webserv
     image: webserv:latest
+    user: "${UID:-1000}:${GID:-1000}"
     volumes:
       - ./requirements/webserv/conf/config.cnf:/usr/local/bin/config.cnf:ro
       - ./requirements/webserv/volume:/var/www/html
@@ -25,17 +26,18 @@ services:
         ipv4_address: 172.19.0.10
     ports:
       - "8080:8080"
-    command: ["run"]
+    command: ["valgrind"]
       
   tester0:
     container_name: tester0
     image: tester:latest
+    user: "${UID:-1000}:${GID:-1000}"
     networks:
       - net1
       - net2
     volumes:
       - ./requirements/tester0/tools/tests.json:/tests/tests.json:ro
-      - ./results:/out
+      - ./requirements/tester0/results:/out
       - ./requirements/tester0/logs:/logs
     depends_on:
       - webserv

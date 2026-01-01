@@ -43,7 +43,7 @@ private:
     Connection::State isItADataRequestOnAClientSocketFromARegisteredClient(::pollfd& activeFd);
     Connection::State isItAControlMessageFromAResponseGeneratorWorker(::pollfd& activeFd);
     Connection::State isItAResponseFromAResponseGeneratorWorker(::pollfd& activeFd);
-    Connection::State handleIncomingConnection(::pollfd& activeFd, bool acceptingNewConnections);
+    Connection::State handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewConnections);
     void handleOutgoingConnection(const ::pollfd& activeFd);
     static void reapChildren();
 

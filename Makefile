@@ -189,7 +189,7 @@ TEST_HEADERS := $(shell find tests -name "*.hpp")
 
 generate-cxxtest-tests: | $(OBJ_F)
 	@echo "Generating tests from $(TEST_HEADERS)"
-	# syntax warnings come from internal cxxtest generator code problems, hiding
+	@# syntax warnings come from internal cxxtest generator code problems, hiding
 	@PYTHONWARNINGS="ignore::SyntaxWarning" python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp $(TEST_HEADERS)
 
 build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
@@ -215,12 +215,12 @@ valgrind: $(MAIN_EXECUTABLE)
 
 # ------------------------------------------------------------
 
-DROP_RESULTS = $(shell find tests -type f -name "*result*.json")
-DROP_DOCKER_WEBSERV = $(shell find tests -type f -name "webserv")
+TEST_RESULTS = $(shell find tests/e2e -type f -name "result*.json")
+TEST_WEBSERV = $(shell find tests/e2e -type f -name "webserv")
+TEST_LOGS = $(shell find tests/e2e -type f -name "*.log")
 
 clean:
-	@rm -rf $(OBJ_F) $(TEST_EXECUTABLE) $(CXXTEST_F) $(DROP_RESULTS) $(DROP_DOCKER_WEBSERV)
-
+	@rm -rf $(OBJ_F) $(TEST_EXECUTABLE) $(CXXTEST_F) $(TEST_RESULTS) $(TEST_WEBSERV) $(TEST_LOGS) tests/e2e/webserv/tools/status_pages
 fclean: clean docker-down
 	@rm -f $(MAIN_EXECUTABLE)
 
@@ -291,25 +291,25 @@ makefile-check:
 
 DEMO_DOCKER=tests/e2e/0
 
-COMPOSE=@docker compose -f $(DEMO_DOCKER)/docker-compose.yml
+COMPOSE=docker compose -f $(DEMO_DOCKER)/docker-compose.yml
 
 docker-up: docker-build-images
-	$(COMPOSE) up --build -d webserv
+	@UID="$(id -u)" GID="$(id -g)" $(COMPOSE) up --build -d webserv
 
 docker-start:
-	$(COMPOSE) start
+	@$(COMPOSE) start
 
 docker-stop:
-	$(COMPOSE) stop
+	@$(COMPOSE) stop
 
 docker-down:
-	$(COMPOSE) down
+	@$(COMPOSE) down
 
 docker-shell:
 	@docker exec -it webserv bash
 
 docker-tester:
-	$(COMPOSE) up --build tester0
+	@UID="$(id -u)" GID="$(id -g)" $(COMPOSE) up --build tester0
 
 docker-cleanup:
 	@docker system prune -a --volumes -f
@@ -319,13 +319,7 @@ docker-cleanup:
 # automated e2e docker tests
 
 E2E_SCENARIOS = $(shell find tests/e2e -maxdepth 1 -mindepth 1 -type d \
-	! -name "results" ! -name "tester" ! -name "webserv" ! -name "1" ! -name "2" )
-
-RESULT_DIRS = $(E2E_SCENARIOS:tests/e2e/%=tests/e2e/results/%)
-
-RESULTS = $(shell find tests/e2e/results -type f)
-
-VALGRIND_LOGS = $(shell find tests/e2e -type f -name "valgrind.log")
+	! -name "tester" ! -name "webserv" ! -name "1" ! -name "2" )
 
 docker-build-images: $(MAIN_EXECUTABLE)
 	@cp $(MAIN_EXECUTABLE) tests/e2e/webserv/tools/$(MAIN_EXECUTABLE)
@@ -334,14 +328,17 @@ docker-build-images: $(MAIN_EXECUTABLE)
 	@docker build -t webserv:latest tests/e2e/webserv
 
 clean-e2e-results:
-	@rm -rf tests/e2e/results/*
+	@rm -rf $(TEST_RESULTS) $(TEST_LOGS)
 
-e2e: docker-down clean-e2e-results docker-build-images $(RESULT_DIRS)
-	@python3 tests/e2e/collect_results.py $(RESULTS) $(VALGRIND_LOGS)
+e2e-run:
+	@for scenario in $(E2E_SCENARIOS); do \
+		sh ./tests/e2e/run_one_test.sh $$(basename $$scenario); \
+	done
 
-tests/e2e/results/%:
-	@mkdir -p $@
-	@sh tests/e2e/run_one_test.sh $*
+e2e-summarize:
+	python3 tests/e2e/collect_results.py $(TEST_RESULTS) $(TEST_LOGS)
+
+e2e: docker-down clean-e2e-results docker-build-images e2e-run e2e-summarize
 
 # ------------------------------------------------------------
 
