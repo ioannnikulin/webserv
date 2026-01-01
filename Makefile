@@ -336,7 +336,7 @@ e2e-run:
 	done
 
 e2e-summarize:
-	python3 tests/e2e/collect_results.py $(TEST_RESULTS) $(TEST_LOGS)
+	@python3 tests/e2e/collect_results.py $(TEST_RESULTS) $(TEST_LOGS)
 
 e2e: docker-down clean-e2e-results docker-build-images e2e-run e2e-summarize
 
