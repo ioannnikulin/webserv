@@ -9,6 +9,7 @@ services:
   webserv:
     container_name: webserv
     image: webserv:latest
+    user: "${UID:-1000}:${GID:-1000}"
     volumes:
       - ./requirements/webserv/conf/config.cnf:/usr/local/bin/config.cnf:ro
       - ./requirements/webserv/volume:/var/www/html
@@ -23,6 +24,7 @@ services:
   tester0:
     container_name: tester0
     image: tester:latest
+    user: "${UID:-1000}:${GID:-1000}"
     networks:
       - net1
     volumes:
@@ -34,6 +36,7 @@ services:
 
   tester42:
     container_name: tester42
+    user: "${UID:-1000}:${GID:-1000}"
     build: ./requirements/42/.
     networks:
       - net1

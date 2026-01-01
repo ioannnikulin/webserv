@@ -46,6 +46,7 @@ public:
     std::string getQuery() const;
 
     std::string getBody() const;
+    Request& setBody(std::string body);
 
     std::string getVersion() const;
     Request& setVersion(std::string version);

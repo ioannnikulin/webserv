@@ -5,6 +5,7 @@
 
 #include "http_status/BadRequest.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "http_status/IncompleteRequest.hpp"
 #include "http_status/ShuttingDown.hpp"
 
 using std::ostringstream;
@@ -50,6 +51,20 @@ BadRequest::BadRequest(const BadRequest& other)
 }
 
 BadRequest::~BadRequest() throw() {
+}
+
+IncompleteRequest::IncompleteRequest(string message)
+    : BadRequest(message) {
+}
+
+IncompleteRequest::IncompleteRequest(const IncompleteRequest& other)
+    : BadRequest(other) {
+    if (this == &other) {
+        return;
+    }
+}
+
+IncompleteRequest::~IncompleteRequest() throw() {
 }
 
 ShuttingDown::ShuttingDown() {

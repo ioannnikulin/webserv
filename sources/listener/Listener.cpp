@@ -99,9 +99,8 @@ struct ::sockaddr_in Listener::resolveAddress() const {
 Listener::Listener(const Endpoint& configuration)
     : _interface(configuration.getInterface())
     , _port(configuration.getPort())
-    , _listeningSocketFd(-1)
+    , _listeningSocketFd(setupSocket())
     , _configuration(configuration) {
-    _listeningSocketFd = setupSocket();
     struct sockaddr_in addr = resolveAddress();
 
     /* NOTE:
@@ -175,9 +174,5 @@ Listener::~Listener() {
         close(_listeningSocketFd);
         _listeningSocketFd = -1;
     }
-}
-
-unsigned long Listener::connectionCount() const {
-    return (_clientConnections.size());
 }
 }  // namespace webserver
