@@ -158,14 +158,26 @@ Connection::State MasterListener::generateResponse(Listener* listener, ::pollfd&
     }
     if (pid == 0) {
         // NOTE: child; generates response and sends it to pipe for the parent to fetch and dispatch
-        close(responsePipe[READING_PIPE_END]);
-        close(controlPipe[READING_PIPE_END]);
+        if (close(responsePipe[READING_PIPE_END]) == -1) {
+            cerr << "close() failed on child's reading response pipe end" << endl;
+        }
+        if (close(controlPipe[READING_PIPE_END]) == -1) {
+            cerr << "close() failed on child's reading control pipe end" << endl;
+        }
         Connection::State connState = listener->generateResponse(activeFd.fd);
-        write(controlPipe[WRITING_PIPE_END], &connState, sizeof(connState));
+        if (write(controlPipe[WRITING_PIPE_END], &connState, sizeof(connState)) == -1) {
+            cerr << "Failed to write to control pipe in child process" << endl;
+        }
         const string response = listener->getResponse(activeFd.fd);
-        write(responsePipe[WRITING_PIPE_END], response.data(), response.size());
-        close(controlPipe[WRITING_PIPE_END]);
-        close(responsePipe[WRITING_PIPE_END]);
+        if (write(responsePipe[WRITING_PIPE_END], response.data(), response.size()) == -1) {
+            cerr << "Failed to write to response pipe in child process" << endl;
+        }
+        if (close(controlPipe[WRITING_PIPE_END]) == -1) {
+            cerr << "close() failed on child's writing control pipe end" << endl;
+        }
+        if (close(responsePipe[WRITING_PIPE_END]) == -1) {
+            cerr << "close() failed on child's writing response pipe end" << endl;
+        }
         // NOTE: circumventing forbidden _exit()
         char* argv[] = {
             const_cast<char*>("/bin/sh"),
