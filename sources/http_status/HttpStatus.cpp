@@ -71,6 +71,7 @@ void HttpStatus::addStatus(int code, const std::string& reasonPhrase) {
 void HttpStatus::initStatusMap() {
     addStatus(OK, "OK");
     addStatus(CREATED, "Created");
+    addStatus(ACCEPTED, "Accepted");
     addStatus(NO_CONTENT, "No Content");
     addStatus(BAD_REQUEST, "Bad Request");
     addStatus(FORBIDDEN, "Forbidden");
@@ -78,9 +79,11 @@ void HttpStatus::initStatusMap() {
     addStatus(METHOD_NOT_ALLOWED, "Method Not Allowed");
     addStatus(PAYLOAD_TOO_LARGE, "Payload Too Large");
     addStatus(I_AM_A_TEAPOT, "I am a teapot");
+    addStatus(REQUEST_HEADER_FIELDS_TOO_LARGE, "Request Header Fields Too Large");
     addStatus(INTERNAL_SERVER_ERROR, "Internal Server Error");
     addStatus(NOT_IMPLEMENTED, "Not Implemented");
     addStatus(BAD_GATEWAY, "Bad Gateway");
+    addStatus(HTTP_SERVICE_UNAVAILABLE, "Service Unavailable");
     addStatus(HTTP_VERSION_NOT_SUPPORTED, "HTTP Version Not Supported");
 }
 
