@@ -2,6 +2,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -12,6 +13,7 @@
 #include "configuration/parser/ConfigParser.hpp"
 #include "http_status/HttpStatus.hpp"
 
+using std::istringstream;
 using std::runtime_error;
 using std::string;
 
@@ -33,7 +35,9 @@ void ConfigParser::parseListen(Endpoint& server) {
     const size_t colonPos = value.find(":");
 
     if (colonPos == string::npos) {
-        const int port = std::atoi(value.c_str());
+        int port;
+        istringstream iss(value);
+        iss >> port;
         if (!Endpoint::isAValidPort(port)) {
             throw runtime_error("Invalid port in listen: " + value);
         }
@@ -45,7 +49,9 @@ void ConfigParser::parseListen(Endpoint& server) {
     const string interface = value.substr(0, colonPos);
     const string portStr = value.substr(colonPos + 1);
 
-    const int port = std::atoi(portStr.c_str());
+    int port;
+    istringstream iss(portStr);
+    iss >> port;
     if (!Endpoint::isAValidPort(port)) {
         throw runtime_error("Invalid port in listen: " + value);
     }
@@ -116,7 +122,9 @@ size_t parseSizeValue(const string& value) {
         numbers = value.substr(0, value.size() - 1);
     }
 
-    const long num = std::atol(numbers.c_str());
+    long num;
+    istringstream iss(numbers);
+    iss >> num;
     if (num < 0) {
         throw runtime_error("Invalid size: " + value);
     }
@@ -141,7 +149,7 @@ void ConfigParser::parseBodySize(Endpoint& server) {
     _index++;
 
     const size_t size = parseSizeValue(value);
-    server.setClientMaxBodySize(size);
+    server.setClientMaxBodySizeBytes(size);
 }
 
 void ConfigParser::parseErrorPage() {
@@ -159,7 +167,9 @@ void ConfigParser::parseErrorPage() {
         if (_tokens[_index][0] == '/' || _tokens[_index].find('.') != string::npos) {
             break;
         }
-        const int code = std::atoi(_tokens[_index].c_str());
+        int code;
+        istringstream iss(_tokens[_index]);
+        iss >> code;
         if (!HttpStatus::isAValidHttpStatusCode(code)) {
             throw runtime_error("Invalid HTTP status code in error_page: " + _tokens[_index]);
         }

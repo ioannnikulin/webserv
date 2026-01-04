@@ -17,7 +17,7 @@ private:
     std::string _rootDirectory;
     size_t _maxRequestBodySizeBytes;
     std::map<std::string, CgiHandlerConfig*> _cgiHandlers;
-    std::vector<RouteConfig> _routes;
+    std::set<RouteConfig> _routes;
     UploadConfig* _uploadConfig;
 
     static const int MIN_PORT = 1;
@@ -26,7 +26,7 @@ private:
 public:
     static const std::string DEFAULT_INTERFACE;
     static const int DEFAULT_PORT;
-    static const size_t DEFAULT_MAX_BODY_SIZE;
+    static const size_t DEFAULT_MAX_BODY_SIZE_BYTES;
     static const std::string DEFAULT_ROOT;
 
     Endpoint();
@@ -41,7 +41,7 @@ public:
     Endpoint& setInterface(std::string interface);
     Endpoint& setPort(const int& port);
     Endpoint& setRoot(const std::string& path);
-    Endpoint& setClientMaxBodySize(size_t size);
+    Endpoint& setClientMaxBodySizeBytes(size_t size);
     Endpoint& addServerName(const std::string& name);
     Endpoint& addCgiHandler(const CgiHandlerConfig& config, std::string extension);
     Endpoint& addRoute(const RouteConfig& route);
@@ -49,7 +49,7 @@ public:
     std::string getInterface() const;
     int getPort() const;
     RouteConfig getRoute(std::string route) const;
-    std::vector<RouteConfig> getRoutes() const;
+    std::set<RouteConfig> getRoutes() const;
 
     static bool isAValidPort(int port);
 };

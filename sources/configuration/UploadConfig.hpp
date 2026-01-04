@@ -8,7 +8,7 @@ class UploadConfig {
 private:
     UploadConfig();
 
-    bool _uploadEnabled;  // TODO 15: default false
+    bool _uploadEnabled;
     const std::string _uploadRootFolder;
 
 public:

@@ -29,6 +29,7 @@ public:
     const FolderConfig* getFolderConfig() const;
 
     bool operator==(const RouteConfig& other) const;
+    bool operator<(const RouteConfig& other) const;
     RouteConfig& addAllowedMethod(HttpMethodType method);
     RouteConfig& addRedirection(const std::string& from, const std::string& toDir);
     RouteConfig& setFolderConfig(const FolderConfig& folder);

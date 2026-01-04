@@ -50,8 +50,8 @@ private:
             cout << "Expected port: " << itE->getPort() << endl;
             cout << "Match: " << (itA->getPort() == itE->getPort() ? "YES" : "NO") << endl;
 
-            const vector<webserver::RouteConfig>& routesActual = itA->getRoutes();
-            const vector<webserver::RouteConfig>& routesExpected = itE->getRoutes();
+            const set<webserver::RouteConfig>& routesActual = itA->getRoutes();
+            const set<webserver::RouteConfig>& routesExpected = itE->getRoutes();
 
             cout << "\n--- Routes Comparison ---" << endl;
             cout << "Actual routes count:   " << routesActual.size() << endl;
@@ -61,16 +61,16 @@ private:
 
             size_t minSize = routesActual.size() < routesExpected.size() ? routesActual.size()
                                                                          : routesExpected.size();
-            for (size_t i = 0; i < minSize; ++i) {
+            set<webserver::RouteConfig>::const_iterator itRA = routesActual.begin();
+            set<webserver::RouteConfig>::const_iterator itRE = routesExpected.begin();
+            for (size_t i = 0; i < minSize; ++i, ++itRA, ++itRE) {
                 cout << "\n--- Route[" << i << "] Details ---" << endl;
-                cout << "Actual path:   '" << routesActual[i].getPath() << "'" << endl;
-                cout << "Expected path: '" << routesExpected[i].getPath() << "'" << endl;
-                cout << "Match: "
-                     << (routesActual[i].getPath() == routesExpected[i].getPath() ? "YES" : "NO")
-                     << endl;
+                cout << "Actual path:   '" << itRA->getPath() << "'" << endl;
+                cout << "Expected path: '" << itRE->getPath() << "'" << endl;
+                cout << "Match: " << (itRA->getPath() == itRE->getPath() ? "YES" : "NO") << endl;
 
                 try {
-                    bool routesEqual = (routesActual[i] == routesExpected[i]);
+                    bool routesEqual = (*itRA == *itRE);
                     cout << "Routes equal: " << (routesEqual ? "YES" : "NO") << endl;
                 } catch (...) {
                     cout << "EXCEPTION caught during route comparison!" << endl;
@@ -324,7 +324,7 @@ public:
         string serverName = "secure.example.com";
 
         ep.addServerName(serverName);
-        ep.setClientMaxBodySize(1 * webserver::ConfigParser::MIB);
+        ep.setClientMaxBodySizeBytes(1 * webserver::ConfigParser::MIB);
 
         // Location /
         webserver::RouteConfig route1;

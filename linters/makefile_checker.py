@@ -41,6 +41,7 @@ def cppPresence(root, makefileText):
 
 def main():
     global exit_code
+    print("Running makefile-checker...")
 
     parser = argparse.ArgumentParser(
         description="Check that all .cpp files in a directory are listed in a Makefile (and vice versa)."
@@ -74,6 +75,7 @@ def main():
 
     if exit_code == 0:
         print("makefile-checker found no issues")
+        print("-------------------------------------------------")
 
     sys.exit(exit_code)
 

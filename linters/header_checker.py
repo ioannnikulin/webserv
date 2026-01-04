@@ -5,21 +5,21 @@ import re
 from pathlib import Path
 from clang import cindex
 
-roots = sys.argv[1:] if len(sys.argv) > 1 else ["sources", "include", "tests"]
+roots = sys.argv[1:] if len(sys.argv) > 1 else ["sources", "tests"]
 headerSuffixes = {".h", ".hpp", ".hh", ".hxx"}
 
 regexpUsing = re.compile(r"^\s*using\s", re.M)
 regexpCommentOneLine = re.compile(r'//(.*)')
 regexpCommentMultiline = re.compile(r'/\*(.*?)\*/', re.DOTALL)
 regexpCommentValidContentPrefix = re.compile(r'^(( TODO [0-9]+:)|( NOTE:)|( namespace)|( clang-format)|( NOLINT))')
-regexpIncludeRelative = re.compile(r'#include ".*\\.')
+regexpIncludeRelative = re.compile(r'#include ".*\.\.')
 regexpIfndef = re.compile(r"^\s*#\s*ifndef\s+([A-Za-z_][A-Za-z0-9_]*)", re.M)
 regexpDefine = lambda name: re.compile(r"^\s*#\s*define\s+" + re.escape(name) + r"\b", re.M)
 regexpEndif = re.compile(r"^\s*#\s*endif\b", re.M)
 
 def lineNum(match, s):
     start_pos = match.start()
-    return "line " + str(s.count('\n', 0, start_pos + 1)) + ": "
+    return str(s.count('\n', 0, start_pos + 1) + 1) + ":"
 
 def collectFiles(roots):
     files = []
@@ -43,17 +43,23 @@ def screamingSnakeFromFilename(path: Path):
     macro = macro.strip("_")
     return macro
 
-def checkCommentPrefixes(s, issues):
+def checkCommentPrefixes(f, s, issues):
     for match in regexpCommentOneLine.finditer(s):
         comment = match.group(1)
         if not regexpCommentValidContentPrefix.match(comment):
-            issues.append(lineNum(match, s) + "contains an unclassified oneline comment, please mark as TODO or NOTE")
-            break
+            issues.append(f"{f}:{lineNum(match, s)} contains an unclassified oneline comment, please mark as TODO or NOTE")
     for match in regexpCommentMultiline.finditer(s):
         comment = match.group(1)
         if not regexpCommentValidContentPrefix.match(comment):
-            issues.append(lineNum(match, s) + "contains an unclassified multiline comment, please mark as TODO or NOTE")
-            break
+            issues.append(f"{f}:{lineNum(match, s)} contains an unclassified multiline comment, please mark as TODO or NOTE")
+def checkGuard(f, s, issues):
+    guardMatch = regexpIfndef.search(s)
+    hasGuard = False
+    guardName = None
+    if guardMatch:
+        guardName = guardMatch.group(1)
+        if regexpDefine(guardName).search(s) and regexpEndif.search(s):
+            hasGuard = True
 
 def checkGuard(f, s, issues):
     guardMatch = regexpIfndef.search(s)
@@ -66,19 +72,19 @@ def checkGuard(f, s, issues):
 
     expectedGuard = screamingSnakeFromFilename(f)
     if not hasGuard:
-        issues.append("missing/mismatched include guard")
+        issues.append(f"{f}: missing/mismatched include guard")
     else:
         if guardName != expectedGuard:
-            issues.append(f'guard name "{guardName}" does not match expected "{expectedGuard}"')
+            issues.append(f'{f}: guard name "{guardName}" does not match expected "{expectedGuard}"')
     
 def textChecks(f):
     s = f.read_text()
     issues = []
     for match in regexpIncludeRelative.finditer(s):
-        issues.append(lineNum(match, s) + "please specify the path starting from the project source root")
+        issues.append(f"{f}:{lineNum(match, s)} please specify the path starting from the project source root")
     for match in regexpUsing.finditer(s):
-        issues.append(lineNum(match, s) + "contains 'using' directive (forbidden in headers)")
-    checkCommentPrefixes(s, issues)
+        issues.append(f"{f}:{lineNum(match, s)} contains 'using' directive (forbidden in headers)")
+    checkCommentPrefixes(f, s, issues)
     checkGuard(f, s, issues)
     return issues
 
@@ -107,14 +113,21 @@ def isMain(node):
         node.spelling == "main"
     )
 
-def checkAST(file):
-    index = cindex.Index.create()
-    tu = index.parse(str(file), args=['-std=c++98'])
+def checkAST(file, index, roots):
+    args=['-std=c++98'] + [f'-I{p}' for p in roots if Path(p).is_dir()] + ['-I/usr/include', '-I/usr/local/include']
+    tu = index.parse(str(file), args=args)
     tu_path = Path(tu.spelling)
+
+    errors = [d for d in tu.diagnostics if d.severity >= d.Error]
+    if errors:
+        for d in errors:
+            print(d)
+        return["AST parse failed; fix includes first"]
+
     issues = []
 
     for node, ns_stack in getNamespaces(tu.cursor):
-        if Path(node.location.file.name) != tu_path:
+        if not node.location.file or Path(node.location.file.name) != tu_path:
             continue
 
         if not ns_stack and not isMain(node):
@@ -148,6 +161,7 @@ def checkAST(file):
 
 def main():
     print("Running header-checker...")
+    index = cindex.Index.create()
     files = collectFiles(roots)
     if not files:
         print("No header files found.")
@@ -156,14 +170,15 @@ def main():
     failed = False
     for f in files:
         issues = textChecks(f)
-        issues += checkAST(f)
+        issues += checkAST(f, index, roots)
         if issues:
             failed = True
-            print(f"{f}: " + "\n\t".join(issues))
+            print("\n".join(issues))
     if failed:
         sys.exit(1)
     else:
-        print("header-checker found no issues")
+        print("header-checker: no issues")
+        print("-------------------------------------------------")
 
 if __name__ == "__main__":
     main()
