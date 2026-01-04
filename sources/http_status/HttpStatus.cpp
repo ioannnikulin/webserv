@@ -49,13 +49,13 @@ HttpStatus::~HttpStatus() {
 std::string HttpStatus::getDefaultPageLocation(int code) {
     std::ostringstream oss;
     oss << "./" << DEFAULT_STATUS_PAGE_DIR << "/" << code << ".html";
-    return oss.str();
+    return (oss.str());
 }
 
 std::string HttpStatus::getPageFileLocation(int code) {
     const std::map<int, HttpStatus>::const_iterator itr = _statusMap.find(code);
     if (itr == _statusMap.end() || itr->second._pageFileLocation.empty()) {
-        return getDefaultPageLocation(code);
+        return (getDefaultPageLocation(code));
     }
     return (itr->second._pageFileLocation);
 }
@@ -92,7 +92,7 @@ const std::string HttpStatus::UNKNOWN_STATUS = "SERVER RESPONSE UNDEFINED";
 std::string HttpStatus::getReasonPhrase(const int code) {
     const std::map<int, HttpStatus>::const_iterator itr = _statusMap.find(code);
     if (itr == _statusMap.end()) {
-        return UNKNOWN_STATUS;
+        return (UNKNOWN_STATUS);
     }
     return (itr->second._reasonPhrase);
 }

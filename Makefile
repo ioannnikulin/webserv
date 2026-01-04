@@ -60,7 +60,7 @@ REQUEST_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_F)/,$(REQUEST_SRC_NAMES))
 # ------------------------------------------------------------
 
 REQUEST_HANDLER_F = request_handler
-REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp ShutdownHandler.cpp
+REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp
 REQUEST_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_HANDLER_F)/,$(REQUEST_HANDLER_SRC_NAMES))
 
 # ------------------------------------------------------------
@@ -202,7 +202,7 @@ VALGRIND=@valgrind \
 
 
 test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
-	$(VALGRIND) ./$(TEST_EXECUTABLE)
+	$(VALGRIND) ./$(TEST_EXECUTABLE) 2>&1 | tee unit_test_valgrind.log
 
 run: $(MAIN_EXECUTABLE)
 	@./$(MAIN_EXECUTABLE) ./tests/config_files/local_run.conf
@@ -345,17 +345,20 @@ e2e: docker-down clean-e2e-results docker-build-images e2e-run e2e-summarize
 # run in 42 campus
 # skips some checks whose prerequisites cannot be installed
 # since we don't have root access
-test-campus: external-calls format-check header-check source-check makefile-check test warn-campus-docker e2e
+test-campus: external-calls format-check header-check source-check makefile-check test separator-1 warn-campus-docker separator-2 e2e separator-3
 	@echo "CLEAN"
 
 warn-campus-docker:
 	@echo "if docker fails, consider running docker-cleanup"
 
 # runs in GitHub Actions environment, use on personal machine too
-test-github: external-calls format-check cppcheck tidy-check header-check source-check makefile-check test e2e
+test-github: external-calls format-check cppcheck tidy-check header-check source-check makefile-check test separator-1 e2e separator-2
 	@echo "CLEAN"
 
 # ------------------------------------------------------------
+
+separator-%:
+	@echo "-------------------------------------------------"
 
 %:
 	@echo "What do you mean, '$@'?"
@@ -363,6 +366,7 @@ test-github: external-calls format-check cppcheck tidy-check header-check source
 # ------------------------------------------------------------
 
 .PHONY: all clean fclean re run-tests test \
+	warn-campus-docker \
 	external-calls \
 	format-fix format-check \
 	cppcheck \

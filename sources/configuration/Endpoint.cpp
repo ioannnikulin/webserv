@@ -2,28 +2,29 @@
 
 #include <cstddef>
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include "configuration/CgiHandlerConfig.hpp"
 #include "configuration/RouteConfig.hpp"
 #include "configuration/UploadConfig.hpp"
 
+using std::map;
+using std::set;
 using std::string;
-using std::vector;
 
 namespace webserver {
 const string Endpoint::DEFAULT_ROOT;
 const string Endpoint::DEFAULT_INTERFACE = "127.0.0.1";
 const int Endpoint::DEFAULT_PORT = 8888;
-const unsigned long Endpoint::DEFAULT_MAX_BODY_SIZE = 1 << 20;
+const unsigned long Endpoint::DEFAULT_MAX_BODY_SIZE_BYTES = 1 << 20;
 
 Endpoint::Endpoint()
     : _interface(DEFAULT_INTERFACE)
     , _port(DEFAULT_PORT)
     , _rootDirectory(DEFAULT_ROOT)
-    , _maxRequestBodySizeBytes(DEFAULT_MAX_BODY_SIZE)
+    , _maxRequestBodySizeBytes(DEFAULT_MAX_BODY_SIZE_BYTES)
     , _uploadConfig(NULL) {
 }
 
@@ -31,7 +32,7 @@ Endpoint::Endpoint(const std::string& interface, int port)
     : _interface(interface)
     , _port(port)
     , _rootDirectory(DEFAULT_ROOT)
-    , _maxRequestBodySizeBytes(DEFAULT_MAX_BODY_SIZE)
+    , _maxRequestBodySizeBytes(DEFAULT_MAX_BODY_SIZE_BYTES)
     , _uploadConfig(NULL) {
 }
 
@@ -43,7 +44,7 @@ Endpoint::Endpoint(const Endpoint& other)
     , _maxRequestBodySizeBytes(other._maxRequestBodySizeBytes)
     , _routes(other._routes)
     , _uploadConfig(NULL) {
-    for (std::map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
+    for (map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
          ++it) {
         _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
@@ -60,7 +61,7 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
 
     // NOTE: cleanup
 
-    for (std::map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
+    for (map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
          it != _cgiHandlers.end();
          ++it) {
         delete it->second;
@@ -72,7 +73,7 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
 
     // NOTE: copying
 
-    for (std::map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
+    for (map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
          ++it) {
         _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
@@ -126,8 +127,8 @@ bool Endpoint::operator==(const Endpoint& other) const {
         return (false);
     }
 
-    std::map<std::string, CgiHandlerConfig*>::const_iterator it1 = _cgiHandlers.begin();
-    std::map<std::string, CgiHandlerConfig*>::const_iterator it2 = other._cgiHandlers.begin();
+    map<std::string, CgiHandlerConfig*>::const_iterator it1 = _cgiHandlers.begin();
+    map<std::string, CgiHandlerConfig*>::const_iterator it2 = other._cgiHandlers.begin();
 
     while (it1 != _cgiHandlers.end()) {
         if (it1->first != it2->first) {
@@ -163,7 +164,7 @@ bool Endpoint::operator==(const Endpoint& other) const {
 
 Endpoint::~Endpoint() {
     delete _uploadConfig;
-    for (std::map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
+    for (map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
          it != _cgiHandlers.end();
          ++it) {
         delete it->second;
@@ -191,7 +192,7 @@ Endpoint& Endpoint::setRoot(const string& path) {
     return (*this);
 }
 
-Endpoint& Endpoint::setClientMaxBodySize(size_t size) {
+Endpoint& Endpoint::setClientMaxBodySizeBytes(size_t size) {
     _maxRequestBodySizeBytes = size;
     return (*this);
 }
@@ -202,18 +203,18 @@ Endpoint& Endpoint::addCgiHandler(const CgiHandlerConfig& config, string extensi
 }
 
 Endpoint& Endpoint::addRoute(const RouteConfig& route) {
-    _routes.push_back(route);
+    _routes.insert(route);
     return (*this);
 }
 
-vector<RouteConfig> Endpoint::getRoutes() const {
+set<RouteConfig> Endpoint::getRoutes() const {
     return (_routes);
 }
 
 RouteConfig Endpoint::getRoute(std::string route) const {
-    for (size_t i = 0; i < _routes.size(); ++i) {
-        if (_routes[i].getPath() == route) {
-            return (_routes[i]);
+    for (std::set<RouteConfig>::const_iterator it = _routes.begin(); it != _routes.end(); ++it) {
+        if (it->getPath() == route) {
+            return (*it);
         }
     }
     throw std::runtime_error("Route not found");

@@ -98,6 +98,10 @@ bool RouteConfig::operator==(const RouteConfig& other) const {
     return (true);
 }
 
+bool RouteConfig::operator<(const RouteConfig& other) const {
+    return (_path < other._path);
+}
+
 RouteConfig::~RouteConfig() {
     delete _folderConfigSection;
     delete _uploadConfigSection;

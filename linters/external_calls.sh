@@ -24,8 +24,8 @@ ALLOWED_EXTERNAL_FUNCTIONS=(
 	# so we allow them here, but better chek raw sources to forbid direct usage
 	memmove strlen memcmp
 
-	# atoi, atol, isspace for parsing
-	atoi atol isspace
+	# isspace for parsing
+	isspace
 )
 
 allowed_regex="$(printf "%s\n" "${ALLOWED_EXTERNAL_FUNCTIONS[@]}" | paste -sd'|' -)"
@@ -53,12 +53,13 @@ failIfForbiddenCallsDetected() {
 		cleanup
 		exit 1;
 	fi
-	echo "No forbidden external calls detected"
+	echo "external calls check: no issues"
 	echo "-------------------------------------------------"
 }
 
 external_calls() {
 	local where="$1"
+	echo "Running external call check..."
     cleanup
     buildObjectsSilently
     filterUndefinedCalls "$where"

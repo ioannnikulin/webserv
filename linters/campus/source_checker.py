@@ -21,56 +21,77 @@ def collectFiles(roots):
     return (sorted(files))
 
 regexpUsingNamespace = re.compile(r"^\s*using\snamespace\s", re.M)
-regexpReturn = re.compile(r"^\s*return(.*)")
-regexpValidReturnContent = re.compile(r"((;)|( \(.*\);))")
+regexpThrow = re.compile(r"^\s*throw\([^)]", re.M)
+regexpReturn = re.compile(r"^\s*return(.*?);", re.M | re.S)
+regexpValidReturnContent = re.compile(
+    r"""
+^
+(
+    \s*                 # return;
+  |
+    \s+\(.*\)           # return ( ... )
+)
+$
+""",
+    re.S | re.X
+)
 regexpPoll = re.compile(f"^bpoll\\(")
 regexpErrno = re.compile(r".*\n.*\n.*\n.*\berrno\b")
 regexpIoOperations = re.compile(r"\b(read|write|recv|send)\(")
 
-files = collectFiles(roots)
-if not files:
-    print("No source files found.")
-    sys.exit(0)
+def main():
+    print("Running source-checker...")
+    files = collectFiles(roots)
+    if not files:
+        print("No source files found.")
+        sys.exit(0)
 
-failed = False
-pollCalls = 0
+    failed = False
+    pollCalls = 0
 
-for f in files:
-    s = f.read_text()
+    for f in files:
+        s = f.read_text()
 
-    issues = []
+        issues = []
 
-    for match in regexpReturn.finditer(s):
-        if regexpValidReturnContent.match(match.group(1)):
-            issues.append(lineNum(match, s) + "please wrap returned values in parenthesis, preceeded by a space; for void use `return;`")
+        for match in regexpReturn.finditer(s):
+            if not regexpValidReturnContent.match(match.group(1)):
+                issues.append(f"{f}:{lineNum(match, s)} please wrap returned values in parenthesis, preceded by a space; for void use `return;`")
 
-    for match in regexpUsingNamespace.finditer(s):
-        issues.append(lineNum(match, s) + "contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
+        for match in regexpThrow.finditer(s):
+            issues.append(f"{f}:{lineNum(match, s)} please do not wrap thrown values in parenthesis; for no value in declarations use `throw();`")
 
-    checkCommentPrefixes(s, issues)
+        for match in regexpUsingNamespace.finditer(s):
+            issues.append(f"{f}:{lineNum(match, s)} contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
 
-    for match in regexpIncludeRelative.finditer(s):
-        issues.append(lineNum(match, s) + "please specify the path starting from the project source root")
+        checkCommentPrefixes(s, issues)
 
-    for match in regexpErrno.finditer(s):
-        if regexpIoOperations.search(match.group(0)):
-            issues.append(lineNum(match, s) + "using errno with IO operations is forbidden by the subject")
-        
-    if regexpPoll.search(s):
-        pollCalls += 1
+        for match in regexpIncludeRelative.finditer(s):
+            issues.append(f"{f}:{lineNum(match, s)} please specify the path starting from the project source root")
 
-    if issues:
+        for match in regexpErrno.finditer(s):
+            if regexpIoOperations.search(match.group(0)):
+                issues.append(f"{f}:{lineNum(match, s)} using errno with IO operations is forbidden by the subject")
+            
+        if regexpPoll.search(s):
+            pollCalls += 1
+
+        if issues:
+            failed = True
+            print("\n".join(issues))
+
+    if pollCalls > 1:
         failed = True
-        print(f"{f}: " + "\n\t".join(issues))
+        print("too many poll() calls detected")
 
-if pollCalls > 1:
-    failed = True
-    print("too many poll() calls detected")
+    if failed:
+        sys.exit(1)
+    else:
+        print("source checker didn't find any issues")
+        print("WARNING!")
+        print("This is a limited source-checker with only whatever checks are available in campus")
+        print("A full source-checker can be more picky")
+        print("-------------------------------------------------")
 
-if failed:
-    sys.exit(1)
-else:
-    print("source checker didn't find any issues")
-    print("WARNING!")
-    print("This is a limited source-checker with only whatever checks are available in campus")
-    print("A full source-checker can be more picky")
+if __name__ == "__main__":
+    main()

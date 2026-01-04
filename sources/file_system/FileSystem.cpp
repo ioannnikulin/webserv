@@ -73,7 +73,7 @@ std::string getFileExtension(const std::string& path) {
     const std::string::size_type dot = path.find_last_of('.');
 
     if (dot == std::string::npos || (slash != std::string::npos && dot < slash)) {
-        return "";
+        return ("");
     }
 
     return (path.substr(dot + 1));

@@ -9,7 +9,7 @@ private:
     FolderConfig();
 
     std::string _rootPath;
-    bool _enableListing;  // TODO 15: default false
+    bool _enableListing;
     std::string _indexPageFileLocation;
 
 public:

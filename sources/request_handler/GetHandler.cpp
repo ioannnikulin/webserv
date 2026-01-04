@@ -29,7 +29,7 @@ Response GetHandler::serveFile(const std::string& path, int statusCode) {
 
 Response GetHandler::serveStatusPage(int statusCode) {
     const std::string path = HttpStatus::getPageFileLocation(statusCode);
-    return serveFile(path, statusCode);
+    return (serveFile(path, statusCode));
 }
 
 Response GetHandler::handleRequest(string location, const Endpoint& configuration) {
