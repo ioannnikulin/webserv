@@ -52,14 +52,6 @@ def checkCommentPrefixes(f, s, issues):
         comment = match.group(1)
         if not regexpCommentValidContentPrefix.match(comment):
             issues.append(f"{f}:{lineNum(match, s)} contains an unclassified multiline comment, please mark as TODO or NOTE")
-def checkGuard(f, s, issues):
-    guardMatch = regexpIfndef.search(s)
-    hasGuard = False
-    guardName = None
-    if guardMatch:
-        guardName = guardMatch.group(1)
-        if regexpDefine(guardName).search(s) and regexpEndif.search(s):
-            hasGuard = True
 
 def checkGuard(f, s, issues):
     guardMatch = regexpIfndef.search(s)
