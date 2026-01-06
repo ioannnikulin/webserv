@@ -94,7 +94,7 @@ def main():
     if failed:
         sys.exit(1)
     else:
-        print("source checker: no issues")
+        print("source-checker: no issues")
         print("-------------------------------------------------")
 
 if __name__ == "__main__":
