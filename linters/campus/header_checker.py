@@ -68,22 +68,6 @@ def checkGuard(f, s, issues):
         if guardName != expectedGuard:
             issues.append(f"{f}: guard name \"{guardName}\" does not match expected \"{expectedGuard}\"")
 
-def checkGuard(f, s, issues):
-    guardMatch = regexpIfndef.search(s)
-    hasGuard = False
-    guardName = None
-    if guardMatch:
-        guardName = guardMatch.group(1)
-        if regexpDefine(guardName).search(s) and regexpEndif.search(s):
-            hasGuard = True
-
-    expectedGuard = screamingSnakeFromFilename(f)
-    if not hasGuard:
-        issues.append("missing/mismatched include guard")
-    else:
-        if guardName != expectedGuard:
-            issues.append(f'guard name "{guardName}" does not match expected "{expectedGuard}"')
-    
 def textChecks(f):
     s = f.read_text()
     issues = []
