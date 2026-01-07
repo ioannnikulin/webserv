@@ -7,8 +7,17 @@
       "url": "http://172.18.0.10:8080/",
       "delay_before_ms": 0,
       "expected": {
-        "status_code": 200,
-        "body": "<html>\n<body>\n\t<h1>Hello World!</h1>\n\t<div>Sample page</div>\n</body>\n</html>"
+        "status_code": 403
+      }
+    },
+    {
+      "name": "root net1 no slash",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 403
       }
     },
     {
@@ -47,6 +56,28 @@
       }
     },
     {
+      "name": "folder net1 slash",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder/",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "<html>\n<body>\n\t<h1>Hello World!</h1>\n\t<div>Sample page</div>\n</body>\n</html>"
+      }
+    },
+    {
+      "name": "folder net1 no slash",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "<html>\n<body>\n\t<h1>Hello World!</h1>\n\t<div>Sample page</div>\n</body>\n</html>"
+      }
+    },
+    {
       "name": "folder/index.html net1",
       "tester": "tester0",
       "method": "GET",
@@ -64,7 +95,7 @@
       "url": "http://172.18.0.10:8080",
       "expected": {
         "status_code": 503,
-        "body": "Server is shutting down\r\n"
+        "body": "Server is shutting down"
       }
     }
   ]

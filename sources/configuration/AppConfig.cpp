@@ -6,7 +6,6 @@
 
 #include "configuration/Endpoint.hpp"
 
-using std::runtime_error;
 using std::set;
 using std::string;
 
@@ -45,7 +44,7 @@ const Endpoint& AppConfig::getEndpoint(string interface, int port) const {
             return (*itr);
         }
     }
-    throw runtime_error("Endpoint not configured");
+    throw std::out_of_range("Endpoint not configured");
 }
 
 AppConfig::~AppConfig() {

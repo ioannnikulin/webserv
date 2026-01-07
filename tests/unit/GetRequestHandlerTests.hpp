@@ -68,34 +68,35 @@ public:
         createTestFiles();
         webserver::Endpoint config =
             webserver::Endpoint().addRoute(webserver::RouteConfig().setPath("/").setFolderConfig(
-                webserver::FolderConfig(_rootFolder, false, "index.html")
+                webserver::FolderConfig("/", _rootFolder, false, "index.html")
             ));
 
-        webserver::Response actual = webserver::GetHandler::handleRequest("folder/foo.txt", config);
+        webserver::Response actual =
+            webserver::GetHandler::handleRequest("/folder/foo.txt", config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("7", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("footext", actual.getBody());
         TS_ASSERT_EQUALS("text/plain", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest("folder/bar.xml", config);
+        actual = webserver::GetHandler::handleRequest("/folder/bar.xml", config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("7", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("bartext", actual.getBody());
         TS_ASSERT_EQUALS("application/xml", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest("another/key.jpg", config);
+        actual = webserver::GetHandler::handleRequest("/another/key.jpg", config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("13", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("communication", actual.getBody());
         TS_ASSERT_EQUALS("image/jpeg", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest("another/empty.mp3", config);
+        actual = webserver::GetHandler::handleRequest("/another/empty.mp3", config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("0", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("", actual.getBody());
         TS_ASSERT_EQUALS("audio/mpeg", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest("another/doesnotexist.txt", config);
+        actual = webserver::GetHandler::handleRequest("/another/doesnotexist.txt", config);
         TS_ASSERT_EQUALS(404, actual.getStatus());
         TS_ASSERT_EQUALS("798", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS(

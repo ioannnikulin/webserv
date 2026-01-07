@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <string>
 
-using std::runtime_error;
 using std::string;
 
 namespace webserver {
@@ -21,6 +20,6 @@ HttpMethodType stringToMethod(const string& str) {
         return (SHUTDOWN);
     }
 
-    throw runtime_error("Invalid HTTP method in limit_except: " + str);
+    throw std::out_of_range("Invalid HTTP method in limit_except: " + str);
 }
 }  // namespace webserver

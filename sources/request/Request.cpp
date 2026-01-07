@@ -35,7 +35,7 @@ Request::Request(const Request& other)
 const std::string Request::MALFORMED_FIRST_LINE =
     "expected to get a first line, containing a valid request type in capitals, "
     "a requestTarget starting with '/', a protocol version starting with "
-    "'HTTP/', and \r\n in the end";
+    "'HTTP/', and \\r\\n in the end";
 
 Request::Request(string raw) {
     if (raw.empty()) {

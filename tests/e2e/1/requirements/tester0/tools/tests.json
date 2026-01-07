@@ -7,19 +7,84 @@
       "url": "http://172.18.0.10:8080/favicon.ico",
       "delay_before_ms": 0,
       "expected": {
+        "status_code": 200
+      }
+    },
+    {
+      "name": "index root",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/",
+      "delay_before_ms": 0,
+      "expected": {
         "status_code": 200,
-        "body": "Hello, World!"
+        "body": "stub0"
+      }
+    },
+    {
+      "name": "index root reverse",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/../..",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "stub0"
+      }
+    },
+    {
+      "name": "index sub1",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder1",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "stub1"
+      }
+    },
+    {
+      "name": "index sub2",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder2",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "stub2"
+      }
+    },
+    {
+      "name": "index sub2 reverse",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder2/folder3/..",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "stub2"
+      }
+    },
+    {
+      "name": "index sub3",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder2/folder3",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "stub3"
       }
     },
     {
       "name": "invalid request type",
       "tester": "tester0",
-      "method": "YOU CANT SEE ME",
+      "method": "YOUCANTSEEME",
       "url": "http://172.18.0.10:8080/johncena.pum.purum.puuum",
       "delay_before_ms": 0,
       "expected": {
-        "status_code": 200,
-        "body": "Hello, World!"
+        "status_code": 400,
+        "body": "Bad Request: expected to get a first line, containing a valid request type in capitals, a requestTarget starting with '/', a protocol version starting with 'HTTP/', and \\r\\n in the end"
       }
     },
     {
@@ -29,8 +94,7 @@
       "url": "http://172.18.0.10:8080/ &!@&#\n++",
       "delay_before_ms": 0,
       "expected": {
-        "status_code": 200,
-        "body": "Hello, World!"
+        "status_code": 404
       }
     }
   ]

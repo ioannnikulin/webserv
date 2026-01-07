@@ -1,9 +1,11 @@
+SHELL := /bin/bash
 CPP = c++
 # sometimes gets used implicitly, so safer to define
 CXX = ${CPP}
 COMPILE_FLAGS = -Wall -Wextra -Werror	\
 				-std=c++98	\
 				-g	\
+				-O0 \
 				-pedantic -Wold-style-cast -Wdeprecated-declarations \
 
 PREPROC_DEFINES =
@@ -60,7 +62,7 @@ REQUEST_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_F)/,$(REQUEST_SRC_NAMES))
 # ------------------------------------------------------------
 
 REQUEST_HANDLER_F = request_handler
-REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp
+REQUEST_HANDLER_SRC_NAMES = RequestHandler.cpp GetHandler.cpp PostHandler.cpp DeleteHandler.cpp
 REQUEST_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_HANDLER_F)/,$(REQUEST_HANDLER_SRC_NAMES))
 
 # ------------------------------------------------------------
@@ -72,7 +74,7 @@ RESPONSE_SRCS = $(addprefix $(SOURCE_F)/$(RESPONSE_F)/,$(RESPONSE_SRC_NAMES))
 # ------------------------------------------------------------
 
 FILE_SYSTEM_F = file_system
-FILE_SYSTEM_SRC_NAMES = FileSystem.cpp MimeTypes.cpp
+FILE_SYSTEM_SRC_NAMES = FileSystem.cpp MimeType.cpp
 FILE_SYSTEM_SRCS = $(addprefix $(SOURCE_F)/$(FILE_SYSTEM_F)/,$(FILE_SYSTEM_SRC_NAMES))
 
 # ------------------------------------------------------------
@@ -193,25 +195,33 @@ generate-cxxtest-tests: | $(OBJ_F)
 	@PYTHONWARNINGS="ignore::SyntaxWarning" python3 $(CXXTEST_F)/bin/cxxtestgen --error-printer -o $(OBJ_F)/cxx_runner.cpp $(TEST_HEADERS)
 
 build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
-	@$(CPP) -std=c++98 -g -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
+	@$(CPP) -std=c++98 -g -O0 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
 
-VALGRIND=@valgrind \
+VALGRIND=valgrind \
 		--leak-check=full --show-leak-kinds=all --track-fds=yes \
 		--child-silent-after-fork=yes \
 		--error-exitcode=1 \
 
 
 test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
+	@set -o pipefail; \
 	$(VALGRIND) ./$(TEST_EXECUTABLE) 2>&1 | tee unit_test_valgrind.log
 
+LOCAL_RUN_CONFIG=./tests/config_files/local_42.conf
+
 run: $(MAIN_EXECUTABLE)
-	@./$(MAIN_EXECUTABLE) ./tests/config_files/local_run.conf
+	@./$(MAIN_EXECUTABLE) $(LOCAL_RUN_CONFIG)
 
 debug: $(MAIN_EXECUTABLE)
-	@gdbtui --args ./$(MAIN_EXECUTABLE) ./tests/config_files/local_run.conf
+	@gdbtui --args ./$(MAIN_EXECUTABLE) $(LOCAL_RUN_CONFIG)
 
 valgrind: $(MAIN_EXECUTABLE)
-	$(VALGRIND) ./$(MAIN_EXECUTABLE) ./tests/config_files/local_run.conf 2>&1 | tee valgrind.log
+	@set -o pipefail; $(VALGRIND) ./$(MAIN_EXECUTABLE) $(LOCAL_RUN_CONFIG) 2>&1 | tee valgrind.log
+
+TESTER_42 = tests/e2e/2/requirements/42/tools/tester
+
+tester-42: # set LOCAL_RUN_CONFIG to local_42.conf and make run
+	printf '\n\n\n\n\n' | $(TESTER_42) http://127.0.0.1:8080 > 42.log 2>&1
 
 # ------------------------------------------------------------
 
@@ -294,7 +304,7 @@ DEMO_DOCKER=tests/e2e/0
 COMPOSE=docker compose -f $(DEMO_DOCKER)/docker-compose.yml
 
 docker-up: docker-build-images
-	@UID="$(id -u)" GID="$(id -g)" $(COMPOSE) up --build -d webserv
+	@$(COMPOSE) up --build -d webserv
 
 docker-start:
 	@$(COMPOSE) start
@@ -309,7 +319,7 @@ docker-shell:
 	@docker exec -it webserv bash
 
 docker-tester:
-	@UID="$(id -u)" GID="$(id -g)" $(COMPOSE) up --build tester0
+	@$(COMPOSE) up --build tester42
 
 docker-cleanup:
 	@docker system prune -a --volumes -f
@@ -319,7 +329,7 @@ docker-cleanup:
 # automated e2e docker tests
 
 E2E_SCENARIOS = $(shell find tests/e2e -maxdepth 1 -mindepth 1 -type d \
-	! -name "tester" ! -name "webserv" ! -name "1" ! -name "2" )
+	! -name "tester" ! -name "webserv" ! -name "2" )
 
 docker-build-images: $(MAIN_EXECUTABLE)
 	@cp $(MAIN_EXECUTABLE) tests/e2e/webserv/tools/$(MAIN_EXECUTABLE)

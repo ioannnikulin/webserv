@@ -274,7 +274,6 @@ Connection::State MasterListener::isItAResponseFromAResponseGeneratorWorker(::po
     clog << "Response for " << responseReadyFor->second << " made by worker on fd "
          << responseReadyFor->first << " is being picked up by main thread" << endl;
     const string response = readStringAndClose(responseReadyFor->first);
-    clog << GREY << response << RESET_COLOR << endl;
     _clientListeners.at(responseReadyFor->second)->setResponse(responseReadyFor->second, response);
     markResponseReadyForReturn(responseReadyFor->second);
     removePollFd(responseReadyFor->first);

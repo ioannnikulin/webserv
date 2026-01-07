@@ -9,6 +9,10 @@
 namespace webserver {
 /* NOTE:
 Parsing raw HTTP request and selecting a responsible handler.
+
+WARNING:
+you will NOT be able to debug this part in gdb, it's callled from a forked process.
+
 */
 class RequestHandler {
 private:
