@@ -1,38 +1,57 @@
 #include "configuration/FolderConfig.hpp"
 
+#include <iostream>
 #include <string>
 
 using std::string;
 
 namespace webserver {
 FolderConfig::FolderConfig(
+    const string& location,
     const string& rootPath,
     bool enableListing,
-    const string& indexPageFileLocation
+    const string& indexPageFilename
 )
-    : _rootPath(rootPath)
+    : _requestedLocation(location)
+    , _storageRootPath(rootPath)
     , _enableListing(enableListing)
-    , _indexPageFileLocation(indexPageFileLocation) {
+    , _indexPageFilename(indexPageFilename) {
 }
 
 FolderConfig::FolderConfig(const FolderConfig& other)
-    : _rootPath(other._rootPath)
+    : _requestedLocation(other._requestedLocation)
+    , _storageRootPath(other._storageRootPath)
     , _enableListing(other._enableListing)
-    , _indexPageFileLocation(other._indexPageFileLocation) {
+    , _indexPageFilename(other._indexPageFilename) {
 }
 
 string FolderConfig::getRootPath() const {
-    return (_rootPath);
+    return (_storageRootPath);
 }
 
-string FolderConfig::getIndexPageFileLocation() const {
-    return (_indexPageFileLocation);
+string FolderConfig::getResolvedPath(std::string target) const {
+    if (target.empty()) {
+        target = "/";
+    }
+    std::cout << "[" << _storageRootPath << "] [" << target << "]" << std::endl;
+    return (
+        _storageRootPath + "/" +
+        target.substr(_requestedLocation.length(), target.length() - _requestedLocation.length())
+    );
+}
+
+string FolderConfig::getIndexPageFilename() const {
+    return (_indexPageFilename);
+}
+
+bool FolderConfig::isListingEnabled() const {
+    return (_enableListing);
 }
 
 bool FolderConfig::operator==(const FolderConfig& other) const {
     return (
-        _rootPath == other._rootPath && _enableListing == other._enableListing &&
-        _indexPageFileLocation == other._indexPageFileLocation
+        _storageRootPath == other._storageRootPath && _enableListing == other._enableListing &&
+        _indexPageFilename == other._indexPageFilename
     );
 }
 

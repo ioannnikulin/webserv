@@ -29,7 +29,7 @@ private:
     void parseUpload(Endpoint& server);
 
     void parseLocationRoot();
-    void parseLocationAutoindex();
+    void parseLocationListable();
     void parseLocationIndex();
     void parseLocationMethods(RouteConfig& route);
     void parseLocationLimitExcept(RouteConfig& route);

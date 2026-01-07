@@ -5,7 +5,7 @@
       "tester": "tester0",
       "method": "SHUTDOWN",
       "url": "http://172.18.0.10:8080/",
-      "delay_before_ms": 2000
+      "delay_before_ms": 20000
     }
   ]
 }

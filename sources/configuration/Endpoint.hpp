@@ -48,7 +48,9 @@ public:
     Endpoint& setUploadConfig(const UploadConfig& cfg);
     std::string getInterface() const;
     int getPort() const;
+    std::string getRoot() const;
     RouteConfig getRoute(std::string route) const;
+    RouteConfig selectRoute(std::string route) const;
     std::set<RouteConfig> getRoutes() const;
 
     static bool isAValidPort(int port);

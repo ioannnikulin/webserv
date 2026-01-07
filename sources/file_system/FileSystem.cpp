@@ -12,6 +12,21 @@
 #define DEFAULT_BUFFER_SIZE 4096
 
 namespace file_system {
+bool isFile(const char* path) {
+    struct stat stt;
+    if (stat(path, &stt) == -1) {
+        return (false);
+    }
+    return (S_ISREG(stt.st_mode));
+}
+
+bool isDirectory(const char* path) {
+    struct stat stt;
+    if (stat(path, &stt) == -1) {
+        return (false);
+    }
+    return (S_ISDIR(stt.st_mode));
+}
 
 bool fileExists(const char* path) {
     struct stat fileStat;
@@ -26,7 +41,7 @@ bool fileExists(const char* path) {
     return (true);
 }
 
-int validateFile(const char* path) {
+webserver::HttpStatus::CODE validateFile(const char* path) {
     if (!fileExists(path)) {
         return (webserver::HttpStatus::NOT_FOUND);
     }

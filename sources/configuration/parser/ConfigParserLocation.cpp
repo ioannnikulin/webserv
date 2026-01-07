@@ -39,8 +39,8 @@ void ConfigParser::parseLocation(Endpoint& server) {
 
         if (token == "root") {
             parseLocationRoot();
-        } else if (token == "autoindex") {
-            parseLocationAutoindex();
+        } else if (token == "listable") {
+            parseLocationListable();
         } else if (token == "index") {
             parseLocationIndex();
         } else if (token == "methods") {
@@ -66,8 +66,9 @@ void ConfigParser::parseLocation(Endpoint& server) {
     }
 
     const FolderConfig folder(
-        _tmp.rootSet() ? _tmp.rootPath() : "",
-        _tmp.autoindexSet() ? _tmp.autoindex() : false,
+        locationPath,
+        _tmp.rootSet() ? _tmp.rootPath() : server.getRoot(),
+        _tmp.listableSet() ? _tmp.listable() : false,
         _tmp.indexSet() ? _tmp.indexPage() : ""
     );
     route.setFolderConfig(folder);
@@ -99,25 +100,25 @@ void ConfigParser::parseLocationRoot() {
     _index++;
 }
 
-void ConfigParser::parseLocationAutoindex() {
+void ConfigParser::parseLocationListable() {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected 'on' or 'off' after autoindex");
+        throw runtime_error("Expected 'true' or 'false' after listable");
     }
 
     const std::string val = _tokens[_index++];
 
-    if (val == "on") {
-        _tmp.setAutoindex(true);
-    } else if (val == "off") {
-        _tmp.setAutoindex(false);
+    if (val == "true") {
+        _tmp.setListable(true);
+    } else if (val == "false") {
+        _tmp.setListable(false);
     } else {
-        throw runtime_error("autoindex must be on/off");
+        throw runtime_error("listable must be true/false");
     }
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after autoindex");
+        throw runtime_error("Missing ';' after listable");
     }
 
     _index++;

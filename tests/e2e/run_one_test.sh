@@ -10,9 +10,7 @@ REQ_DIR="tests/e2e/$TESTDIR/requirements"
 for node in "$REQ_DIR"/*; do
     [ -d "$node" ] || continue
     mkdir -p "$node/logs"
-    chown "$(id -u):$(id -g)" "$node/logs"
     mkdir -p "$node/results"
-    chown "$(id -u):$(id -g)" "$node/results"
 done
 
 echo "Running test suite: $PROJECT_NAME"

@@ -2,11 +2,13 @@
 
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 #include "configuration/Endpoint.hpp"
+#include "configuration/RouteConfig.hpp"
 #include "file_system/FileSystem.hpp"
-#include "file_system/MimeTypes.hpp"
+#include "file_system/MimeType.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "response/Response.hpp"
 
@@ -22,7 +24,7 @@ Response GetHandler::serveFile(const std::string& path, int statusCode) {
     const Response resp(
         statusCode,
         file_system::readFile(path.c_str()),
-        MimeTypes::getMimeType(ext)
+        MimeType::getMimeType(ext)
     );
     return (resp);
 }
@@ -32,21 +34,38 @@ Response GetHandler::serveStatusPage(int statusCode) {
     return (serveFile(path, statusCode));
 }
 
-Response GetHandler::handleRequest(string location, const Endpoint& configuration) {
-    ostringstream oss;
-    oss << configuration.getRoute("/").getFolderConfig()->getRootPath() << "/";
-    if (location == "/") {
-        oss << configuration.getRoute("/").getFolderConfig()->getIndexPageFileLocation();
-    } else {
-        if (!location.empty() && location[0] == '/') {
-            location = location.substr(1);
-        }
-        oss << location;
+Response GetHandler::handleRequest(string target, const Endpoint& configuration) {
+    if (target.find('?') != string::npos) {
+        // NOTE: ignoring queries for now
+        target = target.substr(0, target.find('?'));
     }
-    location = oss.str();
-    clog << "GET " << location << endl;
-    if (file_system::fileExists(location.c_str())) {
-        return (serveFile(location, HttpStatus::OK));
+    RouteConfig routeConfig;
+    try {
+        routeConfig = configuration.selectRoute(target);
+    } catch (const std::out_of_range& e) {
+        return (serveStatusPage(HttpStatus::NOT_FOUND));
+    }
+    ostringstream oss;
+    oss << routeConfig.getFolderConfig()->getResolvedPath(target);
+    clog << "Preresolved path: " << oss.str() << endl;
+    if (file_system::isDirectory(oss.str().c_str())) {
+        clog << "Target is a directory." << endl;
+        if (routeConfig.getFolderConfig()->isListingEnabled() &&
+            !routeConfig.getFolderConfig()->getIndexPageFilename().empty()) {
+            oss << "/" << routeConfig.getFolderConfig()->getIndexPageFilename();
+        } else {
+            return (serveStatusPage(HttpStatus::FORBIDDEN));
+        }
+    } else if (file_system::isFile(oss.str().c_str())) {
+        clog << "Target is a file." << endl;
+        // NOTE: file exists as is
+    } else {
+        return (serveStatusPage(HttpStatus::NOT_FOUND));
+    }
+    target = oss.str();
+    clog << "GET " << target << endl;
+    if (file_system::fileExists(target.c_str())) {
+        return (serveFile(target, HttpStatus::OK));
     }
     return (serveStatusPage(HttpStatus::NOT_FOUND));
 }

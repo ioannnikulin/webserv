@@ -7,8 +7,8 @@ using std::string;
 namespace webserver {
 LocationTempData::LocationTempData()
     : _rootSet(false)
-    , _autoindex(false)
-    , _autoindexSet(false)
+    , _listable(false)
+    , _listableSet(false)
     , _indexSet(false)
     , _uploadEnabled(false)
     , _uploadSet(false) {
@@ -19,10 +19,10 @@ LocationTempData::~LocationTempData() {
 
 void LocationTempData::clear() {
     _rootSet = false;
-    _rootPath = "";
+    _storageRootPath = "";
 
-    _autoindexSet = false;
-    _autoindex = false;
+    _listableSet = false;
+    _listable = false;
 
     _indexSet = false;
     _indexPage = "";
@@ -33,25 +33,25 @@ void LocationTempData::clear() {
 }
 
 void LocationTempData::setRootPath(const string& path) {
-    _rootPath = path;
+    _storageRootPath = path;
     _rootSet = true;
 }
 const string& LocationTempData::rootPath() const {
-    return (_rootPath);
+    return (_storageRootPath);
 }
 bool LocationTempData::rootSet() const {
     return (_rootSet);
 }
 
-void LocationTempData::setAutoindex(bool value) {
-    _autoindex = value;
-    _autoindexSet = true;
+void LocationTempData::setListable(bool value) {
+    _listable = value;
+    _listableSet = true;
 }
-bool LocationTempData::autoindex() const {
-    return (_autoindex);
+bool LocationTempData::listable() const {
+    return (_listable);
 }
-bool LocationTempData::autoindexSet() const {
-    return (_autoindexSet);
+bool LocationTempData::listableSet() const {
+    return (_listableSet);
 }
 
 void LocationTempData::setIndexPage(const string& page) {

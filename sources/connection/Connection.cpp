@@ -32,6 +32,14 @@ using std::runtime_error;
 using std::string;
 using std::stringstream;
 
+namespace {
+void clean(char* buffer, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        buffer[i] = 0;
+    }
+}
+}  // namespace
+
 namespace webserver {
 Connection::Connection(int listeningSocketFd, const Endpoint& configuration)
     : _state(NEWBORN)
@@ -89,6 +97,7 @@ Connection::State Connection::receiveRequestContent() {
     _state = READING;
     const int READ_BUFFER_SIZE = 4096;
     char readBuffer[READ_BUFFER_SIZE];
+    clean(readBuffer, READ_BUFFER_SIZE);
     ssize_t bytesRead;
     while (true) {
         bytesRead = recv(_clientSocketFd, readBuffer, sizeof(readBuffer), 0);
@@ -98,6 +107,7 @@ Connection::State Connection::receiveRequestContent() {
                 _state = READING_COMPLETE;
                 return (_state);
             }
+            continue;
         }
         if (bytesRead == 0) {
             // NOTE: client closed the connection himself, no way to send response
@@ -144,17 +154,6 @@ Connection::State Connection::generateResponse() {
                   << _requestBuffer.str() << "---\n"
                   << endl;
         _request = Request(_requestBuffer.str());
-        if (_request.getType() == SHUTDOWN) {
-            _state = SERVER_SHUTTING_DOWN;
-            // NOTE: sent only in response to a SHUTDOWN request as of now
-            _responseBuffer =
-                "HTTP/1.0 503 Service Unavailable\r\n"
-                "Content-Length: 25\r\n"
-                "Connection: close\r\n"
-                "\r\n"
-                "Server is shutting down\r\n";
-            return (_state);
-        }
         _responseBuffer = RequestHandler::handleRequest(_request, _configuration);
     } catch (const HttpException& e) {
         // NOTE: webserver-logic-related errors
@@ -167,14 +166,19 @@ Connection::State Connection::generateResponse() {
         _responseBuffer = oss.str();
     } catch (const exception& e) {
         // NOTE: system call failures
-        _responseBuffer =
-            "HTTP/1.0 500 Internal Server Error\r\n"
-            "Content-Length: 21\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "Internal Server Error";
+        ostringstream oss;
+        oss << "HTTP/1.0 500 Internal Server Error\r\n"
+            << "Content-Length: " << strlen(e.what()) << "\r\n"
+            << "Connection: close\r\n"
+            << "\r\n"
+            << e.what();
+        _responseBuffer = oss.str();
     }
-    _state = WRITING_COMPLETE;
+    if (_request.getType() == SHUTDOWN) {
+        _state = SERVER_SHUTTING_DOWN;
+    } else {
+        _state = WRITING_COMPLETE;
+    }
     return (_state);
 }
 

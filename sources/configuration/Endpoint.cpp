@@ -99,6 +99,10 @@ string Endpoint::getInterface(void) const {
     return (_interface);
 }
 
+string Endpoint::getRoot() const {
+    return (_rootDirectory);
+}
+
 bool Endpoint::operator<(const Endpoint& other) const {
     if (_interface != other._interface) {
         return (_interface < other._interface);
@@ -217,7 +221,24 @@ RouteConfig Endpoint::getRoute(std::string route) const {
             return (*it);
         }
     }
-    throw std::runtime_error("Route not found");
+    throw std::out_of_range("Route not found");
+}
+
+RouteConfig Endpoint::selectRoute(std::string route) const {
+    RouteConfig bestMatch;
+    size_t bestLength = 0;
+    for (std::set<RouteConfig>::const_iterator itr = _routes.begin(); itr != _routes.end(); ++itr) {
+        if (route.substr(0, itr->getPath().length()) == itr->getPath()) {
+            if (itr->getPath().length() > bestLength) {
+                bestMatch = *itr;
+                bestLength = itr->getPath().length();
+            }
+        }
+    }
+    if (bestLength == 0) {
+        throw std::out_of_range("Route not found; is there a root location in the configuration?");
+    }
+    return (bestMatch);
 }
 
 Endpoint& Endpoint::setUploadConfig(const UploadConfig& cfg) {

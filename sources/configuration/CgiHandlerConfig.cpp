@@ -11,7 +11,7 @@ CgiHandlerConfig::CgiHandlerConfig()
 CgiHandlerConfig::CgiHandlerConfig(const CgiHandlerConfig& other)
     : _timeoutSeconds(other._timeoutSeconds)
     , _executablePath(other._executablePath)
-    , _rootPath(other._rootPath) {
+    , _storageRootPath(other._storageRootPath) {
 }
 
 CgiHandlerConfig& CgiHandlerConfig::operator=(const CgiHandlerConfig& other) {
@@ -19,7 +19,7 @@ CgiHandlerConfig& CgiHandlerConfig::operator=(const CgiHandlerConfig& other) {
         return (*this);
     }
     _executablePath = other._executablePath;
-    _rootPath = other._rootPath;
+    _storageRootPath = other._storageRootPath;
     _timeoutSeconds = other._timeoutSeconds;
     return (*this);
 }
@@ -31,7 +31,7 @@ CgiHandlerConfig::CgiHandlerConfig(int timeoutSeconds, const string& executableP
 
 bool CgiHandlerConfig::operator==(const CgiHandlerConfig& other) const {
     return (
-        _executablePath == other._executablePath && _rootPath == other._rootPath &&
+        _executablePath == other._executablePath && _storageRootPath == other._storageRootPath &&
         _timeoutSeconds == other._timeoutSeconds
     );
 }

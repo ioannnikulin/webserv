@@ -9,11 +9,11 @@ private:
     LocationTempData(const LocationTempData& other);
     LocationTempData& operator=(const LocationTempData& other);
 
-    std::string _rootPath;
+    std::string _storageRootPath;
     bool _rootSet;
 
-    bool _autoindex;
-    bool _autoindexSet;
+    bool _listable;
+    bool _listableSet;
 
     std::string _indexPage;
     bool _indexSet;
@@ -32,9 +32,9 @@ public:
     const std::string& rootPath() const;
     bool rootSet() const;
 
-    void setAutoindex(bool value);
-    bool autoindex() const;
-    bool autoindexSet() const;
+    void setListable(bool value);
+    bool listable() const;
+    bool listableSet() const;
 
     void setIndexPage(const std::string& page);
     const std::string& indexPage() const;

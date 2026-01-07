@@ -4,6 +4,12 @@ server {
 
     location / {
         root /var/www/html;
-        index folder/index.html;
+        index index.html;
+    }
+
+    location /folder {
+        root /var/www/html/folder;
+        index index.html;
+        listable true;
     }
 }

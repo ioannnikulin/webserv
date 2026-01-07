@@ -120,7 +120,7 @@ public:
 
         webserver::RouteConfig route;
         route.setPath("/");
-        route.setFolderConfig(webserver::FolderConfig("/var/www/html", false, "index.html"));
+        route.setFolderConfig(webserver::FolderConfig("/", "/var/www/html", false, "index.html"));
 
         ep.addRoute(route);
         expected.addEndpoint(ep);
@@ -166,13 +166,15 @@ public:
         // Location /
         webserver::RouteConfig route1;
         route1.setPath("/");
-        route1.setFolderConfig(webserver::FolderConfig("/srv/www", false, "index.html"));
+        route1.setFolderConfig(webserver::FolderConfig("/", "/srv/www", false, "index.html"));
         ep.addRoute(route1);
 
         // Location /admin
         webserver::RouteConfig route2;
         route2.setPath("/admin");
-        route2.setFolderConfig(webserver::FolderConfig("/srv/www/admin", false, "dashboard.html"));
+        route2.setFolderConfig(
+            webserver::FolderConfig("/admin", "/srv/www/admin", false, "dashboard.html")
+        );
         route2.addAllowedMethod(webserver::GET);
         route2.addAllowedMethod(webserver::POST);
         route2.addAllowedMethod(webserver::DELETE);
@@ -181,7 +183,7 @@ public:
         // Location /uploads
         webserver::RouteConfig route3;
         route3.setPath("/uploads");
-        route3.setFolderConfig(webserver::FolderConfig("/srv/www/uploads", false, ""));
+        route3.setFolderConfig(webserver::FolderConfig("/uploads", "/srv/www/uploads", false, ""));
         route3.setUploadConfig(webserver::UploadConfig(true, "/srv/uploads"));
         ep.addRoute(route3);
 
@@ -227,7 +229,8 @@ public:
         string serverName1 = "example.com";
         ep1.addServerName(serverName1);
         route1.setPath("/");
-        route1.setFolderConfig(webserver::FolderConfig("/var/www/example", false, "index.html"));
+        route1.setFolderConfig(webserver::FolderConfig("/", "/var/www/example", false, "index.html")
+        );
         ep1.addRoute(route1);
         expected.addEndpoint(ep1);
 
@@ -237,7 +240,8 @@ public:
         string serverName2 = "api.localhost";
         ep2.addServerName(serverName2);
         route2.setPath("/api");
-        route2.setFolderConfig(webserver::FolderConfig("/var/www/api", false, "index.json"));
+        route2.setFolderConfig(webserver::FolderConfig("/api", "/var/www/api", false, "index.json")
+        );
         ep2.addRoute(route2);
         expected.addEndpoint(ep2);
 
@@ -273,7 +277,7 @@ public:
         ep.addServerName(serverName);
         webserver::RouteConfig route;
         route.setPath("/");
-        route.setFolderConfig(webserver::FolderConfig("/srv/www/cgi", false, "index.py"));
+        route.setFolderConfig(webserver::FolderConfig("/", "/srv/www/cgi", false, "index.py"));
         ep.addRoute(route);
 
         // Add CGI handlers
@@ -329,13 +333,13 @@ public:
         // Location /
         webserver::RouteConfig route1;
         route1.setPath("/");
-        route1.setFolderConfig(webserver::FolderConfig("/srv/secure", false, "index.html"));
+        route1.setFolderConfig(webserver::FolderConfig("/", "/srv/secure", false, "index.html"));
         ep.addRoute(route1);
 
         // Location /upload
         webserver::RouteConfig route2;
         route2.setPath("/upload");
-        route2.setFolderConfig(webserver::FolderConfig("/srv/uploads", false, ""));
+        route2.setFolderConfig(webserver::FolderConfig("/upload", "/srv/uploads", false, ""));
         route2.addAllowedMethod(webserver::POST);
         route2.setUploadConfig(webserver::UploadConfig(true, "/srv/uploads/tmp"));
         ep.addRoute(route2);
@@ -343,7 +347,7 @@ public:
         // Location /redirect
         webserver::RouteConfig route3;
         route3.setPath("/redirect");
-        route3.setFolderConfig(webserver::FolderConfig("", false, ""));
+        route3.setFolderConfig(webserver::FolderConfig("/redirect", "", false, ""));
         route3.addRedirection("/redirect", "http://example.com");
         ep.addRoute(route3);
 

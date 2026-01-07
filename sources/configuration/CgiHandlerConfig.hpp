@@ -9,7 +9,7 @@ class CgiHandlerConfig {
 private:
     int _timeoutSeconds;
     std::string _executablePath;
-    std::string _rootPath;
+    std::string _storageRootPath;
 
     // TODO 16: much more here
 
