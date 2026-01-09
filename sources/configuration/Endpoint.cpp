@@ -1,6 +1,8 @@
 #include "Endpoint.hpp"
 
 #include <cstddef>
+#include <iostream>
+#include <limits>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -18,13 +20,14 @@ namespace webserver {
 const string Endpoint::DEFAULT_ROOT;
 const string Endpoint::DEFAULT_INTERFACE = "127.0.0.1";
 const int Endpoint::DEFAULT_PORT = 8888;
-const unsigned long Endpoint::DEFAULT_MAX_BODY_SIZE_BYTES = 1 << 20;
+const unsigned long Endpoint::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES =
+    std::numeric_limits<std::streamsize>::max();
 
 Endpoint::Endpoint()
     : _interface(DEFAULT_INTERFACE)
     , _port(DEFAULT_PORT)
     , _rootDirectory(DEFAULT_ROOT)
-    , _maxRequestBodySizeBytes(DEFAULT_MAX_BODY_SIZE_BYTES)
+    , _maxClientBodySizeBytes(DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES)
     , _uploadConfig(NULL) {
 }
 
@@ -32,7 +35,7 @@ Endpoint::Endpoint(const std::string& interface, int port)
     : _interface(interface)
     , _port(port)
     , _rootDirectory(DEFAULT_ROOT)
-    , _maxRequestBodySizeBytes(DEFAULT_MAX_BODY_SIZE_BYTES)
+    , _maxClientBodySizeBytes(DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES)
     , _uploadConfig(NULL) {
 }
 
@@ -41,16 +44,13 @@ Endpoint::Endpoint(const Endpoint& other)
     , _port(other._port)
     , _serverName(other._serverName)
     , _rootDirectory(other._rootDirectory)
-    , _maxRequestBodySizeBytes(other._maxRequestBodySizeBytes)
+    , _maxClientBodySizeBytes(other._maxClientBodySizeBytes)
     , _routes(other._routes)
-    , _uploadConfig(NULL) {
+    , _uploadConfig(other._uploadConfig) {
     for (map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
          ++it) {
         _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
-    }
-    if (other._uploadConfig != NULL) {
-        _uploadConfig = new UploadConfig(*other._uploadConfig);
     }
 }
 
@@ -68,9 +68,6 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
     }
     _cgiHandlers.clear();
 
-    delete _uploadConfig;
-    _uploadConfig = NULL;
-
     // NOTE: copying
 
     for (map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
@@ -79,13 +76,12 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
         _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
     }
 
-    _uploadConfig = (other._uploadConfig != NULL) ? new UploadConfig(*other._uploadConfig) : NULL;
-
+    _uploadConfig = other._uploadConfig;
     _interface = other._interface;
     _port = other._port;
     _serverName = other._serverName;
     _rootDirectory = other._rootDirectory;
-    _maxRequestBodySizeBytes = other._maxRequestBodySizeBytes;
+    _maxClientBodySizeBytes = other._maxClientBodySizeBytes;
     _routes = other._routes;
 
     return (*this);
@@ -101,6 +97,10 @@ string Endpoint::getInterface(void) const {
 
 string Endpoint::getRoot() const {
     return (_rootDirectory);
+}
+
+size_t Endpoint::getMaxClientBodySizeBytes() const {
+    return (_maxClientBodySizeBytes);
 }
 
 bool Endpoint::operator<(const Endpoint& other) const {
@@ -123,7 +123,7 @@ bool Endpoint::operator==(const Endpoint& other) const {
     if (_rootDirectory != other._rootDirectory) {
         return (false);
     }
-    if (_maxRequestBodySizeBytes != other._maxRequestBodySizeBytes) {
+    if (_maxClientBodySizeBytes != other._maxClientBodySizeBytes) {
         return (false);
     }
 
@@ -196,8 +196,12 @@ Endpoint& Endpoint::setRoot(const string& path) {
     return (*this);
 }
 
-Endpoint& Endpoint::setClientMaxBodySizeBytes(size_t size) {
-    _maxRequestBodySizeBytes = size;
+Endpoint& Endpoint::setMaxClientBodySizeBytes(size_t size) {
+    if (size > static_cast<size_t>(std::numeric_limits<std::streamsize>::max())) {
+        _maxClientBodySizeBytes = std::numeric_limits<std::streamsize>::max();
+    } else {
+        _maxClientBodySizeBytes = size;
+    }
     return (*this);
 }
 
@@ -242,8 +246,7 @@ RouteConfig Endpoint::selectRoute(std::string route) const {
 }
 
 Endpoint& Endpoint::setUploadConfig(const UploadConfig& cfg) {
-    delete _uploadConfig;
-    _uploadConfig = new UploadConfig(cfg);
+    _uploadConfig = &cfg;
     return (*this);
 }
 

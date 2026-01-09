@@ -13,6 +13,7 @@ private:
     mutable std::string _resultBuffer;
 
 protected:
+    HttpException& setCode(HttpStatus::CODE code);
     HttpException();
     HttpException& operator=(const HttpException& other);
 

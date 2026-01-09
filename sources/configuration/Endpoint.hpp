@@ -15,10 +15,10 @@ private:
     int _port;
     std::string _serverName;
     std::string _rootDirectory;
-    size_t _maxRequestBodySizeBytes;
+    size_t _maxClientBodySizeBytes;
     std::map<std::string, CgiHandlerConfig*> _cgiHandlers;
     std::set<RouteConfig> _routes;
-    UploadConfig* _uploadConfig;
+    const UploadConfig* _uploadConfig;
 
     static const int MIN_PORT = 1;
     static const int MAX_PORT = 65535;
@@ -26,7 +26,7 @@ private:
 public:
     static const std::string DEFAULT_INTERFACE;
     static const int DEFAULT_PORT;
-    static const size_t DEFAULT_MAX_BODY_SIZE_BYTES;
+    static const size_t DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES;
     static const std::string DEFAULT_ROOT;
 
     Endpoint();
@@ -41,7 +41,8 @@ public:
     Endpoint& setInterface(std::string interface);
     Endpoint& setPort(const int& port);
     Endpoint& setRoot(const std::string& path);
-    Endpoint& setClientMaxBodySizeBytes(size_t size);
+    Endpoint& setMaxClientBodySizeBytes(size_t size);
+    size_t getMaxClientBodySizeBytes() const;
     Endpoint& addServerName(const std::string& name);
     Endpoint& addCgiHandler(const CgiHandlerConfig& config, std::string extension);
     Endpoint& addRoute(const RouteConfig& route);

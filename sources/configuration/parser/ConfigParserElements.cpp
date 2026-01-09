@@ -12,6 +12,7 @@
 #include "configuration/UploadConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "utils/utils.hpp"
 
 using std::istringstream;
 using std::runtime_error;
@@ -105,20 +106,19 @@ void ConfigParser::parseRoot(Endpoint& server) {
     server.setRoot(path);
 }
 
-namespace {
-size_t parseSizeValue(const string& value) {
+size_t ConfigParser::parseSizeValue(const string& value) {
     int multiplier = 1;
     string numbers = value;
 
     const char last = value[value.size() - 1];
     if (last == 'K' || last == 'k') {
-        multiplier = ConfigParser::KIB;
+        multiplier = utils::KIB;
         numbers = value.substr(0, value.size() - 1);
     } else if (last == 'M' || last == 'm') {
-        multiplier = ConfigParser::MIB;
+        multiplier = utils::MIB;
         numbers = value.substr(0, value.size() - 1);
     } else if (last == 'G' || last == 'g') {
-        multiplier = ConfigParser::GIB;
+        multiplier = utils::GIB;
         numbers = value.substr(0, value.size() - 1);
     }
 
@@ -131,7 +131,6 @@ size_t parseSizeValue(const string& value) {
 
     return (static_cast<size_t>(num) * multiplier);
 }
-}  // namespace
 
 void ConfigParser::parseBodySize(Endpoint& server) {
     _index++;
@@ -149,7 +148,7 @@ void ConfigParser::parseBodySize(Endpoint& server) {
     _index++;
 
     const size_t size = parseSizeValue(value);
-    server.setClientMaxBodySizeBytes(size);
+    server.setMaxClientBodySizeBytes(size);
 }
 
 void ConfigParser::parseErrorPage() {

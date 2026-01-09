@@ -85,6 +85,10 @@ bool Connection::fullRequestReceived() {
     clog << GREY << "checking [" << requestBuffer << "]" << RESET_COLOR << endl;
     try {
         const webserver::Request tmp(requestBuffer);
+        /* NOTE: not checking body size here, not terminating the connection, 
+        since we need to parse the header and determine body size limit from the routing.
+        can improve this later and drop the connection on an earlier stage.
+        */
         return (true);
     } catch (const IncompleteRequest& e) {
         return (false);
@@ -126,6 +130,7 @@ Connection::State Connection::receiveRequestContent() {
 
 void Connection::sendResponse() {
     clog << "Sending response to fd " << _clientSocketFd << endl;
+    clog << GREY << _responseBuffer << RESET_COLOR << endl;
     size_t totalSent = 0;
     const size_t toSend = _responseBuffer.size();
     while (totalSent < toSend) {

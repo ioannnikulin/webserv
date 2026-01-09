@@ -1,6 +1,5 @@
 #include "RouteConfig.hpp"
 
-#include <cstddef>
 #include <string>
 
 #include "configuration/CgiHandlerConfig.hpp"
@@ -10,24 +9,16 @@
 
 using std::string;
 namespace webserver {
-RouteConfig::RouteConfig()
-    : _folderConfigSection(NULL)
-    , _uploadConfigSection(NULL) {
+RouteConfig::RouteConfig() {
 }
 
 RouteConfig::RouteConfig(const RouteConfig& other)
     : _path(other._path)
     , _allowedMethods(other._allowedMethods)
     , _redirections(other._redirections)
-    , _folderConfigSection(NULL)
-    , _uploadConfigSection(NULL)
+    , _folderConfigSection(other._folderConfigSection)
+    , _uploadConfigSection(other._uploadConfigSection)
     , _cgiHandlers(other._cgiHandlers) {
-    if (other._folderConfigSection != NULL) {
-        _folderConfigSection = new FolderConfig(*other._folderConfigSection);
-    }
-    if (other._uploadConfigSection != NULL) {
-        _uploadConfigSection = new UploadConfig(*other._uploadConfigSection);
-    }
 }
 
 RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
@@ -38,25 +29,18 @@ RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
     _allowedMethods = other._allowedMethods;
     _redirections = other._redirections;
     _cgiHandlers = other._cgiHandlers;
-
-    delete _folderConfigSection;
-    delete _uploadConfigSection;
-
-    _folderConfigSection =
-        (other._folderConfigSection != NULL) ? new FolderConfig(*other._folderConfigSection) : NULL;
-    _uploadConfigSection =
-        (other._uploadConfigSection != NULL) ? new UploadConfig(*other._uploadConfigSection) : NULL;
+    _folderConfigSection = other._folderConfigSection;
+    _uploadConfigSection = other._uploadConfigSection;
 
     return (*this);
 }
 
 RouteConfig& RouteConfig::setFolderConfig(const FolderConfig& folder) {
-    delete _folderConfigSection;
-    _folderConfigSection = new FolderConfig(folder);
+    _folderConfigSection = FolderConfig(folder);
     return (*this);
 }
 
-const FolderConfig* RouteConfig::getFolderConfig() const {
+const FolderConfig& RouteConfig::getFolderConfig() const {
     return (_folderConfigSection);
 }
 
@@ -73,22 +57,12 @@ bool RouteConfig::operator==(const RouteConfig& other) const {
         return (false);
     }
 
-    if (_folderConfigSection == NULL && other._folderConfigSection == NULL) {
-    } else if (_folderConfigSection == NULL || other._folderConfigSection == NULL) {
+    if (_folderConfigSection != other._folderConfigSection) {
         return (false);
-    } else {
-        if (!(*_folderConfigSection == *other._folderConfigSection)) {
-            return (false);
-        }
     }
 
-    if (_uploadConfigSection == NULL && other._uploadConfigSection == NULL) {
-    } else if (_uploadConfigSection == NULL || other._uploadConfigSection == NULL) {
+    if (_uploadConfigSection != other._uploadConfigSection) {
         return (false);
-    } else {
-        if (!(*_uploadConfigSection == *other._uploadConfigSection)) {
-            return (false);
-        }
     }
 
     if (_cgiHandlers != other._cgiHandlers) {
@@ -102,9 +76,11 @@ bool RouteConfig::operator<(const RouteConfig& other) const {
     return (_path < other._path);
 }
 
+bool RouteConfig::isMethodAllowed(HttpMethodType method) const {
+    return (_allowedMethods.find(method) != _allowedMethods.end());
+}
+
 RouteConfig::~RouteConfig() {
-    delete _folderConfigSection;
-    delete _uploadConfigSection;
 }
 
 RouteConfig& RouteConfig::setPath(string path) {
@@ -112,9 +88,12 @@ RouteConfig& RouteConfig::setPath(string path) {
     return (*this);
 }
 
+const UploadConfig& RouteConfig::getUploadConfig() const {
+    return (_uploadConfigSection);
+}
+
 RouteConfig& RouteConfig::setUploadConfig(const UploadConfig& upload) {
-    delete _uploadConfigSection;
-    _uploadConfigSection = new UploadConfig(upload);
+    _uploadConfigSection = UploadConfig(upload);
     return (*this);
 }
 

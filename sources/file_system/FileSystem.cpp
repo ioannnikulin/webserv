@@ -4,12 +4,22 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
+#include "file_system/MimeType.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "response/Response.hpp"
 
 #define DEFAULT_BUFFER_SIZE 4096
+
+using std::cerr;
+using std::endl;
+using std::string;
+using webserver::HttpStatus;
+using webserver::MimeType;
+using webserver::Response;
 
 namespace file_system {
 bool isFile(const char* path) {
@@ -93,4 +103,28 @@ std::string getFileExtension(const std::string& path) {
 
     return (path.substr(dot + 1));
 }
+
+Response serveFile(const std::string& path, int statusCode) {
+    const string ext = file_system::getFileExtension(path);
+    const Response resp(
+        statusCode,
+        file_system::readFile(path.c_str()),
+        MimeType::getMimeType(ext)
+    );
+    return (resp);
+}
+
+Response serveStatusPage(int statusCode) {
+    const string path = HttpStatus::getPageFileLocation(statusCode);
+    if (!fileExists(path.c_str())) {
+        cerr << "Status page file not found: " << path << ". Serving default message." << endl;
+        return (Response(
+            statusCode,
+            HttpStatus::getReasonPhrase(statusCode),
+            MimeType::getMimeType("txt")
+        ));
+    }
+    return (serveFile(path, statusCode));
+}
+
 }  // namespace file_system

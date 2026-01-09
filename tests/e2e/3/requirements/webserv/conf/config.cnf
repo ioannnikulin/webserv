@@ -9,9 +9,10 @@ server {
     }
 
     location /folder {
-        methods GET;
+        methods POST;
         root /var/www/html/folder;
         index index.html;
         listable true;
+        upload on /var/www/html/files;
     }
 }

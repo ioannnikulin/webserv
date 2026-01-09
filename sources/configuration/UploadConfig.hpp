@@ -6,18 +6,20 @@
 namespace webserver {
 class UploadConfig {
 private:
-    UploadConfig();
-
     bool _uploadEnabled;
-    const std::string _uploadRootFolder;
+    std::string _uploadRootFolder;
 
 public:
+    UploadConfig();
     UploadConfig(bool uploadEnabled, const std::string& uploadRootFolder);
     UploadConfig(const UploadConfig& other);
     UploadConfig& operator=(const UploadConfig& other);
     ~UploadConfig();
 
     bool operator==(const UploadConfig& other) const;
+    bool operator!=(const UploadConfig& other) const;
+    bool isUploadEnabled() const;
+    std::string getUploadRootFolder() const;
 };
 }  // namespace webserver
 

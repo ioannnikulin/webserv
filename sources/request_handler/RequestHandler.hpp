@@ -22,7 +22,7 @@ private:
 
 public:
     ~RequestHandler();
-    static std::string handleRequest(const Request& request, const Endpoint& configuration);
+    static std::string handleRequest(Request& request, const Endpoint& configuration);
 };
 
 }  // namespace webserver

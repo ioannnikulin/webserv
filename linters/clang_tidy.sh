@@ -26,6 +26,10 @@ fi
 
 COMPILE_FLAGS=($2)
 LINK_FLAGS=$(echo $3 | sed "s|-I|-I$PROJECT_ROOT/|g")
+LINK_FLAGS_ARRAY=()
+for dir in $LINK_FLAGS; do
+	LINK_FLAGS_ARRAY+=("$dir")
+done
 SOURCES=("${@:4}")
 
 # translation units
@@ -38,16 +42,12 @@ SETTINGS_FILE_FLAG="--config-file=linters/.clang-tidy"
 # since they can be declared in internal headers with different names in different OSes.
 # we do include the headers directly if they are standard though,
 # so for std::string please add #include <string>
-CLANG_TIDY_IGNORED_REGEX="SOL_SOCKET|SO_REUSEADDR|POLLIN|POLLOUT|poll|pollfd|__sig_atomic_t"
+CLANG_TIDY_IGNORED_REGEX="SOL_SOCKET|SO_REUSEADDR|POLLIN|POLLOUT|poll|pollfd|__sig_atomic_t|std::streampos"
 
 TEST_SIMPLER_STRUCTURE="tests.*(is not inside any namespace)|(missing .*ctor)"
 
 check() {
 	echo "Running clang-tidy check..."
-	LINK_FLAGS_ARRAY=()
-	for dir in $LINK_FLAGS; do
-		LINK_FLAGS_ARRAY+=("$dir")
-	done
 	errs=0
 	for f in "${TUS[@]}"; do
 		out=$(mktemp)
@@ -70,7 +70,7 @@ check() {
 fix() {
 	echo "Running clang-tidy autoformatting..."
 	for f in "${TUS[@]}"; do
-		"$CLANG_TIDY" -fix "$SETTINGS_FILE_FLAG" $f -- "$COMPILE_FLAGS" "$LINK_FLAGS" || true; \
+		"$CLANG_TIDY" -fix "$SETTINGS_FILE_FLAG" $f -- "${COMPILE_FLAGS[@]}" "${LINK_FLAGS_ARRAY[@]}" || true; \
 	done
 	echo "clang-tidy autoformat applied"
 }

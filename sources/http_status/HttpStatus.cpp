@@ -87,6 +87,10 @@ void HttpStatus::initStatusMap() {
     addStatus(HTTP_VERSION_NOT_SUPPORTED, "HTTP Version Not Supported");
 }
 
+void HttpStatus::clearStatusMap() {
+    _statusMap.clear();
+}
+
 const std::string HttpStatus::UNKNOWN_STATUS = "SERVER RESPONSE UNDEFINED";
 
 std::string HttpStatus::getReasonPhrase(const int code) {

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "configuration/AppConfig.hpp"
+#include "configuration/Endpoint.hpp"
 #include "configuration/parser/LocationTempData.hpp"
 
 namespace webserver {
@@ -28,7 +29,14 @@ private:
     void parseLocation(Endpoint& server);
     void parseUpload(Endpoint& server);
 
+    void setupLocationFolder(
+        const std::string& locationPath,
+        const Endpoint& server,
+        RouteConfig& route
+    );
+    void setupLocationUpload(RouteConfig& route);
     void parseLocationRoot();
+    void parseLocationMaxBodySize();
     void parseLocationListable();
     void parseLocationIndex();
     void parseLocationMethods(RouteConfig& route);
@@ -38,6 +46,7 @@ private:
     void parseLocationCgi(RouteConfig& route);
 
     static bool isEnd(const std::vector<std::string>& tokens, size_t index);
+    static size_t parseSizeValue(const std::string& value);
 
 public:
     ConfigParser();
@@ -46,9 +55,6 @@ public:
     ~ConfigParser();
 
     static const int BUFFER_SIZE = 4096;
-    static const int KIB = 1024;
-    static const int MIB = 1024 * 1024;
-    static const int GIB = 1024 * 1024 * 1024;
 
     AppConfig parse(const std::string& filename);
 };

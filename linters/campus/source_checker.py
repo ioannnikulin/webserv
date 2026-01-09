@@ -64,7 +64,7 @@ def main():
         for match in regexpUsingNamespace.finditer(s):
             issues.append(f"{f}:{lineNum(match, s)} contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
 
-        checkCommentPrefixes(s, issues)
+        checkCommentPrefixes(f, s, issues)
 
         for match in regexpIncludeRelative.finditer(s):
             issues.append(f"{f}:{lineNum(match, s)} please specify the path starting from the project source root")

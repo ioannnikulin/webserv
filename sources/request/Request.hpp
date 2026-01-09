@@ -15,6 +15,7 @@ private:
     std::string _query;          // NOTE: only x=1
     std::string _protocolVersion;
     std::map<std::string, std::string> _headers;
+    bool _isBodyRaw;
     std::string _body;
 
     static const HttpMethodType DEFAULT_TYPE;
@@ -23,9 +24,12 @@ private:
 
     static const std::string MALFORMED_FIRST_LINE;
 
-    void parseFirstLine(std::string firstLine);
-    void parseHeaders(std::string rawHeaders);
-    void parseBody(std::string body);
+    size_t _maxClientBodySizeBytes;
+
+    void parseFirstLine(const std::string& firstLine);
+    void parseHeaders(const std::string& rawHeaders);
+    void parseChunkedBody();
+    void parseBody();
 
 public:
     Request();
@@ -45,7 +49,7 @@ public:
 
     std::string getQuery() const;
 
-    std::string getBody() const;
+    std::string getBody();
     Request& setBody(std::string body);
 
     std::string getVersion() const;
@@ -55,6 +59,8 @@ public:
     std::string getHeader(std::string key) const;
     bool contentLengthSet() const;
     size_t getContentLength() const;
+    void setMaxBodySizeBytes(size_t maxBodySizeBytes);
+    static size_t DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES;
 };
 }  // namespace webserver
 

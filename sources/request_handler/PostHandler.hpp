@@ -17,7 +17,7 @@ private:
 
 public:
     static Response
-    handleRequest(std::string target, std::string body, const Endpoint& configuration);
+    handleRequest(std::string target, std::string body, const RouteConfig& configuration);
 };
 }  // namespace webserver
 #endif

@@ -2,17 +2,21 @@ server {
     listen 8080;
     server_name localhost;
     client_max_body_size 100;
+    root /var/www/html;
 
     location / {
         methods GET;
+        listable true;
+        index index.html;
     }
 
     location /post_body {
         methods POST;
     }
 
-    location /directory/ {
+    location /directory {
         methods GET;
+        listable true;
         root /var/www/html/YoupiBanane;
         index youpi.bad_extension;
     }

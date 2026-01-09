@@ -6,8 +6,6 @@
 namespace webserver {
 class FolderConfig {
 private:
-    FolderConfig();
-
     // NOTE: e.g. /
     // NOTE: yes, this field duplicates key in Endpoint's map
     std::string _requestedLocation;
@@ -20,23 +18,28 @@ private:
     // NOTE: only a name of the file that we have to look for in every folder in this route
     // NOTE: individual file per folder, not a common indexer for whole route
     std::string _indexPageFilename;
+    size_t _maxClientBodySizeBytes;
 
 public:
+    static const size_t DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES;
+    FolderConfig();
     FolderConfig(const FolderConfig& other);
     FolderConfig& operator=(const FolderConfig& other);
     FolderConfig(
         const std::string& location,
         const std::string& rootPath,
         bool enableListing,
-        const std::string& indexPageFilename
+        const std::string& indexPageFilename,
+        size_t maxClientBodySizeBytes
     );
 
     std::string getRootPath() const;
     std::string getResolvedPath(std::string target) const;
     std::string getIndexPageFilename() const;
     bool isListingEnabled() const;
-
+    size_t getMaxClientBodySizeBytes() const;
     bool operator==(const FolderConfig& other) const;
+    bool operator!=(const FolderConfig& other) const;
     ~FolderConfig();
 };
 }  // namespace webserver

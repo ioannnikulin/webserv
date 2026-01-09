@@ -299,7 +299,7 @@ makefile-check:
 
 # manual docker testing
 
-DEMO_DOCKER=tests/e2e/0
+DEMO_DOCKER=tests/e2e/2
 
 COMPOSE=docker compose -f $(DEMO_DOCKER)/docker-compose.yml
 
@@ -329,7 +329,7 @@ docker-cleanup:
 # automated e2e docker tests
 
 E2E_SCENARIOS = $(shell find tests/e2e -maxdepth 1 -mindepth 1 -type d \
-	! -name "tester" ! -name "webserv" ! -name "2" )
+	! -name "tester" ! -name "webserv" ! -name "0" ! -name "1" ! -name "3")
 
 docker-build-images: $(MAIN_EXECUTABLE)
 	@cp $(MAIN_EXECUTABLE) tests/e2e/webserv/tools/$(MAIN_EXECUTABLE)

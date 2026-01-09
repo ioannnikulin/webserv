@@ -13,6 +13,7 @@
 #include "configuration/RouteConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "utils/utils.hpp"
 
 using std::cout;
 using std::endl;
@@ -120,7 +121,13 @@ public:
 
         webserver::RouteConfig route;
         route.setPath("/");
-        route.setFolderConfig(webserver::FolderConfig("/", "/var/www/html", false, "index.html"));
+        route.setFolderConfig(webserver::FolderConfig(
+            "/",
+            "/var/www/html",
+            false,
+            "index.html",
+            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+        ));
 
         ep.addRoute(route);
         expected.addEndpoint(ep);
@@ -136,10 +143,12 @@ public:
         f << "server {\n"
           << "    listen 8081;\n"
           << "    server_name nested.local;\n"
+          << "    client_max_body_size 1000;\n"
           << "\n"
           << "    location / {\n"
           << "        root /srv/www;\n"
           << "        index index.html;\n"
+          << "        client_max_body_size 2000;\n"
           << "    }\n"
           << "\n"
           << "    location /admin {\n"
@@ -166,14 +175,14 @@ public:
         // Location /
         webserver::RouteConfig route1;
         route1.setPath("/");
-        route1.setFolderConfig(webserver::FolderConfig("/", "/srv/www", false, "index.html"));
+        route1.setFolderConfig(webserver::FolderConfig("/", "/srv/www", false, "index.html", 2000));
         ep.addRoute(route1);
 
         // Location /admin
         webserver::RouteConfig route2;
         route2.setPath("/admin");
         route2.setFolderConfig(
-            webserver::FolderConfig("/admin", "/srv/www/admin", false, "dashboard.html")
+            webserver::FolderConfig("/admin", "/srv/www/admin", false, "dashboard.html", 1000)
         );
         route2.addAllowedMethod(webserver::GET);
         route2.addAllowedMethod(webserver::POST);
@@ -183,7 +192,9 @@ public:
         // Location /uploads
         webserver::RouteConfig route3;
         route3.setPath("/uploads");
-        route3.setFolderConfig(webserver::FolderConfig("/uploads", "/srv/www/uploads", false, ""));
+        route3.setFolderConfig(
+            webserver::FolderConfig("/uploads", "/srv/www/uploads", false, "", 1000)
+        );
         route3.setUploadConfig(webserver::UploadConfig(true, "/srv/uploads"));
         ep.addRoute(route3);
 
@@ -229,8 +240,13 @@ public:
         string serverName1 = "example.com";
         ep1.addServerName(serverName1);
         route1.setPath("/");
-        route1.setFolderConfig(webserver::FolderConfig("/", "/var/www/example", false, "index.html")
-        );
+        route1.setFolderConfig(webserver::FolderConfig(
+            "/",
+            "/var/www/example",
+            false,
+            "index.html",
+            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+        ));
         ep1.addRoute(route1);
         expected.addEndpoint(ep1);
 
@@ -240,8 +256,13 @@ public:
         string serverName2 = "api.localhost";
         ep2.addServerName(serverName2);
         route2.setPath("/api");
-        route2.setFolderConfig(webserver::FolderConfig("/api", "/var/www/api", false, "index.json")
-        );
+        route2.setFolderConfig(webserver::FolderConfig(
+            "/api",
+            "/var/www/api",
+            false,
+            "index.json",
+            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+        ));
         ep2.addRoute(route2);
         expected.addEndpoint(ep2);
 
@@ -277,7 +298,13 @@ public:
         ep.addServerName(serverName);
         webserver::RouteConfig route;
         route.setPath("/");
-        route.setFolderConfig(webserver::FolderConfig("/", "/srv/www/cgi", false, "index.py"));
+        route.setFolderConfig(webserver::FolderConfig(
+            "/",
+            "/srv/www/cgi",
+            false,
+            "index.py",
+            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+        ));
         ep.addRoute(route);
 
         // Add CGI handlers
@@ -328,18 +355,30 @@ public:
         string serverName = "secure.example.com";
 
         ep.addServerName(serverName);
-        ep.setClientMaxBodySizeBytes(1 * webserver::ConfigParser::MIB);
+        ep.setMaxClientBodySizeBytes(1 * utils::MIB);
 
         // Location /
         webserver::RouteConfig route1;
         route1.setPath("/");
-        route1.setFolderConfig(webserver::FolderConfig("/", "/srv/secure", false, "index.html"));
+        route1.setFolderConfig(webserver::FolderConfig(
+            "/",
+            "/srv/secure",
+            false,
+            "index.html",
+            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+        ));
         ep.addRoute(route1);
 
         // Location /upload
         webserver::RouteConfig route2;
         route2.setPath("/upload");
-        route2.setFolderConfig(webserver::FolderConfig("/upload", "/srv/uploads", false, ""));
+        route2.setFolderConfig(webserver::FolderConfig(
+            "/upload",
+            "/srv/uploads",
+            false,
+            "",
+            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+        ));
         route2.addAllowedMethod(webserver::POST);
         route2.setUploadConfig(webserver::UploadConfig(true, "/srv/uploads/tmp"));
         ep.addRoute(route2);
@@ -347,7 +386,13 @@ public:
         // Location /redirect
         webserver::RouteConfig route3;
         route3.setPath("/redirect");
-        route3.setFolderConfig(webserver::FolderConfig("/redirect", "", false, ""));
+        route3.setFolderConfig(webserver::FolderConfig(
+            "/redirect",
+            "",
+            false,
+            "",
+            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+        ));
         route3.addRedirection("/redirect", "http://example.com");
         ep.addRoute(route3);
 
@@ -358,6 +403,7 @@ public:
     }
 
     void tearDown() {
+        webserver::HttpStatus::clearStatusMap();
         for (set<string>::iterator it = _configFilenames.begin(); it != _configFilenames.end();
              it++) {
             if (remove(it->c_str()) != 0) {

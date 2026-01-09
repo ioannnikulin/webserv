@@ -6,12 +6,15 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include "WebServer.hpp"
 #include "http_status/BadRequest.hpp"
 #include "http_status/IncompleteRequest.hpp"
+#include "http_status/PayloadTooLarge.hpp"
 
+using std::ostringstream;
 using std::string;
 using webserver::Request;
 
@@ -64,6 +67,96 @@ public:
             .setBody("Hello World!");
         Request actual(raw);
         TS_ASSERT_EQUALS(expected, actual);
+    }
+
+    void testCurlPostChunked() {
+        const string raw =
+            "POST /post HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
+            "Transfer-Encoding: chunked\r\n\r\n5\r\nHello\r\n7\r\n World!\r\n0\r\n\r\n";
+        Request expected;
+        expected.setType(webserver::POST)
+            .setRequestTarget("/post")
+            .setVersion("HTTP/1.1")
+            // spaces after colon skipped, spaces after the value are preserved
+            .addHeader("Host", "127.10.0.1:8888 ")
+            .addHeader("User-Agent", "curl/8.5.0")
+            .addHeader("Transfer-Encoding", "chunked")
+            .setBody("Hello World!");
+        Request actual(raw);
+        TS_ASSERT_EQUALS(expected, actual);
+    }
+
+    void testCurlPostChunkedEmptyBody() {
+        const string raw =
+            "POST /post HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
+            "Transfer-Encoding: chunked\r\n\r\n0\r\n\r\n";
+        Request expected;
+        expected.setType(webserver::POST)
+            .setRequestTarget("/post")
+            .setVersion("HTTP/1.1")
+            // spaces after colon skipped, spaces after the value are preserved
+            .addHeader("Host", "127.10.0.1:8888 ")
+            .addHeader("User-Agent", "curl/8.5.0")
+            .addHeader("Transfer-Encoding", "chunked");
+        Request actual(raw);
+        TS_ASSERT_EQUALS(expected, actual);
+    }
+
+    void testCurlPostChunkedNoChunks() {
+        const string raw =
+            "POST /post HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
+            "Transfer-Encoding: chunked\r\n\r\n";
+        TS_ASSERT_THROWS(Request act(raw), webserver::IncompleteRequest);
+    }
+
+    void testCurlPostChunkedBadChunk1() {
+        const string raw =
+            "POST /post HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
+            "Transfer-Encoding: chunked\r\n\r\n5\r\nHello\r\nAA\r\n World!\r\n0\r\n\r\n";
+        TS_ASSERT_THROWS(Request act(raw), webserver::IncompleteRequest);
+    }
+
+    void testCurlPostChunkedBadChunk2() {
+        const string raw =
+            "POST /post HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
+            "Transfer-Encoding: chunked\r\n\r\n5\r\nHello\r\n9\r\n World!\r\n0\r\n\r\n";
+        TS_ASSERT_THROWS(Request act(raw), webserver::BadRequest);
+    }
+
+    void testCurlPostChunkedBadChunk3() {
+        const string raw =
+            "POST /post HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
+            "Transfer-Encoding: chunked\r\n\r\n5\r\nHello\r\nA\r\n World!\r\n0\r\n\r\n";
+        TS_ASSERT_THROWS(Request act(raw), webserver::BadRequest);
+    }
+
+    void testCurlPostChunkedBadChunk4() {
+        const string raw =
+            "POST /post HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
+            "Transfer-Encoding: chunked\r\n\r\n5\r\nHello\r\n6\r\n World!\r\n0\r\n\r\n";
+        TS_ASSERT_THROWS(Request act(raw), webserver::BadRequest);
+    }
+
+    void testCurlPostChunkedBodyTooLarge() {
+        ostringstream oss;
+        oss << "POST /post HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
+            << "Transfer-Encoding: chunked\r\n\r\n";
+        for (int i = 0; i < 1000; ++i) {
+            oss << "5\r\nHello\r\n";
+        }
+        oss << "0\r\n\r\n";
+
+        TS_ASSERT_THROWS(Request act(oss.str()), webserver::PayloadTooLarge);
+    }
+
+    void testCurlPostBodyTooLarge() {
+        ostringstream oss;
+        oss << "POST /post HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
+            << "Content-Length: 5\r\n\r\nHello";
+        Request res(oss.str());
+        res.setMaxBodySizeBytes(4);
+
+        TS_ASSERT_THROWS(res.getBody(), webserver::PayloadTooLarge);
     }
 
     void testIncompleteBody() {

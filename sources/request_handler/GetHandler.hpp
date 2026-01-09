@@ -26,7 +26,7 @@ private:
     ~GetHandler();
 
 public:
-    static Response handleRequest(std::string target, const Endpoint& configuration);
+    static Response handleRequest(std::string target, const RouteConfig& routeConfig);
     static Response serveFile(const std::string& path, int statusCode);
     static Response serveStatusPage(int statusCode);
 };
