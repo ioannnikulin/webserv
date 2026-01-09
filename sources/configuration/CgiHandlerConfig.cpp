@@ -2,6 +2,11 @@
 
 #include <string>
 
+#include <iostream>
+
+using std::endl;
+using std::ostream;
+
 using std::string;
 namespace webserver {
 CgiHandlerConfig::CgiHandlerConfig()
@@ -37,6 +42,14 @@ bool CgiHandlerConfig::operator==(const CgiHandlerConfig& other) const {
 }
 
 CgiHandlerConfig::~CgiHandlerConfig() {
+}
+
+ostream& operator<<(ostream& oss, const CgiHandlerConfig& cgi) {
+    oss << cgi._timeoutSeconds;
+    oss << " " << cgi._executablePath;
+    oss << " " << cgi._storageRootPath;
+    oss << endl;
+    return (oss);
 }
 
 }  // namespace webserver

@@ -20,6 +20,7 @@ public:
     bool operator!=(const UploadConfig& other) const;
     bool isUploadEnabled() const;
     std::string getUploadRootFolder() const;
+    friend std::ostream& operator<<(std::ostream& oss, const UploadConfig& config);
 };
 }  // namespace webserver
 

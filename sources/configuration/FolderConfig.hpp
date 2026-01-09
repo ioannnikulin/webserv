@@ -21,7 +21,7 @@ private:
     size_t _maxClientBodySizeBytes;
 
 public:
-    static const size_t DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES;
+    static size_t defaultMaxClientBodySizeBytes();
     FolderConfig();
     FolderConfig(const FolderConfig& other);
     FolderConfig& operator=(const FolderConfig& other);
@@ -41,6 +41,7 @@ public:
     bool operator==(const FolderConfig& other) const;
     bool operator!=(const FolderConfig& other) const;
     ~FolderConfig();
+    friend std::ostream& operator<<(std::ostream& oss, const FolderConfig& config);
 };
 }  // namespace webserver
 

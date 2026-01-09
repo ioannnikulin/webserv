@@ -48,7 +48,7 @@ string RequestHandler::handleRequest(Request& request, const Endpoint& configura
         return (serializeAndPrint(file_system::serveStatusPage(HttpStatus::NOT_FOUND)));
     }
     string body;
-    request.setMaxBodySizeBytes(routeConfig.getFolderConfig().getMaxClientBodySizeBytes());
+    request.setMaxClientBodySizeBytes(routeConfig.getFolderConfig().getMaxClientBodySizeBytes());
     try {
         body = request.getBody();
     } catch (const std::exception& e) {

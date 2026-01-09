@@ -5,15 +5,19 @@
 #include <limits>
 #include <string>
 
+using std::ostream;
+using std::endl;
 using std::string;
 
 namespace webserver {
-const size_t FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES =
-    std::numeric_limits<std::streamsize>::max();
+size_t FolderConfig::defaultMaxClientBodySizeBytes() {
+    // NOTE: cannot be a static constant field due to initialization order problems
+    return (std::numeric_limits<size_t>::max());
+}
 
 FolderConfig::FolderConfig()
     : _enableListing(false)
-    , _maxClientBodySizeBytes(DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES) {
+    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes()) {
 }
 
 FolderConfig::FolderConfig(
@@ -90,5 +94,15 @@ size_t FolderConfig::getMaxClientBodySizeBytes() const {
 }
 
 FolderConfig::~FolderConfig() {
+}
+
+ostream& operator<<(ostream& oss, const FolderConfig& config) {
+    oss << config._requestedLocation;
+    oss << " " << config._storageRootPath;
+    oss << " " << config._enableListing;
+    oss << " " << config._indexPageFilename;
+    oss << " " << config._maxClientBodySizeBytes;
+    oss << endl;
+    return (oss);
 }
 }  // namespace webserver

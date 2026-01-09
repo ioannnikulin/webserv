@@ -18,7 +18,6 @@ private:
     size_t _maxClientBodySizeBytes;
     std::map<std::string, CgiHandlerConfig*> _cgiHandlers;
     std::set<RouteConfig> _routes;
-    const UploadConfig* _uploadConfig;
 
     static const int MIN_PORT = 1;
     static const int MAX_PORT = 65535;
@@ -26,7 +25,7 @@ private:
 public:
     static const std::string DEFAULT_INTERFACE;
     static const int DEFAULT_PORT;
-    static const unsigned long DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES;
+    static size_t defaultMaxClientBodySizeBytes();
     static const std::string DEFAULT_ROOT;
 
     Endpoint();
@@ -55,6 +54,7 @@ public:
     std::set<RouteConfig> getRoutes() const;
 
     static bool isAValidPort(int port);
+    friend std::ostream& operator<<(std::ostream& oss, const Endpoint& endpoint);
 };
 }  // namespace webserver
 

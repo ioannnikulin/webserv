@@ -127,7 +127,7 @@ public:
             "/var/www/html",
             false,
             "index.html",
-            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+            webserver::FolderConfig::defaultMaxClientBodySizeBytes()
         ));
 
         ep.addRoute(route);
@@ -202,7 +202,7 @@ public:
 
         expected.addEndpoint(ep);
 
-        printDebugInfo(expected, actual);
+        //printDebugInfo(expected, actual);
         TS_ASSERT_EQUALS(expected, actual);
     }
 
@@ -247,7 +247,7 @@ public:
             "/var/www/example",
             false,
             "index.html",
-            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+            webserver::FolderConfig::defaultMaxClientBodySizeBytes()
         ));
         ep1.addRoute(route1);
         expected.addEndpoint(ep1);
@@ -263,7 +263,7 @@ public:
             "/var/www/api",
             false,
             "index.json",
-            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+            webserver::FolderConfig::defaultMaxClientBodySizeBytes()
         ));
         ep2.addRoute(route2);
         expected.addEndpoint(ep2);
@@ -305,7 +305,7 @@ public:
             "/srv/www/cgi",
             false,
             "index.py",
-            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+            webserver::FolderConfig::defaultMaxClientBodySizeBytes()
         ));
         ep.addRoute(route);
 
@@ -367,7 +367,7 @@ public:
             "/srv/secure",
             false,
             "index.html",
-            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+            1 * utils::MIB
         ));
         ep.addRoute(route1);
 
@@ -379,7 +379,7 @@ public:
             "/srv/uploads",
             false,
             "",
-            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+            1 * utils::MIB
         ));
         route2.addAllowedMethod(webserver::POST);
         route2.setUploadConfig(webserver::UploadConfig(true, "/srv/uploads/tmp"));
@@ -393,7 +393,7 @@ public:
             "",
             false,
             "",
-            webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+            webserver::FolderConfig::defaultMaxClientBodySizeBytes()
         ));
         route3.addRedirection("/redirect", "http://example.com");
         ep.addRoute(route3);
@@ -401,6 +401,8 @@ public:
         expected.addEndpoint(ep);
 
         //printDebugInfo(expected, actual);
+        volatile size_t a = actual.getEndpoints().begin()->getMaxClientBodySizeBytes();
+        cout << a << endl; // TODO 67: some field here IS NOT FUCKING INITIALIZED
         TS_ASSERT_EQUALS(expected, actual);
     }
 

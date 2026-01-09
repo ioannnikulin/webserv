@@ -39,6 +39,7 @@ public:
     RouteConfig& setPath(std::string path);
     RouteConfig& addCgiHandler(const CgiHandlerConfig& cfg, std::string extension);
     std::string getPath() const;
+    friend std::ostream& operator<<(std::ostream& oss, const RouteConfig& route);
 };
 }  // namespace webserver
 

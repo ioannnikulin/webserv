@@ -94,7 +94,7 @@ bool LocationTempData::uploadSet() const {
     return (_uploadSet);
 }
 
-void LocationTempData::setMaxBodySizeBytes(size_t maxBodySizeBytes) {
+void LocationTempData::setMaxClientBodySizeBytes(size_t maxBodySizeBytes) {
     _maxClientBodySizeBytes = maxBodySizeBytes;
     _maxBodySizeBytesSet = true;
 }

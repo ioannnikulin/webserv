@@ -22,4 +22,24 @@ HttpMethodType stringToMethod(const string& str) {
 
     throw std::out_of_range("Invalid HTTP method in limit_except: " + str);
 }
+
+std::string methodToString(const HttpMethodType& method) {
+    switch(method) {
+        case GET: {
+            return ("GET");
+            }
+        case POST: {
+            return ("POST");
+        }
+        case DELETE: {
+            return ("DELETE");
+        }
+        case SHUTDOWN: {
+            return ("SHUTDOWN");
+        }
+        default: {
+            throw std::out_of_range("Invalid HTTP method");
+        }
+    }
+}
 }  // namespace webserver

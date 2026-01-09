@@ -18,19 +18,25 @@ using std::endl;
 using std::istringstream;
 using std::map;
 using std::ostringstream;
+using std::ostream;
 using std::string;
 
 namespace webserver {
 const HttpMethodType Request::DEFAULT_TYPE = GET;
 const string Request::DEFAULT_REQUEST_TARGET = "/dev/null";
 const string Request::DEFAULT_HTTP_VERSION = "0.0";
-size_t Request::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES = std::numeric_limits<std::streamsize>::max();
+
+size_t Request::defaultMaxClientBodySizeBytes() {
+    return (std::numeric_limits<size_t>::max());
+}
 
 Request::Request()
     : _method(DEFAULT_TYPE)
     , _requestTarget(DEFAULT_REQUEST_TARGET)
     , _path(DEFAULT_REQUEST_TARGET)
-    , _protocolVersion(DEFAULT_HTTP_VERSION) {
+    , _protocolVersion(DEFAULT_HTTP_VERSION)
+    , _isBodyRaw(true)
+    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes()) {
 }
 
 Request::Request(const Request& other)
@@ -89,7 +95,8 @@ Request::Request(string raw)
     , _requestTarget(DEFAULT_REQUEST_TARGET)
     , _path(DEFAULT_REQUEST_TARGET)
     , _protocolVersion(DEFAULT_HTTP_VERSION)
-    , _isBodyRaw(true) {
+    , _isBodyRaw(true)
+    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes()) {
     if (raw.empty()) {
         throw IncompleteRequest("empty request");
     }
@@ -171,7 +178,7 @@ void Request::parseHeaders(const string& rawHeaders) {
 }
 
 Request& Request::operator=(const Request& other) {
-    if (other == *this) {
+    if (*this == other) {
         return (*this);
     }
     _method = other._method;
@@ -181,14 +188,18 @@ Request& Request::operator=(const Request& other) {
     _protocolVersion = other._protocolVersion;
     _headers = other._headers;
     _body = other._body;
+    _isBodyRaw = other._isBodyRaw;
     return (*this);
 }
 
-bool Request::operator==(const Request& other) const {
+bool Request::operator==(const Request& other) {
+    if (_isBodyRaw) {
+        parseBody();
+    }
     return (
         _method == other._method && _requestTarget == other._requestTarget &&
         _protocolVersion == other._protocolVersion && _headers == other._headers &&
-        _body == other._body && _path == other._path && _query == other._query
+        _body == other._body && _path == other._path && _query == other._query && _isBodyRaw == other._isBodyRaw && _maxClientBodySizeBytes == other._maxClientBodySizeBytes
     );
 }
 
@@ -262,7 +273,26 @@ Request& Request::setBody(std::string body) {
 Request::~Request() {
 }
 
-void Request::setMaxBodySizeBytes(size_t maxBodySizeBytes) {
-    _maxClientBodySizeBytes = maxBodySizeBytes;
+void Request::setMaxClientBodySizeBytes(size_t maxClientBodySizeBytes) {
+    _maxClientBodySizeBytes = maxClientBodySizeBytes;
+}
+
+size_t Request::getMaxClientBodySizeBytes() const {
+    return (_maxClientBodySizeBytes);
+}
+std::ostream& operator<<(std::ostream& oss, const Request& request) {
+    oss << request._method;
+    oss << " " << request._requestTarget;
+    oss << " " << request._path;
+    oss << " " << request._query;
+    oss << " " << request._protocolVersion;
+    oss << " " << request._isBodyRaw;
+    oss << " " << request._body << endl;
+    for (map<string, string>::const_iterator itr = request._headers.begin();
+itr != request._headers.end();
+itr ++) {
+    oss << itr->first << ": " << itr->second << endl;
+}
+    return (oss);
 }
 }  // namespace webserver

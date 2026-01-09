@@ -120,7 +120,7 @@ void ConfigParser::parseLocationMaxBodySize() {
     _index++;
 
     const size_t size = parseSizeValue(value);
-    _tmp.setMaxBodySizeBytes(size);
+    _tmp.setMaxClientBodySizeBytes(size);
 }
 
 void ConfigParser::parseLocationRoot() {

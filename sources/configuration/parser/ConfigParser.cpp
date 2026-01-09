@@ -63,8 +63,6 @@ void ConfigParser::parseServer(AppConfig& appConfig) {
             parseBodySize(server);
         } else if (token == "error_page") {
             parseErrorPage();
-        } else if (token == "upload") {
-            parseUpload(server);
         } else if (token == "cgi") {
             parseCgi(server);
         } else if (token != "}") {

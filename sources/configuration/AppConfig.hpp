@@ -23,6 +23,7 @@ public:
     const Endpoint& getEndpoint(std::string interface, int port) const;
 
     bool operator==(const AppConfig& other) const;
+    friend std::ostream& operator<<(std::ostream& oss, const AppConfig& config);
 };
 }  // namespace webserver
 

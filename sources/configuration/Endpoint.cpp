@@ -12,7 +12,9 @@
 #include "configuration/RouteConfig.hpp"
 #include "configuration/UploadConfig.hpp"
 
+using std::endl;
 using std::map;
+using std::ostream;
 using std::set;
 using std::string;
 
@@ -20,23 +22,24 @@ namespace webserver {
 const string Endpoint::DEFAULT_ROOT;
 const string Endpoint::DEFAULT_INTERFACE = "127.0.0.1";
 const int Endpoint::DEFAULT_PORT = 8888;
-const unsigned long Endpoint::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES =
-    std::numeric_limits<std::streamsize>::max();
+
+size_t Endpoint::defaultMaxClientBodySizeBytes() {
+    // NOTE: cannot be a static constant field due to initialization order problems
+    return (std::numeric_limits<size_t>::max());
+}
 
 Endpoint::Endpoint()
     : _interface(DEFAULT_INTERFACE)
     , _port(DEFAULT_PORT)
     , _rootDirectory(DEFAULT_ROOT)
-    , _maxClientBodySizeBytes(DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES)
-    , _uploadConfig(NULL) {
+    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes()) {
 }
 
 Endpoint::Endpoint(const std::string& interface, int port)
     : _interface(interface)
     , _port(port)
     , _rootDirectory(DEFAULT_ROOT)
-    , _maxClientBodySizeBytes(DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES)
-    , _uploadConfig(NULL) {
+    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes()) {
 }
 
 Endpoint::Endpoint(const Endpoint& other)
@@ -45,8 +48,7 @@ Endpoint::Endpoint(const Endpoint& other)
     , _serverName(other._serverName)
     , _rootDirectory(other._rootDirectory)
     , _maxClientBodySizeBytes(other._maxClientBodySizeBytes)
-    , _routes(other._routes)
-    , _uploadConfig(other._uploadConfig) {
+    , _routes(other._routes) {
     for (map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
          ++it) {
@@ -76,7 +78,6 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
         _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
     }
 
-    _uploadConfig = other._uploadConfig;
     _interface = other._interface;
     _port = other._port;
     _serverName = other._serverName;
@@ -154,20 +155,10 @@ bool Endpoint::operator==(const Endpoint& other) const {
         return (false);
     }
 
-    if (_uploadConfig == NULL && other._uploadConfig == NULL) {
-    } else if (_uploadConfig == NULL || other._uploadConfig == NULL) {
-        return (false);
-    } else {
-        if (!(*_uploadConfig == *other._uploadConfig)) {
-            return (false);
-        }
-    }
-
     return (true);
 }
 
 Endpoint::~Endpoint() {
-    delete _uploadConfig;
     for (map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
          it != _cgiHandlers.end();
          ++it) {
@@ -197,8 +188,8 @@ Endpoint& Endpoint::setRoot(const string& path) {
 }
 
 Endpoint& Endpoint::setMaxClientBodySizeBytes(size_t size) {
-    if (size > static_cast<size_t>(DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES)) {
-        _maxClientBodySizeBytes = DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES;
+    if (size > static_cast<size_t>(defaultMaxClientBodySizeBytes())) {
+        _maxClientBodySizeBytes = defaultMaxClientBodySizeBytes();
     } else {
         _maxClientBodySizeBytes = size;
     }
@@ -245,12 +236,29 @@ RouteConfig Endpoint::selectRoute(std::string route) const {
     return (bestMatch);
 }
 
-Endpoint& Endpoint::setUploadConfig(const UploadConfig& cfg) {
-    _uploadConfig = &cfg;
-    return (*this);
-}
-
 bool Endpoint::isAValidPort(int port) {
     return (port >= MIN_PORT && port <= MAX_PORT);
+}
+
+ostream& operator<<(ostream& oss, const Endpoint& endpoint) {
+    oss << endpoint._interface;
+    oss << " " << endpoint._port;
+    oss << " " << endpoint._serverName;
+    oss << " " << endpoint._rootDirectory;
+    oss << " " << endpoint._maxClientBodySizeBytes;
+    oss << endl;
+    for (map<string, CgiHandlerConfig*>::const_iterator itr = endpoint._cgiHandlers.begin();
+itr != endpoint._cgiHandlers.end(); itr ++) {
+    oss << "{" << itr->first << ": " << *(itr->second) << "}" << endl;
+}
+oss << endl;
+    for (set<RouteConfig>::const_iterator itr = endpoint._routes.begin();
+    itr != endpoint._routes.end();
+    itr ++
+) {
+    oss << "{" << *itr << "}" << endl;
+}
+oss << endl;
+return (oss);
 }
 }  // namespace webserver

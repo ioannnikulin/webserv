@@ -1,10 +1,13 @@
 #include "configuration/UploadConfig.hpp"
 
 #include <string>
+#include <iostream>
 
+using std::ostream;
+using std::endl;
 using std::string;
-namespace webserver {
 
+namespace webserver {
 UploadConfig::UploadConfig()
     : _uploadEnabled(false) {
 }
@@ -45,5 +48,12 @@ string UploadConfig::getUploadRootFolder() const {
 }
 
 UploadConfig::~UploadConfig() {
+}
+
+ostream& operator<<(ostream& oss, const UploadConfig& config) {
+    oss << config._uploadEnabled;
+    oss << " " << config._uploadRootFolder;
+    oss << endl;
+    return (oss);
 }
 }  // namespace webserver

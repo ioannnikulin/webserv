@@ -34,8 +34,8 @@ Response PostHandler::handleRequest(string target, string body, const RouteConfi
         return (file_system::serveStatusPage(HttpStatus::BAD_REQUEST));
     }
     std::ofstream file(target.c_str(), std::ios::binary);
-    if (body.size() >
-        static_cast<std::string::size_type>(std::numeric_limits<std::streamsize>::max())) {
+    if (body.size() > // TODO 67:
+        static_cast<std::string::size_type>(std::numeric_limits<size_t>::max())) {
         return (file_system::serveStatusPage(HttpStatus::PAYLOAD_TOO_LARGE));
     }
     file.write(body.data(), static_cast<std::streamsize>(body.size()));

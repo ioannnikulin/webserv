@@ -198,7 +198,7 @@ build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
 	@$(CPP) -std=c++98 -g -O0 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
 
 VALGRIND=valgrind \
-		--leak-check=full --show-leak-kinds=all --track-fds=yes \
+		--track-origins=yes --leak-check=full --show-leak-kinds=all --track-fds=yes \
 		--child-silent-after-fork=yes \
 		--error-exitcode=1 \
 

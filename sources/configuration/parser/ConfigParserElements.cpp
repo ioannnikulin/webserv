@@ -231,41 +231,4 @@ void ConfigParser::parseCgi(Endpoint& server) {
     server.addCgiHandler(config, extension);
 }
 
-void ConfigParser::parseUpload(Endpoint& server) {
-    _index++;
-
-    if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected 'on' or 'off' after 'upload'");
-    }
-
-    const string enabled = _tokens[_index];
-
-    _index++;
-
-    bool uploadEnabled;
-    if (enabled == "on") {
-        uploadEnabled = true;
-    } else if (enabled == "off") {
-        uploadEnabled = false;
-    } else {
-        throw runtime_error("upload must be 'on' or 'off' at server level");
-    }
-
-    if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected upload directory after upload");
-    }
-
-    const string uploadRoot = _tokens[_index];
-
-    _index++;
-
-    if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after upload directive");
-    }
-
-    _index++;
-
-    const UploadConfig cfg(uploadEnabled, uploadRoot);
-    server.setUploadConfig(cfg);
-}
 }  // namespace webserver

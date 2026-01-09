@@ -1,13 +1,21 @@
 #include "RouteConfig.hpp"
 
+#include <map>
 #include <string>
+#include <iostream>
+#include <set>
 
 #include "configuration/CgiHandlerConfig.hpp"
 #include "configuration/FolderConfig.hpp"
 #include "configuration/UploadConfig.hpp"
 #include "http_methods/HttpMethodType.hpp"
 
+using std::ostream;
+using std::endl;
+using std::map;
 using std::string;
+using std::set;
+
 namespace webserver {
 RouteConfig::RouteConfig() {
 }
@@ -113,5 +121,33 @@ RouteConfig& RouteConfig::addCgiHandler(const CgiHandlerConfig& cfg, string exte
 
 string RouteConfig::getPath() const {
     return (_path);
+}
+
+ostream& operator<<(ostream& oss, const RouteConfig& route) {
+    oss << route._path;
+    oss << endl;
+    for (set<HttpMethodType>::const_iterator itr = route._allowedMethods.begin();
+    itr != route._allowedMethods.end();
+    itr ++
+) {
+    oss << methodToString(*itr) << " ";
+}
+oss << endl;
+for (map<string, string>::const_iterator itr = route._redirections.begin();
+itr != route._redirections.end();
+itr ++
+) {
+    oss << itr->first << "->" << itr->second << endl;
+}
+oss << route._folderConfigSection;
+oss << route._uploadConfigSection;
+oss << endl;
+for (map<string, CgiHandlerConfig>::const_iterator itr = route._cgiHandlers.begin();
+itr != route._cgiHandlers.end();
+itr ++
+) {
+    oss << itr->first << "->" << itr->second << endl;
+}
+return (oss);
 }
 }  // namespace webserver

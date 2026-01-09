@@ -76,7 +76,7 @@ public:
                 _rootFolder,
                 false,
                 "index.html",
-                webserver::FolderConfig::DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES
+                webserver::FolderConfig::defaultMaxClientBodySizeBytes()
             ));
 
         webserver::Response actual =

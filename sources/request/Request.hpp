@@ -8,7 +8,7 @@
 
 namespace webserver {
 class Request {
-private:
+public:
     HttpMethodType _method;
     std::string _requestTarget;  // NOTE: full form as in /foo/bar?x=1
     std::string _path;           // NOTE: only /foo/bar
@@ -36,7 +36,8 @@ public:
     Request(const Request& other);
     explicit Request(std::string raw);
     Request& operator=(const Request& other);
-    bool operator==(const Request& other) const;
+    // NOTE: not const due to lazy body initalization
+    bool operator==(const Request& other);
     ~Request();
 
     HttpMethodType getType() const;
@@ -49,6 +50,7 @@ public:
 
     std::string getQuery() const;
 
+    // NOTE: not const due to lazy body initalization
     std::string getBody();
     Request& setBody(std::string body);
 
@@ -59,9 +61,12 @@ public:
     std::string getHeader(std::string key) const;
     bool contentLengthSet() const;
     size_t getContentLength() const;
-    void setMaxBodySizeBytes(size_t maxBodySizeBytes);
-    static size_t DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES;
+    void setMaxClientBodySizeBytes(size_t maxClientBodySizeBytes);
+    size_t getMaxClientBodySizeBytes() const;
+    static size_t defaultMaxClientBodySizeBytes();
+    friend std::ostream& operator<<(std::ostream& oss, const Request& request);
 };
+
 }  // namespace webserver
 
 #endif

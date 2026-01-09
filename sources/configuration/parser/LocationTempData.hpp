@@ -50,7 +50,7 @@ public:
     const std::string& uploadRoot() const;
     bool uploadSet() const;
 
-    void setMaxBodySizeBytes(size_t maxBodySizeBytes);
+    void setMaxClientBodySizeBytes(size_t maxBodySizeBytes);
     size_t getMaxBodySizeBytes() const;
     bool maxBodySizeBytesSet() const;
 };

@@ -27,7 +27,6 @@ private:
     void parseErrorPage();
     void parseCgi(Endpoint& server);
     void parseLocation(Endpoint& server);
-    void parseUpload(Endpoint& server);
 
     void setupLocationFolder(
         const std::string& locationPath,
