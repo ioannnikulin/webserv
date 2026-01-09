@@ -26,7 +26,7 @@ private:
 public:
     static const std::string DEFAULT_INTERFACE;
     static const int DEFAULT_PORT;
-    static const size_t DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES;
+    static const unsigned long DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES;
     static const std::string DEFAULT_ROOT;
 
     Endpoint();

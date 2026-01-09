@@ -28,10 +28,9 @@ RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
     _path = other._path;
     _allowedMethods = other._allowedMethods;
     _redirections = other._redirections;
-    _cgiHandlers = other._cgiHandlers;
     _folderConfigSection = other._folderConfigSection;
     _uploadConfigSection = other._uploadConfigSection;
-
+    _cgiHandlers = other._cgiHandlers;
     return (*this);
 }
 

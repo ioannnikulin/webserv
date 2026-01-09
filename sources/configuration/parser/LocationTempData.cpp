@@ -32,6 +32,8 @@ void LocationTempData::clear() {
     _uploadSet = false;
     _uploadEnabled = false;
     _uploadRoot = "";
+
+    _maxBodySizeBytesSet = false;
 }
 
 void LocationTempData::setRootPath(const string& path) {

@@ -197,8 +197,8 @@ Endpoint& Endpoint::setRoot(const string& path) {
 }
 
 Endpoint& Endpoint::setMaxClientBodySizeBytes(size_t size) {
-    if (size > static_cast<size_t>(std::numeric_limits<std::streamsize>::max())) {
-        _maxClientBodySizeBytes = std::numeric_limits<std::streamsize>::max();
+    if (size > static_cast<size_t>(DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES)) {
+        _maxClientBodySizeBytes = DEFAULT_MAX_CLIENT_BODY_SIZE_BYTES;
     } else {
         _maxClientBodySizeBytes = size;
     }

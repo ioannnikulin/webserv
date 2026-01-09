@@ -69,7 +69,7 @@ private:
                 cout << "Actual path:   '" << itRA->getPath() << "'" << endl;
                 cout << "Expected path: '" << itRE->getPath() << "'" << endl;
                 cout << "Match: " << (itRA->getPath() == itRE->getPath() ? "YES" : "NO") << endl;
-
+                cout << itRA->getFolderConfig().getMaxClientBodySizeBytes() << " vs " << itRE->getFolderConfig().getMaxClientBodySizeBytes() << endl;
                 try {
                     bool routesEqual = (*itRA == *itRE);
                     cout << "Routes equal: " << (routesEqual ? "YES" : "NO") << endl;
@@ -80,6 +80,7 @@ private:
 
             cout << "\n--- Endpoint Equality Check ---" << endl;
             cout << "Endpoints equal: " << (*itA == *itE ? "YES" : "NO") << endl;
+            cout << itE->getMaxClientBodySizeBytes() << " vs " << itA->getMaxClientBodySizeBytes() << endl;
 
             ++itA;
             ++itE;
@@ -172,6 +173,7 @@ public:
 
         string serverName = "nested.local";
         ep.addServerName(serverName);
+        ep.setMaxClientBodySizeBytes(1000);
         // Location /
         webserver::RouteConfig route1;
         route1.setPath("/");
@@ -200,7 +202,7 @@ public:
 
         expected.addEndpoint(ep);
 
-        //printDebugInfo(expected, actual);
+        printDebugInfo(expected, actual);
         TS_ASSERT_EQUALS(expected, actual);
     }
 

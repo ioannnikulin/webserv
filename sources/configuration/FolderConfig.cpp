@@ -63,7 +63,7 @@ bool FolderConfig::isListingEnabled() const {
 
 bool FolderConfig::operator==(const FolderConfig& other) const {
     return (
-        _storageRootPath == other._storageRootPath && _enableListing == other._enableListing &&
+        _requestedLocation == other._requestedLocation && _storageRootPath == other._storageRootPath && _enableListing == other._enableListing &&
         _indexPageFilename == other._indexPageFilename &&
         _maxClientBodySizeBytes == other._maxClientBodySizeBytes
     );
