@@ -23,9 +23,12 @@ private:
 
     static const std::string MALFORMED_FIRST_LINE;
 
-    void parseFirstLine(std::string firstLine);
-    void parseHeaders(std::string rawHeaders);
-    void parseBody(std::string body);
+    static size_t MAX_BODY_SIZE_BYTES;
+
+    void parseFirstLine(const std::string& firstLine);
+    void parseHeaders(const std::string& rawHeaders);
+    void parseChunkedBody(const std::string& raw, size_t startPos);
+    void parseBody(const std::string& body);
 
 public:
     Request();
@@ -55,6 +58,7 @@ public:
     std::string getHeader(std::string key) const;
     bool contentLengthSet() const;
     size_t getContentLength() const;
+    static void setMaxBodySizeBytes(size_t size);
 };
 }  // namespace webserver
 

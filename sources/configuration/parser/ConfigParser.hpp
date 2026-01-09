@@ -46,9 +46,6 @@ public:
     ~ConfigParser();
 
     static const int BUFFER_SIZE = 4096;
-    static const int KIB = 1024;
-    static const int MIB = 1024 * 1024;
-    static const int GIB = 1024 * 1024 * 1024;
 
     AppConfig parse(const std::string& filename);
 };
