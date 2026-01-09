@@ -6,6 +6,7 @@
 #include "http_status/BadRequest.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "http_status/IncompleteRequest.hpp"
+#include "http_status/PayloadTooLarge.hpp"
 #include "http_status/ShuttingDown.hpp"
 
 using std::ostringstream;
@@ -65,6 +66,20 @@ IncompleteRequest::IncompleteRequest(const IncompleteRequest& other)
 }
 
 IncompleteRequest::~IncompleteRequest() throw() {
+}
+
+PayloadTooLarge::PayloadTooLarge(string message)
+    : BadRequest(message) {
+}
+
+PayloadTooLarge::PayloadTooLarge(const PayloadTooLarge& other)
+    : BadRequest(other) {
+    if (this == &other) {
+        return;
+    }
+}
+
+PayloadTooLarge::~PayloadTooLarge() throw() {
 }
 
 ShuttingDown::ShuttingDown() {

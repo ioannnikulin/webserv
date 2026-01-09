@@ -12,6 +12,7 @@
 #include "configuration/UploadConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "utils/utils.hpp"
 
 using std::istringstream;
 using std::runtime_error;
@@ -112,13 +113,13 @@ size_t parseSizeValue(const string& value) {
 
     const char last = value[value.size() - 1];
     if (last == 'K' || last == 'k') {
-        multiplier = ConfigParser::KIB;
+        multiplier = utils::KIB;
         numbers = value.substr(0, value.size() - 1);
     } else if (last == 'M' || last == 'm') {
-        multiplier = ConfigParser::MIB;
+        multiplier = utils::MIB;
         numbers = value.substr(0, value.size() - 1);
     } else if (last == 'G' || last == 'g') {
-        multiplier = ConfigParser::GIB;
+        multiplier = utils::GIB;
         numbers = value.substr(0, value.size() - 1);
     }
 

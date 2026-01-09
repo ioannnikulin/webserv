@@ -13,6 +13,7 @@
 #include "configuration/RouteConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "utils/utils.hpp"
 
 using std::cout;
 using std::endl;
@@ -328,7 +329,7 @@ public:
         string serverName = "secure.example.com";
 
         ep.addServerName(serverName);
-        ep.setClientMaxBodySizeBytes(1 * webserver::ConfigParser::MIB);
+        ep.setClientMaxBodySizeBytes(1 * utils::MIB);
 
         // Location /
         webserver::RouteConfig route1;

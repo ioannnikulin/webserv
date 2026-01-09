@@ -38,7 +38,7 @@ SETTINGS_FILE_FLAG="--config-file=linters/.clang-tidy"
 # since they can be declared in internal headers with different names in different OSes.
 # we do include the headers directly if they are standard though,
 # so for std::string please add #include <string>
-CLANG_TIDY_IGNORED_REGEX="SOL_SOCKET|SO_REUSEADDR|POLLIN|POLLOUT|poll|pollfd|__sig_atomic_t"
+CLANG_TIDY_IGNORED_REGEX="SOL_SOCKET|SO_REUSEADDR|POLLIN|POLLOUT|poll|pollfd|__sig_atomic_t|std::streampos"
 
 TEST_SIMPLER_STRUCTURE="tests.*(is not inside any namespace)|(missing .*ctor)"
 
