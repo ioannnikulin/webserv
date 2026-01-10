@@ -24,10 +24,10 @@ HttpMethodType stringToMethod(const string& str) {
 }
 
 std::string methodToString(const HttpMethodType& method) {
-    switch(method) {
+    switch (method) {
         case GET: {
             return ("GET");
-            }
+        }
         case POST: {
             return ("POST");
         }

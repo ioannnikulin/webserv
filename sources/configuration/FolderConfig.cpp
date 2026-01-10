@@ -5,8 +5,8 @@
 #include <limits>
 #include <string>
 
-using std::ostream;
 using std::endl;
+using std::ostream;
 using std::string;
 
 namespace webserver {
@@ -67,7 +67,8 @@ bool FolderConfig::isListingEnabled() const {
 
 bool FolderConfig::operator==(const FolderConfig& other) const {
     return (
-        _requestedLocation == other._requestedLocation && _storageRootPath == other._storageRootPath && _enableListing == other._enableListing &&
+        _requestedLocation == other._requestedLocation &&
+        _storageRootPath == other._storageRootPath && _enableListing == other._enableListing &&
         _indexPageFilename == other._indexPageFilename &&
         _maxClientBodySizeBytes == other._maxClientBodySizeBytes
     );

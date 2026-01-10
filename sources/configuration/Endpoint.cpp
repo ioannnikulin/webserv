@@ -248,17 +248,17 @@ ostream& operator<<(ostream& oss, const Endpoint& endpoint) {
     oss << " " << endpoint._maxClientBodySizeBytes;
     oss << endl;
     for (map<string, CgiHandlerConfig*>::const_iterator itr = endpoint._cgiHandlers.begin();
-itr != endpoint._cgiHandlers.end(); itr ++) {
-    oss << "{" << itr->first << ": " << *(itr->second) << "}" << endl;
-}
-oss << endl;
+         itr != endpoint._cgiHandlers.end();
+         itr++) {
+        oss << "{" << itr->first << ": " << *(itr->second) << "}" << endl;
+    }
+    oss << endl;
     for (set<RouteConfig>::const_iterator itr = endpoint._routes.begin();
-    itr != endpoint._routes.end();
-    itr ++
-) {
-    oss << "{" << *itr << "}" << endl;
-}
-oss << endl;
-return (oss);
+         itr != endpoint._routes.end();
+         itr++) {
+        oss << "{" << *itr << "}" << endl;
+    }
+    oss << endl;
+    return (oss);
 }
 }  // namespace webserver

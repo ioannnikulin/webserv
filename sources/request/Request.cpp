@@ -17,8 +17,8 @@ using std::clog;
 using std::endl;
 using std::istringstream;
 using std::map;
-using std::ostringstream;
 using std::ostream;
+using std::ostringstream;
 using std::string;
 
 namespace webserver {
@@ -199,7 +199,8 @@ bool Request::operator==(const Request& other) {
     return (
         _method == other._method && _requestTarget == other._requestTarget &&
         _protocolVersion == other._protocolVersion && _headers == other._headers &&
-        _body == other._body && _path == other._path && _query == other._query && _isBodyRaw == other._isBodyRaw && _maxClientBodySizeBytes == other._maxClientBodySizeBytes
+        _body == other._body && _path == other._path && _query == other._query &&
+        _isBodyRaw == other._isBodyRaw && _maxClientBodySizeBytes == other._maxClientBodySizeBytes
     );
 }
 
@@ -289,10 +290,10 @@ std::ostream& operator<<(std::ostream& oss, const Request& request) {
     oss << " " << request._isBodyRaw;
     oss << " " << request._body << endl;
     for (map<string, string>::const_iterator itr = request._headers.begin();
-itr != request._headers.end();
-itr ++) {
-    oss << itr->first << ": " << itr->second << endl;
-}
+         itr != request._headers.end();
+         itr++) {
+        oss << itr->first << ": " << itr->second << endl;
+    }
     return (oss);
 }
 }  // namespace webserver

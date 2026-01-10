@@ -69,7 +69,8 @@ private:
                 cout << "Actual path:   '" << itRA->getPath() << "'" << endl;
                 cout << "Expected path: '" << itRE->getPath() << "'" << endl;
                 cout << "Match: " << (itRA->getPath() == itRE->getPath() ? "YES" : "NO") << endl;
-                cout << itRA->getFolderConfig().getMaxClientBodySizeBytes() << " vs " << itRE->getFolderConfig().getMaxClientBodySizeBytes() << endl;
+                cout << itRA->getFolderConfig().getMaxClientBodySizeBytes() << " vs "
+                     << itRE->getFolderConfig().getMaxClientBodySizeBytes() << endl;
                 try {
                     bool routesEqual = (*itRA == *itRE);
                     cout << "Routes equal: " << (routesEqual ? "YES" : "NO") << endl;
@@ -80,7 +81,8 @@ private:
 
             cout << "\n--- Endpoint Equality Check ---" << endl;
             cout << "Endpoints equal: " << (*itA == *itE ? "YES" : "NO") << endl;
-            cout << itE->getMaxClientBodySizeBytes() << " vs " << itA->getMaxClientBodySizeBytes() << endl;
+            cout << itE->getMaxClientBodySizeBytes() << " vs " << itA->getMaxClientBodySizeBytes()
+                 << endl;
 
             ++itA;
             ++itE;
@@ -362,25 +364,17 @@ public:
         // Location /
         webserver::RouteConfig route1;
         route1.setPath("/");
-        route1.setFolderConfig(webserver::FolderConfig(
-            "/",
-            "/srv/secure",
-            false,
-            "index.html",
-            1 * utils::MIB
-        ));
+        route1.setFolderConfig(
+            webserver::FolderConfig("/", "/srv/secure", false, "index.html", 1 * utils::MIB)
+        );
         ep.addRoute(route1);
 
         // Location /upload
         webserver::RouteConfig route2;
         route2.setPath("/upload");
-        route2.setFolderConfig(webserver::FolderConfig(
-            "/upload",
-            "/srv/uploads",
-            false,
-            "",
-            1 * utils::MIB
-        ));
+        route2.setFolderConfig(
+            webserver::FolderConfig("/upload", "/srv/uploads", false, "", 1 * utils::MIB)
+        );
         route2.addAllowedMethod(webserver::POST);
         route2.setUploadConfig(webserver::UploadConfig(true, "/srv/uploads/tmp"));
         ep.addRoute(route2);
@@ -402,7 +396,7 @@ public:
 
         //printDebugInfo(expected, actual);
         volatile size_t a = actual.getEndpoints().begin()->getMaxClientBodySizeBytes();
-        cout << a << endl; // TODO 67: some field here IS NOT FUCKING INITIALIZED
+        cout << a << endl;  // TODO 67: some field here IS NOT FUCKING INITIALIZED
         TS_ASSERT_EQUALS(expected, actual);
     }
 

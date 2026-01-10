@@ -1,8 +1,7 @@
 #include "CgiHandlerConfig.hpp"
 
-#include <string>
-
 #include <iostream>
+#include <string>
 
 using std::endl;
 using std::ostream;

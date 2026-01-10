@@ -1,10 +1,10 @@
 #include "configuration/UploadConfig.hpp"
 
-#include <string>
 #include <iostream>
+#include <string>
 
-using std::ostream;
 using std::endl;
+using std::ostream;
 using std::string;
 
 namespace webserver {

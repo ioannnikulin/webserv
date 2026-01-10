@@ -55,10 +55,10 @@ AppConfig::~AppConfig() {
 
 ostream& operator<<(ostream& oss, const AppConfig& config) {
     for (set<Endpoint>::const_iterator itr = config._endpoints.begin();
-itr != config._endpoints.end();
-itr ++) {
-    oss << "{" << *itr << "}" << endl;
-}
+         itr != config._endpoints.end();
+         itr++) {
+        oss << "{" << *itr << "}" << endl;
+    }
     return (oss);
 }
 

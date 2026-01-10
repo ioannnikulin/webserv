@@ -36,7 +36,7 @@ public:
             .addHeader("User-Agent", "curl/8.5.0")
             .addHeader("Accept", "*/*");
         Request actual(raw);
-        actual.getBody(); // lazy body
+        actual.getBody();  // lazy body
         expected.getBody();
         TS_ASSERT_EQUALS(expected, actual);
     }
@@ -53,9 +53,10 @@ public:
             .addHeader("Host", "127.10.0.1:8888 ")
             .addHeader("User-Agent", "curl/8.5.0")
             .addHeader("Accept", "*/*")
-            .addHeader("Content-Length", "42").setBody("");
+            .addHeader("Content-Length", "42")
+            .setBody("");
         Request actual(raw);
-        actual.getBody(); // lazy body
+        actual.getBody();  // lazy body
         expected.getBody();
         cout << expected << endl;
         cout << actual << endl;
@@ -77,7 +78,7 @@ public:
             .addHeader("Content-Length", "12")
             .setBody("Hello World!");
         Request actual(raw);
-        actual.getBody(); // lazy body
+        actual.getBody();  // lazy body
         expected.getBody();
         TS_ASSERT_EQUALS(expected, actual);
     }
@@ -97,7 +98,7 @@ public:
             .addHeader("Transfer-Encoding", "chunked")
             .setBody("Hello World!");
         Request actual(raw);
-        actual.getBody(); // lazy body
+        actual.getBody();  // lazy body
         expected.getBody();
         TS_ASSERT_EQUALS(expected, actual);
     }
@@ -116,7 +117,7 @@ public:
             .addHeader("User-Agent", "curl/8.5.0")
             .addHeader("Transfer-Encoding", "chunked");
         Request actual(raw);
-        actual.getBody(); // lazy body
+        actual.getBody();  // lazy body
         expected.getBody();
         TS_ASSERT_EQUALS(expected, actual);
     }
