@@ -25,6 +25,7 @@ namespace webserver {
 const HttpMethodType Request::DEFAULT_TYPE = GET;
 const string Request::DEFAULT_REQUEST_TARGET = "/dev/null";
 const string Request::DEFAULT_HTTP_VERSION = "0.0";
+size_t Request::MAX_BODY_SIZE_BYTES = static_cast<size_t>(4) * utils::KIB;
 
 size_t Request::defaultMaxClientBodySizeBytes() {
     return (std::numeric_limits<size_t>::max());
