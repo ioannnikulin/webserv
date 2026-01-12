@@ -14,8 +14,7 @@
 namespace utils {
 std::string separator(void) {
     std::ostringstream oss;
-    oss << SEPARATOR_COLOR << std::string(SEPARATOR_WIDTH, SEPARATOR_CHAR) << RESET_COLOR
-        << std::endl;
+    oss << SEPARATOR_COLOR << std::string(SEPARATOR_WIDTH, SEPARATOR_CHAR) << RESET_COLOR;
     return (oss.str());
 }
 
@@ -32,17 +31,17 @@ std::string toString(std::size_t value) {
 }
 
 std::string getTimestamp() {
-    /* NOTE: 
-    #include <ctime>
-    #include <iomanip>
+    /* NOTE: Time functions are forbidden
+	#include <ctime>
+	#include <iomanip>
     std::time_t now = std::time(0);
     std::tm gmt = *std::gmtime(&now);
     char buf[64];
-    Format: "Mon, 10 Oct 2025 10:00:00 GMT"
+    NOTE: Format: "Mon, 10 Oct 2025 10:00:00 GMT"
     std::strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", &gmt);
     return (std::string(buf));
-    */
-    return ("[BEAUTIFUL TIMESTAMP THAT USES A FORBIDDEN FUNCTION]");
+	*/
+    return ("Mon, 10 Oct 2025 10:00:00 GMT");
 }
 
 }  // namespace utils

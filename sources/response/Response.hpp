@@ -4,10 +4,13 @@
 #include <map>
 #include <string>
 
+#include "logger/Logger.hpp"
+
 namespace webserver {
 
 class Response {
 private:
+    static Logger _log;
     int _statusCode;
     std::map<std::string, std::string> _headers;
     std::string _body;

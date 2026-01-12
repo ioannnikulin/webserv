@@ -19,13 +19,8 @@
 #include "configuration/Endpoint.hpp"
 #include "connection/Connection.hpp"
 #include "listener/Listener.hpp"
-#include "utils/colors.hpp"
-#include "utils/utils.hpp"
+#include "logger/Logger.hpp"
 
-using std::cerr;
-using std::clog;
-using std::cout;
-using std::endl;
 using std::map;
 using std::ostringstream;
 using std::runtime_error;
@@ -75,6 +70,9 @@ string readStringAndClose(int pipeFd) {
 }  // namespace
 
 namespace webserver {
+
+Logger MasterListener::_log;
+
 MasterListener::MasterListener(const AppConfig& configuration) {
     const set<Endpoint>& endpoints = configuration.getEndpoints();
     for (set<Endpoint>::const_iterator itr = endpoints.begin(); itr != endpoints.end(); ++itr) {
@@ -94,14 +92,13 @@ MasterListener& MasterListener::operator=(const MasterListener& other) {
 }
 
 int MasterListener::registerNewConnection(int listeningFd, Listener* listener) {
-    clog << B_YELLOW << "A new connection on socket fd " << listeningFd << endl << RESET_COLOR;
+    _log.stream(LOG_DEBUG) << "A new connection on socket fd " << listeningFd << "\n";
     struct ::pollfd clientPfd;
     clientPfd.fd = listener->acceptConnection();
     clientPfd.events = POLLIN;
     clientPfd.revents = 0;
     _pollFds.push_back(clientPfd);
-    clog << "Connection accepted, client socket " << clientPfd.fd << " assigned to this client."
-         << endl;
+    _log.stream(LOG_DEBUG) << "Connection accepted, client socket " << clientPfd.fd << "\n";
     return (clientPfd.fd);
 }
 
@@ -159,24 +156,24 @@ Connection::State MasterListener::generateResponse(Listener* listener, ::pollfd&
     if (pid == 0) {
         // NOTE: child; generates response and sends it to pipe for the parent to fetch and dispatch
         if (close(responsePipe[READING_PIPE_END]) == -1) {
-            cerr << "close() failed on child's reading response pipe end" << endl;
+            _log.stream(LOG_ERROR) << "close() failed on child's reading response pipe end\n";
         }
         if (close(controlPipe[READING_PIPE_END]) == -1) {
-            cerr << "close() failed on child's reading control pipe end" << endl;
+            _log.stream(LOG_ERROR) << "close() failed on child's reading control pipe end\n";
         }
         Connection::State connState = listener->generateResponse(activeFd.fd);
         if (write(controlPipe[WRITING_PIPE_END], &connState, sizeof(connState)) == -1) {
-            cerr << "Failed to write to control pipe in child process" << endl;
+            _log.stream(LOG_ERROR) << "Failed to write to control pipe in child process\n";
         }
         const string response = listener->getResponse(activeFd.fd);
         if (write(responsePipe[WRITING_PIPE_END], response.data(), response.size()) == -1) {
-            cerr << "Failed to write to response pipe in child process" << endl;
+            _log.stream(LOG_ERROR) << "Failed to write to response pipe in child process\n";
         }
         if (close(controlPipe[WRITING_PIPE_END]) == -1) {
-            cerr << "close() failed on child's writing control pipe end" << endl;
+            _log.stream(LOG_ERROR) << "close() failed on child's writing control pipe end\n";
         }
         if (close(responsePipe[WRITING_PIPE_END]) == -1) {
-            cerr << "close() failed on child's writing response pipe end" << endl;
+            _log.stream(LOG_ERROR) << "close() failed on child's writing response pipe end\n";
         }
         // NOTE: circumventing forbidden _exit()
         char* argv[] = {
@@ -233,11 +230,11 @@ Connection::State MasterListener::isItADataRequestOnAClientSocketFromARegistered
     if (listener == NULL) {
         return (Connection::IGNORED);
     }
-    clog << "Existing client on socket fd " << activeFd.fd << " has sent data." << endl;
+    _log.stream(LOG_TRACE) << "Existing client on socket fd " << activeFd.fd << " has sent data\n";
     const Connection::State connState = listener->receiveRequest(activeFd.fd);
     if (connState == Connection::CLOSED_BY_CLIENT) {
-        cout << "Client on socket fd " << activeFd.fd
-             << " closed the connection before completing the request." << endl;
+        _log.stream(LOG_TRACE) << "Client on socket fd " << activeFd.fd
+                               << " closed the connection before completing the request\n";
         markConnectionClosedToAvoidRequestOverlapping(activeFd);
         _clientListeners.erase(_clientListeners.find(activeFd.fd));
         listener->killConnection(activeFd.fd);
@@ -259,8 +256,8 @@ Connection::State MasterListener::isItAControlMessageFromAResponseGeneratorWorke
         return (Connection::IGNORED);
     }
     const Connection::State connState = readControlMessageAndClose(controlMessageReadyFor->first);
-    clog << "Worker on fd " << controlMessageReadyFor->first << " reported status " << connState
-         << endl;
+    _log.stream(LOG_TRACE) << "Worker on fd " << controlMessageReadyFor->first
+                           << " reported status " << connState << "\n";
     removePollFd(controlMessageReadyFor->first);
     _responseWorkerControls.erase(controlMessageReadyFor);
     return (connState);
@@ -271,9 +268,11 @@ Connection::State MasterListener::isItAResponseFromAResponseGeneratorWorker(::po
     if (responseReadyFor == _responseWorkers.end()) {
         return (Connection::IGNORED);
     }
-    clog << "Response for " << responseReadyFor->second << " made by worker on fd "
-         << responseReadyFor->first << " is being picked up by main thread" << endl;
+    _log.stream(LOG_TRACE) << "Response for " << responseReadyFor->second
+                           << " made by worker on fd " << responseReadyFor->first
+                           << " is being picked up by main thread\n";
     const string response = readStringAndClose(responseReadyFor->first);
+    _log.stream(LOG_TRACE) << response << "\n";
     _clientListeners.at(responseReadyFor->second)->setResponse(responseReadyFor->second, response);
     markResponseReadyForReturn(responseReadyFor->second);
     removePollFd(responseReadyFor->first);
@@ -305,27 +304,23 @@ MasterListener::handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewC
     if (ret != Connection::IGNORED) {
         return (ret);
     }
-    cerr << RED << "Unknown socket fd " << activeFd.fd << " has sent data, ignoring." << RESET_COLOR
-         << endl;
+    _log.stream(LOG_WARN) << "Unknown socket fd " << activeFd.fd + " has sent data, ignoring.\n";
     return (Connection::IGNORED);
 }
 
 void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
-    clog << "Starting sending response back to " << activeFd.fd << endl;
+    _log.stream(LOG_TRACE) << "Starting sending response back to " << activeFd.fd;
     Listener* listener = findListener(_clientListeners, activeFd.fd);
 
     if (listener == NULL) {
-        cerr << B_RED << "Tried to send data to an unknown socket fd " << activeFd.fd
-             << ", ignoring." << endl
-             << RESET_COLOR;
+        _log.stream(LOG_WARN) << "Tried to send data to an unknown socket fd " << activeFd.fd
+                              << ", ignoring.\n";
         return;
     }
     listener->sendResponse(activeFd.fd);
     // NOTE: no keep-alive in HTTP 1.0, so killing right away
     // NOTE: if he wants to go on, he'd have to go to listening socket again
-    cout << utils::separator() << B_GREEN << "📨 Sent response to socket fd " << activeFd.fd
-         << RESET_COLOR << endl
-         << utils::separator();
+    _log.stream(LOG_INFO) << "Sent response to socket fd " << activeFd.fd << "\n";
     _clientListeners.erase(_clientListeners.find(activeFd.fd));
     listener->killConnection(activeFd.fd);
     removePollFd(activeFd.fd);
@@ -373,12 +368,13 @@ void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
 void MasterListener::reapChildren() {
     int status = 0;
     pid_t pid;
-
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         if (WIFEXITED(status)) {
-            clog << "Child " << pid << " exited with code " << WEXITSTATUS(status) << endl;
+            _log.stream(LOG_DEBUG)
+                << "Child " << pid << " exited with code " << WEXITSTATUS(status) << "\n";
         } else if (WIFSIGNALED(status)) {
-            clog << "Child " << pid << " killed by signal " << WTERMSIG(status) << endl;
+            _log.stream(LOG_DEBUG)
+                << "Child " << pid << " killed by signal " << WTERMSIG(status) << "\n";
         }
     }
 }

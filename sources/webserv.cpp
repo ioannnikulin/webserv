@@ -1,17 +1,15 @@
-#include <iostream>
+#include <string>
 
 #include "WebServer.hpp"
-
-using std::cerr;
-using std::endl;
+#include "logger/Logger.hpp"
 
 int main(int argc, char* argv[]) {
+    webserver::Logger log;
     if (argc != 2) {
-        cerr << "Usage: " << argv[0] << " <config_file>\nFor example, " << argv[0]
-             << " tests/config_files/local_run.conf" << endl;
+        log.stream(LOG_FATAL) << "Failed to launch, no config file provided. Usage: " << argv[0]
+                              << " <config_file>\n";
         return (1);
     }
-
     webserver::WebServer& server = webserver::WebServer::getInstance(argv[1]);
     server.start();
 

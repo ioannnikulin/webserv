@@ -3,8 +3,8 @@
 set -euo pipefail
 
 # allowed functions from the subject
-# if this check fails, and you are absolutely sure 
-# this function is allowed by the subject, 
+# if this check fails, and you are absolutely sure
+# this function is allowed by the subject,
 # feel free to add it in a separate block
 ALLOWED_EXTERNAL_FUNCTIONS=(
 	execve pipe strerror gai_strerror
@@ -13,12 +13,12 @@ ALLOWED_EXTERNAL_FUNCTIONS=(
 	kevent socket accept listen send recv chdir bind connect
 	getaddrinfo freeaddrinfo setsockopt getsockname getprotobyname
 	fcntl close read write waitpid kill signal access stat
-	open opendir readdir closedir 
+	open opendir readdir closedir
 
 	# standard implicit C++ stuff
 	__cxa_.* __dso_handle
 	_GLOBAL_OFFSET_TABLE_ __gxx_personality_v0 __stack_chk_fail _stack_chk_guard
-	_Unwind_Resume 
+	_Unwind_Resume
 
 	# memmove, memcmp, memset, strlen leak from STL optimizations,
 	# so we allow them here, but better chek raw sources to forbid direct usage
@@ -47,7 +47,7 @@ filterUndefinedCalls() {
 }
 
 failIfForbiddenCallsDetected() {
-	if [ -s forbidden_calls.txt ]; then 
+	if [ -s forbidden_calls.txt ]; then
 		echo "Error: Forbidden external calls detected:";
 		cat forbidden_calls.txt;
 		cleanup

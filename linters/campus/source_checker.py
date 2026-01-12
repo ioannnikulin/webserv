@@ -3,12 +3,25 @@
 import sys
 import re
 from pathlib import Path
-from header_checker import checkCommentPrefixes
+from header_checker import checkCommentPrefixes 
 from header_checker import lineNum
 from header_checker import regexpIncludeRelative
+from header_checker import regexpCommentOneLine
+from header_checker import regexpCommentMultiline
+
 
 roots = sys.argv[1:] if len(sys.argv) > 1 else ["sources", "include", "tests"]
 headerSuffixes = {".cpp", ".c"}
+
+def stripCommentsPreserveLines(s):
+    # remove multiline comments but keep newlines
+    def repl_multiline(m):
+        return ("\n" * m.group(0).count("\n"))
+
+    s = regexpCommentMultiline.sub(repl_multiline, s)
+    s = regexpCommentOneLine.sub("", s)
+    return (s)
+
 
 def collectFiles(roots):
     files = []
@@ -38,6 +51,7 @@ $
 regexpPoll = re.compile(f"^bpoll\\(")
 regexpErrno = re.compile(r".*\n.*\n.*\n.*\berrno\b")
 regexpIoOperations = re.compile(r"\b(read|write|recv|send)\(")
+regexpForbiddenStdStreams = re.compile(r"\bstd::(cout|clog|cerr|endl)\b")
 
 def main():
     print("Running source-checker...")
@@ -76,6 +90,15 @@ def main():
         if regexpPoll.search(s):
             pollCalls += 1
 
+        # forbid std::cout / cin / clog / endl outside Logger
+        if f.name not in ALLOWED_STD_STREAM_FILES:
+            clean = stripCommentsPreserveLines(s)
+            for match in regexpForbiddenStdStreams.finditer(clean):
+                issues.append(
+                    lineNum(match, clean)
+                    + "use of std::cout / cin / clog / endl is forbidden; use Logger instead"
+                )
+        
         if issues:
             failed = True
             print("\n".join(issues))

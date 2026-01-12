@@ -16,12 +16,8 @@
 #include <string>
 
 #include "configuration/Endpoint.hpp"
-#include "utils/colors.hpp"
-#include "utils/utils.hpp"
+#include "logger/Logger.hpp"
 
-using std::cerr;
-using std::clog;
-using std::endl;
 using std::map;
 using std::runtime_error;
 using std::strerror;
@@ -52,8 +48,11 @@ int setupSocket() {
 }  // namespace
 
 namespace webserver {
+
+Logger Listener::_log;
+
 Listener& Listener::operator=(const Listener& other) {
-    cerr << "Unexpected stub assignment operator called for Listener." << endl;
+    _log.stream(LOG_WARN) << "Unexpected stub assignment operator called for Listener\n";
     _port = other._port;
     _interface = other._interface;
     _listeningSocketFd = 0;
@@ -118,9 +117,7 @@ Listener::Listener(const Endpoint& configuration)
         throw runtime_error(string("listen() failed: ") + strerror(errno));
     }
     // clang-format off
-    clog << utils::separator() << "Listening on " << B_GREEN << "http:/" << "/" << _interface << ":"
-         << _port << RESET_COLOR << " via socket " << _listeningSocketFd << endl
-         << utils::separator();
+    _log.stream(LOG_INFO) << "Listener initialized on " << "http://" << _interface << ":" << _port << " via socket " << _listeningSocketFd << "\n";
     // clang-format on
 }
 
@@ -160,7 +157,7 @@ void Listener::sendResponse(int clientSocketFd) {
 }
 
 void Listener::killConnection(int clientSocketFd) {
-    clog << "Killing connection " << clientSocketFd << endl;
+    _log.stream(LOG_INFO) << "Killing connection\n";
     close(clientSocketFd);
     const map<int, Connection*>::iterator itr = _clientConnections.find(clientSocketFd);
     delete itr->second;
@@ -168,10 +165,10 @@ void Listener::killConnection(int clientSocketFd) {
 }
 
 Listener::~Listener() {
-    clog << "Destroying listener" << endl;
     if (_listeningSocketFd != -1) {
         close(_listeningSocketFd);
         _listeningSocketFd = -1;
     }
+    _log.stream(LOG_TRACE) << "Destroyed listener\n";
 }
 }  // namespace webserver

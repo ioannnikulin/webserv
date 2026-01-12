@@ -5,6 +5,7 @@
 
 #include "configuration/AppConfig.hpp"
 #include "listener/MasterListener.hpp"
+#include "logger/Logger.hpp"
 
 namespace webserver {
 class WebServer {
@@ -14,6 +15,7 @@ private:
     // NOTE: DL: volatile tells the compiler: “Don’t optimize access to this variable. Always read/write it directly from memory.”
     volatile __sig_atomic_t _isRunning;
     MasterListener _masterListener;
+    static Logger _log;
 
     WebServer();
     // NOTE: DL: The keyword explicit is used to prevent implicit (automatic) type conversions when calling a constructor.

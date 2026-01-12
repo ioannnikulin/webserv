@@ -9,6 +9,7 @@
 
 #include "configuration/AppConfig.hpp"
 #include "connection/Connection.hpp"
+#include "logger/Logger.hpp"
 
 namespace webserver {
 class Listener {
@@ -17,6 +18,7 @@ private:
     Listener& operator=(const Listener& other);
     Listener(const Listener& other);
 
+    static Logger _log;
     std::string _interface;
     int _port;
     int _listeningSocketFd;
