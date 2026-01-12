@@ -6,7 +6,7 @@
 #include <string>
 
 #include "http_status/HttpStatus.hpp"
-#include "utils/colors.hpp"
+#include "logger/Logger.hpp"
 #include "utils/utils.hpp"
 
 using std::string;
@@ -15,6 +15,8 @@ using std::string;
 #define SERVER_NAME "OurWebServer/1.0"
 
 namespace webserver {
+
+Logger Response::_log;
 
 Response::Response() {
     _statusCode = HttpStatus::OK;
@@ -81,7 +83,7 @@ void Response::setHeader(const std::string& key, const std::string& value) {
 }
 
 string Response::serialize(void) const {
-    std::clog << B_YELLOW << "Serializing the HTTP response..." << RESET_COLOR << std::endl;
+    _log.stream(LOG_TRACE) << "Serializing HTTP response\n";
 
     std::ostringstream resp;
 
@@ -101,7 +103,7 @@ string Response::serialize(void) const {
     // NOTE: BODY
     resp << _body;
 
-    std::clog << B_GREEN << "✅ HTTP response serialized!" << RESET_COLOR << std::endl;
+    _log.stream(LOG_TRACE) << "HTTP response serialized\n";
 
     return (resp.str());
 }

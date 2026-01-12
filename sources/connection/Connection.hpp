@@ -9,6 +9,7 @@
 #include <string>
 
 #include "configuration/AppConfig.hpp"
+#include "logger/Logger.hpp"
 #include "request/Request.hpp"
 
 namespace webserver {
@@ -27,11 +28,12 @@ public:
     };
 
 private:
+    static Logger _log;
     State _state;
     int _clientSocketFd;  // NOTE: acquired here, then passed to pollfd up in MasterListener
     std::string _responseBuffer;
     /* NOTE: buffer used for construction in a forked process,
-    * then read in MasterListener via getResponseBuffer + responsePipe 
+    * then read in MasterListener via getResponseBuffer + responsePipe
     * and reset into the main thread's Connection for dispatching.
     */
     std::ostringstream _requestBuffer;

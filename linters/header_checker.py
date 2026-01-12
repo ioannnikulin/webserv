@@ -9,7 +9,7 @@ roots = sys.argv[1:] if len(sys.argv) > 1 else ["sources", "tests"]
 headerSuffixes = {".h", ".hpp", ".hh", ".hxx"}
 
 regexpUsing = re.compile(r"^\s*using\s", re.M)
-regexpCommentOneLine = re.compile(r'//(.*)')
+regexpCommentOneLine = re.compile(r'(?<!http:)(?<!https:)//(.*)')
 regexpCommentMultiline = re.compile(r'/\*(.*?)\*/', re.DOTALL)
 regexpCommentValidContentPrefix = re.compile(r'^(( TODO [0-9]+:)|( NOTE:)|( namespace)|( clang-format)|( NOLINT))')
 regexpIncludeRelative = re.compile(r'#include ".*\.\.')

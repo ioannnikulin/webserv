@@ -1,25 +1,25 @@
 #include "RequestHandler.hpp"
 
-#include <iostream>
 #include <string>
 
 #include "configuration/Endpoint.hpp"
 #include "file_system/MimeType.hpp"
 #include "http_methods/HttpMethodType.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "logger/Logger.hpp"
 #include "request/Request.hpp"
 #include "request_handler/DeleteHandler.hpp"
 #include "request_handler/GetHandler.hpp"
 #include "request_handler/PostHandler.hpp"
 #include "response/Response.hpp"
-#include "utils/colors.hpp"
-#include "utils/utils.hpp"
 
 using std::string;
 
 #define PRINT_RESPONSES 1
 
 namespace webserver {
+
+Logger RequestHandler::_log;
 
 string RequestHandler::handleRequest(const Request& request, const Endpoint& configuration) {
     Response response;
@@ -56,8 +56,7 @@ string RequestHandler::handleRequest(const Request& request, const Endpoint& con
     }
     const std::string resp = response.serialize();
     if ((PRINT_RESPONSES == 1) && MimeType::isPrintable(response.getHeader("Content-Type"))) {
-        std::clog << utils::separator() << GREY << resp << RESET_COLOR << utils::separator()
-                  << std::endl;
+        _log.stream(LOG_TRACE) << resp;
     }
     return (resp);
 }

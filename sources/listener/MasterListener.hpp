@@ -14,6 +14,7 @@
 namespace webserver {
 class MasterListener {
 private:
+    static Logger _log;
     MasterListener(const MasterListener& other);
 
     std::vector<struct ::pollfd> _pollFds;

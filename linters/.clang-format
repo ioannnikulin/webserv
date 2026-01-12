@@ -36,14 +36,14 @@ BreakInheritanceList: BeforeComma
 # int* ptr; // not int *ptr
 # int& ref; // not int &ref;
 PointerAlignment: Left
-DerivePointerAlignment: false 
+DerivePointerAlignment: false
 
 ReflowComments: false
 
 # Google + SortIncludes:
-# first current file's respective header, 
-# then C system includes, 
-# then C++ system includes, 
+# first current file's respective header,
+# then C system includes,
+# then C++ system includes,
 # then project headers;
 # all four blocks sorted alphabetically within themselves
 SortIncludes: true

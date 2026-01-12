@@ -20,12 +20,10 @@
 #include "http_status/HttpException.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "http_status/IncompleteRequest.hpp"
+#include "logger/Logger.hpp"
 #include "request/Request.hpp"
 #include "request_handler/RequestHandler.hpp"
-#include "utils/colors.hpp"
 
-using std::clog;
-using std::endl;
 using std::exception;
 using std::ostringstream;
 using std::runtime_error;
@@ -41,6 +39,9 @@ void clean(char* buffer, size_t size) {
 }  // namespace
 
 namespace webserver {
+
+Logger Connection::_log;
+
 Connection::Connection(int listeningSocketFd, const Endpoint& configuration)
     : _state(NEWBORN)
     , _clientIp(0)
@@ -62,9 +63,10 @@ Connection::Connection(int listeningSocketFd, const Endpoint& configuration)
     _clientPort = ntohs(clientAddr.sin_port);
 
     const uint32_t clientIp = ntohl(_clientIp);
-    clog << "Accepted connection from " << ((clientIp >> SHIFT24) & MASK8) << "."
-         << ((clientIp >> SHIFT16) & MASK8) << "." << ((clientIp >> SHIFT8) & MASK8) << "."
-         << (clientIp & MASK8) << ":" << _clientPort << endl;
+    _log.stream(LOG_TRACE) << "Accepted connection from " << ((clientIp >> SHIFT24) & MASK8) << "."
+                           << ((clientIp >> SHIFT16) & MASK8) << "."
+                           << ((clientIp >> SHIFT8) & MASK8) << "." << (clientIp & MASK8) << ":"
+                           << _clientPort << "\n";
 }
 
 Connection& Connection::setResponseBuffer(string buffer) {
@@ -82,7 +84,7 @@ int Connection::getClientSocketFd() const {
 
 bool Connection::fullRequestReceived() {
     const string requestBuffer = _requestBuffer.str();
-    clog << GREY << "checking [" << requestBuffer << "]" << RESET_COLOR << endl;
+    _log.stream(LOG_TRACE) << "checking [" + requestBuffer + "]\n";
     try {
         const webserver::Request tmp(requestBuffer);
         return (true);
@@ -125,7 +127,7 @@ Connection::State Connection::receiveRequestContent() {
 }
 
 void Connection::sendResponse() {
-    clog << "Sending response to fd " << _clientSocketFd << endl;
+    _log.stream(LOG_TRACE) << "Sending response to fd " << _clientSocketFd << "\n";
     size_t totalSent = 0;
     const size_t toSend = _responseBuffer.size();
     while (totalSent < toSend) {
@@ -146,13 +148,9 @@ Connection::State Connection::generateResponse() {
         // NOTE: how did you call this? this is a wrong time to call response generator
         return (_state);
     }
-
     try {
-        // NOTE: DL should it be cout or clog? clog is usually used for errors?
-        std::clog << B_YELLOW << "Received a HTTP request on socket fd " << _clientSocketFd
-                  << RESET_COLOR << ":\n---\n"
-                  << _requestBuffer.str() << "---\n"
-                  << endl;
+        _log.stream(LOG_TRACE) << "Received HTTP request on socket " << _clientSocketFd << ":\n"
+                               << _requestBuffer.str();
         _request = Request(_requestBuffer.str());
         _responseBuffer = RequestHandler::handleRequest(_request, _configuration);
     } catch (const HttpException& e) {

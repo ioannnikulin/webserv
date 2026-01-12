@@ -4,6 +4,7 @@
 #include <string>
 
 #include "http_methods/HttpMethodType.hpp"
+#include "logger/Logger.hpp"
 #include "request_handler/RequestHandler.hpp"
 #include "response/Response.hpp"
 
@@ -20,6 +21,7 @@ you will NOT be able to debug this part in gdb, it's callled from a forked proce
 */
 class GetHandler {
 private:
+    static Logger _log;
     GetHandler();
     GetHandler(const GetHandler& other);
     GetHandler& operator=(const GetHandler& other);

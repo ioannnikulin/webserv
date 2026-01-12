@@ -90,6 +90,11 @@ HTTP_STATUSES_SRC_NAMES = HttpStatus.cpp HttpException.cpp
 HTTP_STATUSES_SRCS = $(addprefix $(SOURCE_F)/$(HTTP_STATUSES_F)/,$(HTTP_STATUSES_SRC_NAMES))
 
 # ------------------------------------------------------------
+LOGGER_F = logger
+LOGGER_SRC_NAMES = Logger.cpp LoggerConfig.cpp
+LOGGER_SRCS = $(addprefix $(SOURCE_F)/$(LOGGER_F)/,$(LOGGER_SRC_NAMES))
+
+# ------------------------------------------------------------
 
 UTILS_F = utils
 UTILS_SRC_NAMES = utils.cpp
@@ -111,11 +116,12 @@ MAIN_NONENDPOINT_SRCS = \
 	$(REQUEST_HANDLER_SRCS) \
 	$(RESPONSE_SRCS) \
 	$(WEBSERV_SRCS) \
+	$(LOGGER_SRCS) \
 	$(HTTP_METHODS_SRCS) \
 	$(HTTP_STATUSES_SRCS) \
 	$(FILE_SYSTEM_SRCS) \
 	$(UTILS_SRCS) \
-	
+
 MAIN_NONENDPOINT_OBJS = $(addprefix $(OBJ_F)/,$(MAIN_NONENDPOINT_SRCS:.cpp=.o))
 
 # ------------------------------------------------------------
@@ -135,6 +141,7 @@ MAIN_DIRS = \
 	$(SOURCE_F)/$(REQUEST_F) \
 	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
 	$(SOURCE_F)/$(RESPONSE_F) \
+	$(SOURCE_F)/$(LOGGER_F) \
 	$(SOURCE_F)/$(HTTP_STATUSES_F) \
 	$(SOURCE_F)/$(FILE_SYSTEM_F) \
 	$(SOURCE_F)/$(UTILS_F) \

@@ -4,6 +4,7 @@
 #include <string>
 
 #include "configuration/AppConfig.hpp"
+#include "logger/Logger.hpp"
 #include "request/Request.hpp"
 
 namespace webserver {
@@ -16,6 +17,7 @@ you will NOT be able to debug this part in gdb, it's callled from a forked proce
 */
 class RequestHandler {
 private:
+    static Logger _log;
     RequestHandler();
     RequestHandler(const RequestHandler& other);
     RequestHandler& operator=(const RequestHandler& other);
