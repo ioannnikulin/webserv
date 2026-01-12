@@ -15,14 +15,6 @@ namespace webserver {
 
 Logger WebServer::_log;
 
-WebServer::WebServer(const std::string& configFilePath)
-    : _appConfig(ConfigParser().parse(configFilePath))
-    , _isRunning(0)
-    , _masterListener(_appConfig) {
-    HttpStatus::initStatusMap();
-    handleSignals();
-}
-
 WebServer& WebServer::operator=(const WebServer& other) {
     if (&other == this) {
         return (*this);
@@ -45,6 +37,14 @@ void WebServer::handleSignals() {
 
 AppConfig WebServer::getAppConfig() const {
     return (_appConfig);
+}
+
+WebServer::WebServer(const std::string& configFilePath)
+    : _appConfig(ConfigParser().parse(configFilePath))
+    , _isRunning(0)
+    , _masterListener(_appConfig) {
+    HttpStatus::initStatusMap();
+    handleSignals();
 }
 
 WebServer& WebServer::getInstance(const string& configFilePath) {

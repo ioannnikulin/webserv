@@ -1,13 +1,15 @@
+#include "WebServer.hpp"
+
+#include <iostream>
 #include <string>
 
-#include "WebServer.hpp"
-#include "logger/Logger.hpp"
+#include "utils/colors.hpp"
 
 int main(int argc, char* argv[]) {
-    webserver::Logger log;
     if (argc != 2) {
-        log.stream(LOG_FATAL) << "Failed to launch, no config file provided. Usage: " << argv[0]
-                              << " <config_file>\n";
+        std::cout << B_RED << "Failed to launch: no config file provided. Usage: " << argv[0]
+                    << " <config_file>\n" << RESET_COLOR
+                    << "Example: ./webserv tests/config_files/local_run.conf\n";
         return (1);
     }
     webserver::WebServer& server = webserver::WebServer::getInstance(argv[1]);

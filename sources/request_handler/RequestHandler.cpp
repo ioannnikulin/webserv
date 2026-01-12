@@ -15,8 +15,6 @@
 
 using std::string;
 
-#define PRINT_RESPONSES 1
-
 namespace webserver {
 
 Logger RequestHandler::_log;
@@ -55,7 +53,7 @@ string RequestHandler::handleRequest(const Request& request, const Endpoint& con
         }
     }
     const std::string resp = response.serialize();
-    if ((PRINT_RESPONSES == 1) && MimeType::isPrintable(response.getHeader("Content-Type"))) {
+    if (MimeType::isPrintable(response.getHeader("Content-Type"))) {
         _log.stream(LOG_TRACE) << resp;
     }
     return (resp);
