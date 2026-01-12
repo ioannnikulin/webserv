@@ -3,9 +3,12 @@
 
 #include <string>
 
+#include "logger/Logger.hpp"
+
 namespace webserver {
 class FolderConfig {
 private:
+    static Logger _log;
     FolderConfig();
 
     // NOTE: e.g. /

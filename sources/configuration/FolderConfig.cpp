@@ -1,11 +1,15 @@
 #include "configuration/FolderConfig.hpp"
 
-#include <iostream>
 #include <string>
+
+#include "logger/Logger.hpp"
 
 using std::string;
 
 namespace webserver {
+
+Logger FolderConfig::_log;
+
 FolderConfig::FolderConfig(
     const string& location,
     const string& rootPath,
@@ -33,7 +37,8 @@ string FolderConfig::getResolvedPath(std::string target) const {
     if (target.empty()) {
         target = "/";
     }
-    std::cout << "[" << _storageRootPath << "] [" << target << "]" << std::endl;
+
+    _log.stream(LOG_DEBUG) << "[" << _storageRootPath << "] [" << target << "]\n";
     return (
         _storageRootPath + "/" +
         target.substr(_requestedLocation.length(), target.length() - _requestedLocation.length())

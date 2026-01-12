@@ -36,7 +36,6 @@ extern "C" void handleSigint(int signum) {
     (void)signum;
     WebServer& server = WebServer::getInstance("");
     // TODO 137: DL: Calling server.stop() from inside a signal handler is not signal-safe — signal handler should only set a flag.
-
     server.stop();
 }
 
