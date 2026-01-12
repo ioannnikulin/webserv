@@ -85,13 +85,14 @@ std::ostream& Logger::stream(LogLevel level) {
 }
 
 std::string Logger::levelToString(LogLevel level) {
-    /* NOTE: level explanations
-    trace - entering a function, printing a variable value
-    debug - decisions ("this was a GET request", "FSM in READING_COMPLETE now", "parsing results")
-    info  - external events (start/stop, connected, sent response and its contents)
-    warn  - server would prefer this to be different, but recovered and the standard process is going on
-    error - standard process broken
-    fatal - exiting
+    /* NOTE: log level explanations
+    silent - no output; used for tests or performance-critical runs
+    trace  - entering a function, printing a variable value
+    debug  - decisions ("this was a GET request", "FSM in READING_COMPLETE now", "parsing results")
+    info   - external events (start/stop, connected, sent response and its contents)
+    warn   - server would prefer this to be different, but recovered and the standard process is going on
+    error  - standard process broken
+    fatal  - exiting
     */
     switch (level) {
         case LOG_SILENT:
