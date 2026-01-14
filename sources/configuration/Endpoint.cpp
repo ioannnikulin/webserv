@@ -99,10 +99,6 @@ string Endpoint::getInterface(void) const {
     return (_interface);
 }
 
-string Endpoint::getRoot() const {
-    return (_rootDirectory);
-}
-
 bool Endpoint::operator<(const Endpoint& other) const {
     if (_interface != other._interface) {
         return (_interface < other._interface);
@@ -215,6 +211,14 @@ set<RouteConfig> Endpoint::getRoutes() const {
     return (_routes);
 }
 
+UploadConfig* Endpoint::getUploadConfig() const {
+    return (_uploadConfig);
+}
+
+string Endpoint::getRoot() const {
+    return (_rootDirectory);
+}
+
 RouteConfig Endpoint::getRoute(std::string route) const {
     for (std::set<RouteConfig>::const_iterator it = _routes.begin(); it != _routes.end(); ++it) {
         if (it->getPath() == route) {
@@ -245,6 +249,10 @@ Endpoint& Endpoint::setUploadConfig(const UploadConfig& cfg) {
     delete _uploadConfig;
     _uploadConfig = new UploadConfig(cfg);
     return (*this);
+}
+
+const std::map<std::string, CgiHandlerConfig*>& Endpoint::getCgiHandlers() const {
+    return (_cgiHandlers);
 }
 
 bool Endpoint::isAValidPort(int port) {

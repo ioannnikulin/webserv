@@ -21,6 +21,7 @@ public:
     CgiHandlerConfig(int timeoutSeconds, const std::string& executablePath);
     std::string getExtension() const;
     int getTimeoutSeconds() const;
+    std::string getExecutablePath() const;
     ~CgiHandlerConfig();
 
     bool operator==(const CgiHandlerConfig& other) const;

@@ -1,7 +1,6 @@
 #include <cctype>
 #include <cerrno>
 #include <cstring>
-#include <stdexcept>
 #include <string>
 
 #include "configuration/CgiHandlerConfig.hpp"
@@ -10,9 +9,9 @@
 #include "configuration/RouteConfig.hpp"
 #include "configuration/UploadConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
+#include "configuration/parser/ConfigParsingException.hpp"
 #include "http_methods/HttpMethodType.hpp"
 
-using std::runtime_error;
 using std::string;
 
 namespace webserver {
@@ -20,7 +19,7 @@ void ConfigParser::parseLocation(Endpoint& server) {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected path after 'location'");
+        throw ConfigParsingException("Expected path after 'location'");
     }
 
     const string locationPath = _tokens[_index];
@@ -28,7 +27,7 @@ void ConfigParser::parseLocation(Endpoint& server) {
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != "{") {
-        throw runtime_error("Expected '{' after location path '" + locationPath + "'");
+        throw ConfigParsingException("Expected '{' after location path '" + locationPath + "'");
     }
     _index++;
 
@@ -54,7 +53,7 @@ void ConfigParser::parseLocation(Endpoint& server) {
         } else if (token == "cgi") {
             parseLocationCgi(route);
         } else if (token != "}") {
-            throw runtime_error("Unexpected token in location block: " + token);
+            throw ConfigParsingException("Unexpected token in location block: " + token);
         } else {
             _index++;
             break;
@@ -62,7 +61,7 @@ void ConfigParser::parseLocation(Endpoint& server) {
     }
 
     if (isEnd(_tokens, _index) && (_tokens[_index - 1] != "}")) {
-        throw runtime_error("Unexpected end of file in location block (missing '}')");
+        throw ConfigParsingException("Unexpected end of file in location block (missing '}')");
     }
 
     const FolderConfig folder(
@@ -87,14 +86,14 @@ void ConfigParser::parseLocationRoot() {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected path after 'root' in location");
+        throw ConfigParsingException("Expected path after 'root' in location");
     }
 
     _tmp.setRootPath(_tokens[_index]);
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after root");
+        throw ConfigParsingException("Missing ';' after root");
     }
 
     _index++;
@@ -104,7 +103,7 @@ void ConfigParser::parseLocationListable() {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected 'true' or 'false' after listable");
+        throw ConfigParsingException("Expected 'true' or 'false' after listable");
     }
 
     const std::string val = _tokens[_index++];
@@ -114,11 +113,11 @@ void ConfigParser::parseLocationListable() {
     } else if (val == "false") {
         _tmp.setListable(false);
     } else {
-        throw runtime_error("listable must be true/false");
+        throw ConfigParsingException("listable must be true/false");
     }
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after listable");
+        throw ConfigParsingException("Missing ';' after listable");
     }
 
     _index++;
@@ -128,7 +127,7 @@ void ConfigParser::parseLocationIndex() {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected filename after index");
+        throw ConfigParsingException("Expected filename after index");
     }
 
     _tmp.setIndexPage(_tokens[_index]);
@@ -136,7 +135,7 @@ void ConfigParser::parseLocationIndex() {
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after index");
+        throw ConfigParsingException("Missing ';' after index");
     }
 
     _index++;
@@ -146,7 +145,7 @@ void ConfigParser::parseLocationMethods(RouteConfig& route) {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected methods after 'methods'");
+        throw ConfigParsingException("Expected methods after 'methods'");
     }
 
     while (!isEnd(_tokens, _index) && _tokens[_index] != ";") {
@@ -156,7 +155,7 @@ void ConfigParser::parseLocationMethods(RouteConfig& route) {
     }
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after methods in location");
+        throw ConfigParsingException("Missing ';' after methods in location");
     }
 
     _index++;
@@ -166,7 +165,7 @@ void ConfigParser::parseLocationLimitExcept(RouteConfig& route) {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected methods after 'limit_except'");
+        throw ConfigParsingException("Expected methods after 'limit_except'");
     }
 
     while (!isEnd(_tokens, _index) && _tokens[_index] != ";") {
@@ -176,7 +175,7 @@ void ConfigParser::parseLocationLimitExcept(RouteConfig& route) {
     }
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after limit_except in location");
+        throw ConfigParsingException("Missing ';' after limit_except in location");
     }
 
     _index++;
@@ -186,7 +185,7 @@ void ConfigParser::parseLocationReturn(RouteConfig& route, const string& locatio
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected target after 'return' in location");
+        throw ConfigParsingException("Expected target after 'return' in location");
     }
 
     const string target = _tokens[_index];
@@ -194,7 +193,7 @@ void ConfigParser::parseLocationReturn(RouteConfig& route, const string& locatio
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after return in location");
+        throw ConfigParsingException("Missing ';' after return in location");
     }
 
     _index++;
@@ -206,7 +205,7 @@ void ConfigParser::parseLocationUpload() {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected on/off after upload");
+        throw ConfigParsingException("Expected on/off after upload");
     }
 
     const string enabled = _tokens[_index];
@@ -218,11 +217,11 @@ void ConfigParser::parseLocationUpload() {
     } else if (enabled == "off") {
         _tmp.setUploadEnabled(false);
     } else {
-        throw runtime_error("upload must be on/off");
+        throw ConfigParsingException("upload must be on/off");
     }
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected upload path");
+        throw ConfigParsingException("Expected upload path");
     }
 
     _tmp.setUploadRoot(_tokens[_index]);
@@ -230,7 +229,7 @@ void ConfigParser::parseLocationUpload() {
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after upload");
+        throw ConfigParsingException("Missing ';' after upload");
     }
 
     _index++;
@@ -240,19 +239,19 @@ void ConfigParser::parseLocationCgi(RouteConfig& route) {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected extension after 'cgi'");
+        throw ConfigParsingException("Expected extension after 'cgi'");
     }
 
     string ext = _tokens[_index];
 
     if (ext.empty() || ext[0] != '.') {
-        throw runtime_error("Invalid CGI extension: " + ext);
+        throw ConfigParsingException("Invalid CGI extension: " + ext);
     }
 
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected executable path after CGI extension");
+        throw ConfigParsingException("Expected executable path after CGI extension");
     }
 
     const string execPath = _tokens[_index];
@@ -260,7 +259,7 @@ void ConfigParser::parseLocationCgi(RouteConfig& route) {
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after cgi directive in location");
+        throw ConfigParsingException("Missing ';' after cgi directive in location");
     }
 
     _index++;

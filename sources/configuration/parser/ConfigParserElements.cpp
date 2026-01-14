@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -11,25 +10,26 @@
 #include "configuration/Endpoint.hpp"
 #include "configuration/UploadConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
+#include "configuration/parser/ConfigParsingException.hpp"
+#include "file_system/FileSystem.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "utils/utils.hpp"
 
 using std::istringstream;
-using std::runtime_error;
 using std::string;
 
 namespace webserver {
 void ConfigParser::parseListen(Endpoint& server) {
     _index++;
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected value after 'listen'");
+        throw ConfigParsingException("Expected value after 'listen'");
     }
 
     const string value = _tokens[_index];
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after listen directive");
+        throw ConfigParsingException("Missing ';' after listen directive");
     }
     _index++;
 
@@ -40,7 +40,7 @@ void ConfigParser::parseListen(Endpoint& server) {
         istringstream iss(value);
         iss >> port;
         if (!Endpoint::isAValidPort(port)) {
-            throw runtime_error("Invalid port in listen: " + value);
+            throw ConfigParsingException("Invalid port in listen: " + value);
         }
         server.setInterface("0.0.0.0");
         server.setPort(port);
@@ -54,10 +54,10 @@ void ConfigParser::parseListen(Endpoint& server) {
     istringstream iss(portStr);
     iss >> port;
     if (!Endpoint::isAValidPort(port)) {
-        throw runtime_error("Invalid port in listen: " + value);
+        throw ConfigParsingException("Invalid port in listen: " + value);
     }
     if (interface.empty()) {
-        throw runtime_error("Invalid host in listen: " + value);
+        throw ConfigParsingException("Invalid host in listen: " + value);
     }
     server.setInterface(interface);
     server.setPort(port);
@@ -67,7 +67,7 @@ void ConfigParser::parseServerName(Endpoint& server) {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected a name after 'server_name'");
+        throw ConfigParsingException("Expected a name after 'server_name'");
     }
 
     std::string name;
@@ -77,13 +77,13 @@ void ConfigParser::parseServerName(Endpoint& server) {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Missing ';' after server_name directive");
+        throw ConfigParsingException("Missing ';' after server_name directive");
     }
 
     _index++;
 
     if (name.empty()) {
-        throw runtime_error("No server_name value provided");
+        throw ConfigParsingException("No server_name value provided");
     }
     server.addServerName(name);
 }
@@ -91,14 +91,14 @@ void ConfigParser::parseServerName(Endpoint& server) {
 void ConfigParser::parseRoot(Endpoint& server) {
     _index++;
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected path after 'root'");
+        throw ConfigParsingException("Expected path after 'root'");
     }
 
     const string path = _tokens[_index];
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after root directive");
+        throw ConfigParsingException("Missing ';' after root directive");
     }
 
     _index++;
@@ -127,7 +127,7 @@ size_t parseSizeValue(const string& value) {
     istringstream iss(numbers);
     iss >> num;
     if (num < 0) {
-        throw runtime_error("Invalid size: " + value);
+        throw ConfigParsingException("Invalid size: " + value);
     }
 
     return (static_cast<size_t>(num) * multiplier);
@@ -137,14 +137,14 @@ size_t parseSizeValue(const string& value) {
 void ConfigParser::parseBodySize(Endpoint& server) {
     _index++;
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected value after 'client_max_body_size'");
+        throw ConfigParsingException("Expected value after 'client_max_body_size'");
     }
 
     const string value = _tokens[_index];
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after client_max_body_size");
+        throw ConfigParsingException("Missing ';' after client_max_body_size");
     }
 
     _index++;
@@ -157,13 +157,14 @@ void ConfigParser::parseErrorPage() {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected status code or URL after 'error_page'");
+        throw ConfigParsingException("Expected status code or URL after 'error_page'");
     }
 
     std::vector<int> codes;
     while (!isEnd(_tokens, _index)) {
         if (_tokens[_index] == ";") {
-            throw runtime_error("Missing path in error_page directive");
+            _index++;
+            return;
         }
         if (_tokens[_index][0] == '/' || _tokens[_index].find('.') != string::npos) {
             break;
@@ -172,28 +173,33 @@ void ConfigParser::parseErrorPage() {
         istringstream iss(_tokens[_index]);
         iss >> code;
         if (!HttpStatus::isAValidHttpStatusCode(code)) {
-            throw runtime_error("Invalid HTTP status code in error_page: " + _tokens[_index]);
+            throw ConfigParsingException(
+                "Invalid HTTP status code in error_page: " + _tokens[_index]
+            );
         }
         codes.push_back(code);
         _index++;
     }
 
     if (codes.empty()) {
-        throw runtime_error("No status codes provided in error_page directive");
+        throw ConfigParsingException("No status codes provided in error_page directive");
     }
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected path after status codes in error_page");
+        throw ConfigParsingException("Expected path after status codes in error_page");
     }
 
     const string pagePath = _tokens[_index++];
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after error_page directive");
+        throw ConfigParsingException("Missing ';' after error_page directive");
     }
 
     _index++;
 
+    if (!file_system::isReadableFile(pagePath.c_str())) {
+        return;
+    }
     for (size_t i = 0; i < codes.size(); i++) {
         HttpStatus::setPage(codes[i], pagePath);
     }
@@ -203,7 +209,7 @@ void ConfigParser::parseCgi(Endpoint& server) {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected CGI extension after 'cgi'");
+        throw ConfigParsingException("Expected CGI extension after 'cgi'");
     }
 
     string extension = _tokens[_index];
@@ -211,11 +217,11 @@ void ConfigParser::parseCgi(Endpoint& server) {
     _index++;
 
     if (extension[0] != '.') {
-        throw runtime_error("Invalid CGI extension: " + extension);
+        throw ConfigParsingException("Invalid CGI extension: " + extension);
     }
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected CGI executable path after extension");
+        throw ConfigParsingException("Expected CGI executable path after extension");
     }
 
     const string execPath = _tokens[_index];
@@ -223,7 +229,7 @@ void ConfigParser::parseCgi(Endpoint& server) {
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after cgi directive");
+        throw ConfigParsingException("Missing ';' after cgi directive");
     }
 
     _index++;
@@ -237,7 +243,7 @@ void ConfigParser::parseUpload(Endpoint& server) {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected 'on' or 'off' after 'upload'");
+        throw ConfigParsingException("Expected 'on' or 'off' after 'upload'");
     }
 
     const string enabled = _tokens[_index];
@@ -250,11 +256,11 @@ void ConfigParser::parseUpload(Endpoint& server) {
     } else if (enabled == "off") {
         uploadEnabled = false;
     } else {
-        throw runtime_error("upload must be 'on' or 'off' at server level");
+        throw ConfigParsingException("upload must be 'on' or 'off' at server level");
     }
 
     if (isEnd(_tokens, _index)) {
-        throw runtime_error("Expected upload directory after upload");
+        throw ConfigParsingException("Expected upload directory after upload");
     }
 
     const string uploadRoot = _tokens[_index];
@@ -262,7 +268,7 @@ void ConfigParser::parseUpload(Endpoint& server) {
     _index++;
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw runtime_error("Missing ';' after upload directive");
+        throw ConfigParsingException("Missing ';' after upload directive");
     }
 
     _index++;

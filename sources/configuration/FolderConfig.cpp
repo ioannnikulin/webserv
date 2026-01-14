@@ -60,6 +60,22 @@ bool FolderConfig::operator==(const FolderConfig& other) const {
     );
 }
 
+bool FolderConfig::doesLocationBlockServeFiles() const {
+    if (!_storageRootPath.empty()) {
+        return (true);
+    }
+    if (!_indexPageFilename.empty()) {
+        return (true);
+    }
+    if (_enableListing) {
+        return (true);
+    }
+    return (false);
+}
+void FolderConfig::setRootPath(std::string root) {
+    _storageRootPath = root;
+}
+
 FolderConfig::~FolderConfig() {
 }
 }  // namespace webserver

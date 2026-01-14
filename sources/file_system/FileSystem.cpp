@@ -93,4 +93,42 @@ std::string getFileExtension(const std::string& path) {
 
     return (path.substr(dot + 1));
 }
+
+bool isReadableFile(const char* path) {
+    if (!isFile(path)) {
+        return (false);
+    }
+    return (access(path, R_OK) == 0);
+}
+
+bool isExecutableFile(const char* path) {
+    if (!isFile(path)) {
+        return (false);
+    }
+    return (access(path, X_OK) == 0);
+}
+
+bool isWritableDirectory(const char* path) {
+    if (!isDirectory(path)) {
+        return (false);
+    }
+    return (access(path, W_OK) == 0);
+}
+
+bool canCreateDirectory(const char* path) {
+    const std::string pathStr(path);
+    const std::string::size_type lastSlash = pathStr.find_last_of("/\\");
+
+    if (lastSlash == std::string::npos) {
+        return (access(".", W_OK) == 0);
+    }
+
+    const std::string parent = pathStr.substr(0, lastSlash);
+    if (parent.empty()) {
+        return (access("/", W_OK) == 0);
+    }
+
+    return (isDirectory(parent.c_str()) && access(parent.c_str(), W_OK) == 0);
+}
+
 }  // namespace file_system

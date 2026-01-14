@@ -18,6 +18,9 @@ public:
     ~UploadConfig();
 
     bool operator==(const UploadConfig& other) const;
+
+    bool isEnabled() const;
+    const std::string& getUploadPath() const;
 };
 }  // namespace webserver
 

@@ -3,13 +3,13 @@
 #include <cctype>
 #include <cerrno>
 #include <cstring>
-#include <stdexcept>
 #include <string>
 
 #include "configuration/AppConfig.hpp"
 #include "configuration/Endpoint.hpp"
+#include "configuration/parser/ConfigChecker.hpp"
+#include "configuration/parser/ConfigParsingException.hpp"
 
-using std::runtime_error;
 using std::string;
 
 namespace webserver {
@@ -35,7 +35,7 @@ AppConfig ConfigParser::buildConfigTree() {
             _index++;
             parseServer(appConfig);
         } else {
-            throw runtime_error("Unexpected token: " + token);
+            throw ConfigParsingException("Unexpected token: " + token);
         }
     }
     return (appConfig);
@@ -44,7 +44,7 @@ AppConfig ConfigParser::buildConfigTree() {
 void ConfigParser::parseServer(AppConfig& appConfig) {
     Endpoint server;
     if (_tokens[_index] != "{") {
-        throw runtime_error("Unexpected token: " + _tokens[_index]);
+        throw ConfigParsingException("Unexpected token: " + _tokens[_index]);
     }
     _index++;
 
@@ -68,14 +68,15 @@ void ConfigParser::parseServer(AppConfig& appConfig) {
         } else if (token == "cgi") {
             parseCgi(server);
         } else if (token != "}") {
-            throw runtime_error("Unexpected token in server block: " + token);
+            throw ConfigParsingException("Unexpected token in server block: " + token);
         } else {
             _index++;
+            webserver::ConfigChecker::checkEndpoint(server);
             appConfig.addEndpoint(server);
             return;
         }
     }
-    throw runtime_error("Unexpected end of file in server block (missing '}')");
+    throw ConfigParsingException("Unexpected end of file in server block (missing '}')");
 }
 
 }  // namespace webserver

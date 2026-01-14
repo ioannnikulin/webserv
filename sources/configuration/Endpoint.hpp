@@ -47,11 +47,13 @@ public:
     Endpoint& addRoute(const RouteConfig& route);
     Endpoint& setUploadConfig(const UploadConfig& cfg);
     std::string getInterface() const;
-    int getPort() const;
     std::string getRoot() const;
+    int getPort() const;
     RouteConfig getRoute(std::string route) const;
     RouteConfig selectRoute(std::string route) const;
+    UploadConfig* getUploadConfig() const;
     std::set<RouteConfig> getRoutes() const;
+    const std::map<std::string, CgiHandlerConfig*>& getCgiHandlers() const;
 
     static bool isAValidPort(int port);
 };

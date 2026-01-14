@@ -7,7 +7,6 @@ networks:
 
 services:
   webserv:
-    container_name: webserv
     image: webserv:latest
     volumes:
       - ./requirements/webserv/conf/config.cnf:/usr/local/bin/config.cnf:ro
@@ -21,7 +20,6 @@ services:
     command: ["run"]
       
   tester0:
-    container_name: tester0
     image: tester:latest
     networks:
       - net1
@@ -35,7 +33,6 @@ services:
     command: ["--id=tester0"]
 
   tester42:
-    container_name: tester42
     build: ./requirements/42/.
     networks:
       - net1

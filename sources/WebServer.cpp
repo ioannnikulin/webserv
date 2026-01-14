@@ -43,11 +43,11 @@ WebServer::WebServer(const std::string& configFilePath)
     : _appConfig(ConfigParser().parse(configFilePath))
     , _isRunning(0)
     , _masterListener(_appConfig) {
-    HttpStatus::initStatusMap();
     handleSignals();
 }
 
 WebServer& WebServer::getInstance(const string& configFilePath) {
+    HttpStatus::initStatusMap();
     static WebServer instance = WebServer(configFilePath);
     return (instance);
 }

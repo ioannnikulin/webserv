@@ -36,8 +36,10 @@ public:
 
     std::string getRootPath() const;
     std::string getResolvedPath(std::string target) const;
+    void setRootPath(std::string root);
     std::string getIndexPageFilename() const;
     bool isListingEnabled() const;
+    bool doesLocationBlockServeFiles() const;
 
     bool operator==(const FolderConfig& other) const;
     ~FolderConfig();
