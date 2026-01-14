@@ -1,6 +1,6 @@
 #include <exception>
-#include <string>
 #include <iostream>
+#include <string>
 
 #include "WebServer.hpp"
 #include "configuration/parser/ConfigParsingException.hpp"
@@ -21,17 +21,17 @@ int main(int argc, char* argv[]) {
     try {
         webserver::WebServer::getInstance(argv[1]);
     } catch (const webserver::ConfigParsingException& e) {
-        std::cerr << "Malformed configuration file, aborting startup: " << e.what() << std::endl;
+        cerr << "Malformed configuration file, aborting startup: " << e.what() << endl;
         return (1);
     } catch (const std::exception& e) {
-        std::cerr << "Fatal runtime error: " << e.what() << std::endl;
+        cerr << "Fatal runtime error: " << e.what() << endl;
         return (1);
     }
     try {
         webserver::WebServer& server = webserver::WebServer::getInstance(argv[1]);
         server.start();
     } catch (const std::exception& e) {
-        std::cerr << "Fatal runtime error: " << e.what() << std::endl;
+        cerr << "Fatal runtime error: " << e.what() << endl;
         return (1);
     }
     return (0);
