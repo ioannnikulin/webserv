@@ -19,9 +19,11 @@ private:
     Listener(const Listener& other);
 
     static Logger _log;
+
     std::string _interface;
     int _port;
     int _listeningSocketFd;
+
     std::map<int, Connection*> _clientConnections;
     // NOTE: client socket file descriptor: connection
     const Endpoint& _configuration;

@@ -28,6 +28,7 @@ public:
     };
 
 private:
+
     static Logger _log;
     State _state;
     int _clientSocketFd;  // NOTE: acquired here, then passed to pollfd up in MasterListener
