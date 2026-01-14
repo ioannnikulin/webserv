@@ -2,7 +2,7 @@
 #define LOGGERCONFIG_HPP
 
 // NOTE: DL: I wanted to move all settings to a separate setting file but doing this through macros is seemingly a bad idea
-#define DEFAULT_LOG_LEVEL LOG_TRACE
+#define DEFAULT_LOG_LEVEL LOG_INFO
 #define GLOBAL_LOG_LEVEL LOG_INFO
 
 #define C_RESET RESET_COLOR
