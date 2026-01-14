@@ -111,7 +111,7 @@ void HttpStatus::setPage(int code, const std::string& pageFileLocation) {
 }
 
 bool HttpStatus::isAValidHttpStatusCode(int code) {
-    return (code >= MIN_CODE && code <= MAX_CODE);
+    return (_statusMap.find(code) != _statusMap.end());
 }
 
 }  // namespace webserver

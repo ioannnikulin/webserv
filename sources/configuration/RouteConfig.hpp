@@ -18,7 +18,8 @@ private:
     std::map<std::string, std::string> _redirections;  // NOTE: from:to
     FolderConfig* _folderConfigSection;
     UploadConfig* _uploadConfigSection;
-    std::map<std::string, CgiHandlerConfig> _cgiHandlers;  // NOTE: extension:config
+    std::map<std::string, CgiHandlerConfig*> _cgiHandlers;  // NOTE: extension:config
+    bool compareCgiHandlers(const RouteConfig& other) const;
 
 public:
     RouteConfig();
@@ -27,6 +28,7 @@ public:
     ~RouteConfig();
 
     const FolderConfig* getFolderConfig() const;
+    FolderConfig* getFolderConfig();
 
     bool operator==(const RouteConfig& other) const;
     bool operator<(const RouteConfig& other) const;
@@ -34,9 +36,11 @@ public:
     RouteConfig& addRedirection(const std::string& from, const std::string& toDir);
     RouteConfig& setFolderConfig(const FolderConfig& folder);
     RouteConfig& setUploadConfig(const UploadConfig& upload);
+    UploadConfig* getUploadConfigSection() const;
     RouteConfig& setPath(std::string path);
     RouteConfig& addCgiHandler(const CgiHandlerConfig& cfg, std::string extension);
     std::string getPath() const;
+    const std::map<std::string, CgiHandlerConfig*>& getCgiHandlers() const;
 };
 }  // namespace webserver
 

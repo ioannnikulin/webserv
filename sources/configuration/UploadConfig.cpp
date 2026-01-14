@@ -20,4 +20,12 @@ bool UploadConfig::operator==(const UploadConfig& other) const {
 
 UploadConfig::~UploadConfig() {
 }
+
+bool UploadConfig::isEnabled() const {
+    return (_uploadEnabled);
+}
+
+const string& UploadConfig::getUploadPath() const {
+    return (_uploadRootFolder);
+}
 }  // namespace webserver

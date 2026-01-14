@@ -1,0 +1,47 @@
+{
+  "tests": [
+    {
+      "name": "favicon",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/favicon.ico",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "Hello, World!"
+      }
+    },
+    {
+      "name": "invalid request type",
+      "tester": "tester0",
+      "method": "YOU CANT SEE ME",
+      "url": "http://172.18.0.10:8080/johncena.pum.purum.puuum",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "Hello, World!"
+      }
+    },
+    {
+      "name": "invalid url",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/ &!@&#\n++",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "Hello, World!"
+      }
+    },
+    {
+      "name": "shutdown",
+      "tester": "tester0",
+      "method": "SHUTDOWN",
+      "url": "http://172.18.0.10:8080",
+      "expected": {
+        "status_code": 503,
+        "body": "Server is shutting down"
+      }
+    }
+  ]
+}

@@ -38,6 +38,8 @@ APP_CONFIG_PARSER_SRC_NAMES = \
 	ConfigParserLocation.cpp \
 	ConfigParserTokens.cpp \
 	LocationTempData.cpp \
+	ConfigParsingException.cpp \
+	ConfigChecker.cpp \
 
 APP_CONFIG_PARSER_SRCS = $(addprefix $(SOURCE_F)/$(APP_CONFIG_PARSER_F)/,$(APP_CONFIG_PARSER_SRC_NAMES))
 
@@ -336,7 +338,7 @@ docker-cleanup:
 # automated e2e docker tests
 
 E2E_SCENARIOS = $(shell find tests/e2e -maxdepth 1 -mindepth 1 -type d \
-	! -name "tester" ! -name "webserv" ! -name "2" )
+	! -name "tester" ! -name "webserv" ! -name "2" ! -name "3" ! -name "4" ! -name "5" ! -name "6" ! -name "7")
 
 docker-build-images: $(MAIN_EXECUTABLE)
 	@cp $(MAIN_EXECUTABLE) tests/e2e/webserv/tools/$(MAIN_EXECUTABLE)

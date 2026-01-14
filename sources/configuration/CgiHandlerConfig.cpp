@@ -29,6 +29,10 @@ CgiHandlerConfig::CgiHandlerConfig(int timeoutSeconds, const string& executableP
     , _executablePath(executablePath) {
 }
 
+std::string CgiHandlerConfig::getExecutablePath() const {
+    return (_executablePath);
+}
+
 bool CgiHandlerConfig::operator==(const CgiHandlerConfig& other) const {
     return (
         _executablePath == other._executablePath && _storageRootPath == other._storageRootPath &&
