@@ -66,6 +66,8 @@ std::ostream& Logger::stream(LogLevel level) {
         stream = &std::cerr;
     }
 
+    (*stream) << std::flush;
+
     const std::string lvlStr = levelToString(level);
 
     (*stream) << logLevelToColor(level);

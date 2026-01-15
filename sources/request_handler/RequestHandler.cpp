@@ -59,7 +59,7 @@ string RequestHandler::handleRequest(Request& request, const RouteConfig& config
         }
         case DELETE: {
             _log.stream(LOG_TRACE) << "Preresolved path: " << resolvedTarget << "\n";
-            response = DeleteHandler::handleRequest(resolvedTarget, configuration);
+            response = DeleteHandler::handleRequest(resolvedTarget);
             break;
         }
         case SHUTDOWN: {
