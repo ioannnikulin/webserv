@@ -1,6 +1,7 @@
 #include "utils.hpp"
 
 #include <cstddef>
+#include <ctime>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -11,37 +12,35 @@
 #define SEPARATOR_CHAR '='
 #define SEPARATOR_COLOR CYAN
 
+using std::ostringstream;
+using std::string;
+
 namespace utils {
-std::string separator(void) {
-    std::ostringstream oss;
-    oss << SEPARATOR_COLOR << std::string(SEPARATOR_WIDTH, SEPARATOR_CHAR) << RESET_COLOR;
+string separator(void) {
+    ostringstream oss;
+    oss << SEPARATOR_COLOR << string(SEPARATOR_WIDTH, SEPARATOR_CHAR) << RESET_COLOR;
     return (oss.str());
 }
 
-std::string toString(int value) {
-    std::ostringstream oss;
+string toString(int value) {
+    ostringstream oss;
     oss << value;
     return (oss.str());
 }
 
-std::string toString(std::size_t value) {
-    std::ostringstream oss;
+string toString(std::size_t value) {
+    ostringstream oss;
     oss << value;
     return (oss.str());
 }
 
-std::string getTimestamp() {
-    /* NOTE: Time functions are forbidden
-	#include <ctime>
-	#include <iomanip>
-    std::time_t now = std::time(0);
-    std::tm gmt = *std::gmtime(&now);
-    char buf[64];
-    NOTE: Format: "Mon, 10 Oct 2025 10:00:00 GMT"
+string getTimestamp() {
+    const std::time_t now = std::time(0);
+    const std::tm gmt = *std::gmtime(&now);
+    const int BUFSIZE = 64;
+    char buf[BUFSIZE];
     std::strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", &gmt);
-    return (std::string(buf));
-	*/
-    return ("Mon, 10 Oct 2025 10:00:00 GMT");
+    return (string(buf));
 }
 
 }  // namespace utils

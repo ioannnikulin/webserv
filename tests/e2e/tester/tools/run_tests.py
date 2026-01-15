@@ -73,6 +73,8 @@ def run_single_test(test):
         success = True
 
         if "status_code" in expect and expect["status_code"] != r.status_code:
+            result["expected_status"] = expect["status_code"]
+            result["actual_status"] = r.status_code
             success = False
 
         if "body" in expect:

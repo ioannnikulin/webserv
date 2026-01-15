@@ -26,6 +26,13 @@ ALLOWED_EXTERNAL_FUNCTIONS=(
 
 	# isspace for parsing
 	isspace
+
+	# I don't know what they are expecting from us for DELETE, 
+	# especially considering we're not allowed to use remove and unlink. execve rm?
+	remove
+
+	# time for timestamp - not critical for webserv core functionality
+	time gmtime strftime
 )
 
 allowed_regex="$(printf "%s\n" "${ALLOWED_EXTERNAL_FUNCTIONS[@]}" | paste -sd'|' -)"

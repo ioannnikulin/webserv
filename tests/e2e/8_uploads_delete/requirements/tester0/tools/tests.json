@@ -89,6 +89,36 @@
       }
     },
     {
+      "name": "wrong deletion path",
+      "tester": "tester0",
+      "method": "DELETE",
+      "url": "http://172.18.0.10:8080/folder/file.tst",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 405
+      }
+    },
+    {
+      "name": "deleting",
+      "tester": "tester0",
+      "method": "DELETE",
+      "url": "http://172.18.0.10:8080/files/file.tst",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 204
+      }
+    },
+    {
+      "name": "download deleted",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/files/file.tst",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 404
+      }
+    },
+    {
       "name": "shutdown",
       "tester": "tester0",
       "method": "SHUTDOWN",
