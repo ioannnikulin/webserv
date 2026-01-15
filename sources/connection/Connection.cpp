@@ -15,6 +15,7 @@
 #include <string>
 
 #include "configuration/Endpoint.hpp"
+#include "file_system/FileSystem.hpp"
 #include "http_methods/HttpMethodType.hpp"
 #include "http_status/BadRequest.hpp"
 #include "http_status/HttpException.hpp"
@@ -23,6 +24,7 @@
 #include "logger/Logger.hpp"
 #include "request/Request.hpp"
 #include "request_handler/RequestHandler.hpp"
+#include "response/Response.hpp"
 
 using std::exception;
 using std::ostringstream;
@@ -172,23 +174,30 @@ Connection::State Connection::generateResponse() {
         _request = Request(_requestBuffer.str());
         _responseBuffer = RequestHandler::handleRequest(_request, *_route);
     } catch (const HttpException& e) {
-        // NOTE: webserver-logic-related errors
-        ostringstream oss;
-        oss << "HTTP/1.0 " << e.getCode() << " " << HttpStatus::getReasonPhrase(e.getCode())
-            << "\r\n"
-            << "Content-Length: " << strlen(e.what()) << "\r\n"
-            << "Connection: close\r\n\r\n"
-            << e.what();
-        _responseBuffer = oss.str();
+        const string pageLocation = HttpStatus::getPageFileLocation(e.getCode());
+        string errorPageContent;
+        try {
+            errorPageContent = file_system::readFile(pageLocation.c_str());
+        } catch (const exception& fileError) {
+            // NOTE: fallback if custom error page cannot be loaded
+            errorPageContent = e.what();
+        }
+        Response response(e.getCode(), errorPageContent, "text/html");
+        response.setHeader("Connection", "close");
+        _responseBuffer = response.serialize();
     } catch (const exception& e) {
-        // NOTE: system call failures
-        ostringstream oss;
-        oss << "HTTP/1.0 500 Internal Server Error\r\n"
-            << "Content-Length: " << strlen(e.what()) << "\r\n"
-            << "Connection: close\r\n"
-            << "\r\n"
-            << e.what();
-        _responseBuffer = oss.str();
+        const string pageLocation =
+            HttpStatus::getPageFileLocation(HttpStatus::INTERNAL_SERVER_ERROR);
+        string errorPageContent;
+        try {
+            errorPageContent = file_system::readFile(pageLocation.c_str());
+        } catch (const exception& fileError) {
+            // NOTE: fallback if error page cannot be loaded
+            errorPageContent = e.what();
+        }
+        Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
+        response.setHeader("Connection", "close");
+        _responseBuffer = response.serialize();
     }
     if (_request.getType() == SHUTDOWN) {
         _state = SERVER_SHUTTING_DOWN;
