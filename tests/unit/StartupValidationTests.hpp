@@ -18,6 +18,7 @@
 #include "configuration/Endpoint.hpp"
 #include "configuration/FolderConfig.hpp"
 #include "configuration/RouteConfig.hpp"
+#include "configuration/parser/ConfigParser.hpp"
 #include "configuration/parser/ConfigParsingException.hpp"
 #include "http_methods/HttpMethodType.hpp"
 #include "request_handler/GetHandler.hpp"

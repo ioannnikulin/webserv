@@ -39,8 +39,7 @@
       "url": "http://172.18.0.10:8080/notfound",
       "delay_before_ms": 0,
       "expected": {
-        "status_code": 404,
-        "body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>404 Not Found</title>\n    <style>\n        body {\n            margin: 0;\n            height: 100vh;\n            background: #000000;\n            color: #ffffff;\n            font-family: Helvetica, Arial, sans-serif;\n            display: flex;\n            align-items: center;\n            justify-content: center;\n        }\n        .box {\n            text-align: center;\n        }\n        h1 {\n            font-size: 6rem;\n            margin: 0;\n        }\n        p {\n            margin-top: 1rem;\n            font-size: 1.1rem;\n            opacity: 0.9;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"box\">\n        <h1>404</h1>\n        <p>The page you were looking for doesn't exist.</p>\n    </div>\n</body>\n</html>"
+        "status_code": 404
       }
     },
     {

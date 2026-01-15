@@ -1,6 +1,5 @@
 #include "configuration/parser/ConfigChecker.hpp"
 
-#include <cstddef>
 #include <map>
 #include <set>
 #include <string>
@@ -27,11 +26,11 @@ void ConfigChecker::checkLocationRootIsSetOrInherit(Endpoint& endpoint) {
     const std::set<RouteConfig> routes = endpoint.getRoutes();
 
     for (std::set<RouteConfig>::iterator it = routes.begin(); it != routes.end(); ++it) {
-        RouteConfig& route = const_cast<RouteConfig&>(*it);
-        FolderConfig* folder = route.getFolderConfig();
+        const RouteConfig& route = const_cast<RouteConfig&>(*it);
+        FolderConfig folder = route.getFolderConfig();
 
-        if (folder->doesLocationBlockServeFiles()) {
-            const std::string& locationRoot = folder->getRootPath();
+        if (folder.doesLocationBlockServeFiles()) {
+            const std::string& locationRoot = folder.getRootPath();
 
             if (locationRoot.empty()) {
                 if (serverRoot.empty()) {
@@ -40,7 +39,7 @@ void ConfigChecker::checkLocationRootIsSetOrInherit(Endpoint& endpoint) {
                         "' has no root directive and server block has no root directive"
                     );
                 }
-                folder->setRootPath(serverRoot);
+                folder.setRootPath(serverRoot);
             }
         }
     }
@@ -57,8 +56,8 @@ void ConfigChecker::checkRootExistsOnDiskAndIsAFolder(const Endpoint& endpoint) 
         );
     }
     for (std::set<RouteConfig>::const_iterator it = routes.begin(); it != routes.end(); ++it) {
-        if (it->getFolderConfig()->doesLocationBlockServeFiles()) {
-            const string path = it->getFolderConfig()->getRootPath();
+        if (it->getFolderConfig().doesLocationBlockServeFiles()) {
+            const string path = it->getFolderConfig().getRootPath();
             if (!file_system::isDirectory(path.c_str())) {
                 throw ConfigParsingException(
                     "Root path '" + path + "' for location '" + it->getPath() +
@@ -90,10 +89,10 @@ void ConfigChecker::checkFilesCanBeOpened(const Endpoint& endpoint) {
 
     for (std::set<RouteConfig>::const_iterator it = routes.begin(); it != routes.end(); ++it) {
         const RouteConfig& route = *it;
-        const FolderConfig* folder = route.getFolderConfig();
+        const FolderConfig& folder = route.getFolderConfig();
 
-        if (!folder->getIndexPageFilename().empty()) {
-            const string indexPath = folder->getRootPath() + "/" + folder->getIndexPageFilename();
+        if (!folder.getIndexPageFilename().empty()) {
+            const string indexPath = folder.getRootPath() + "/" + folder.getIndexPageFilename();
 
             if (!file_system::isReadableFile(indexPath.c_str())) {
                 throw ConfigParsingException(
@@ -114,9 +113,9 @@ void ConfigChecker::checkFilesCanBeOpened(const Endpoint& endpoint) {
 void ConfigChecker::checkUploadDirectories(const Endpoint& endpoint) {
     const std::set<RouteConfig> routes = endpoint.getRoutes();
     for (std::set<RouteConfig>::const_iterator it = routes.begin(); it != routes.end(); ++it) {
-        const UploadConfig* locUpload = it->getUploadConfigSection();
-        if (locUpload != NULL && locUpload->isEnabled()) {
-            const string& uploadPath = locUpload->getUploadPath();
+        const UploadConfig& locUpload = it->getUploadConfigSection();
+        if (locUpload.isUploadEnabled()) {
+            const string& uploadPath = locUpload.getUploadRootFolder();
             if (!file_system::isWritableDirectory(uploadPath.c_str())) {
                 throw ConfigParsingException(
                     "Upload directory '" + uploadPath + "' for location '" + it->getPath() +

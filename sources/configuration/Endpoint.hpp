@@ -15,10 +15,9 @@ private:
     int _port;
     std::string _serverName;
     std::string _rootDirectory;
-    size_t _maxRequestBodySizeBytes;
+    size_t _maxClientBodySizeBytes;
     std::map<std::string, CgiHandlerConfig*> _cgiHandlers;
     std::set<RouteConfig> _routes;
-    UploadConfig* _uploadConfig;
 
     static const int MIN_PORT = 1;
     static const int MAX_PORT = 65535;
@@ -26,7 +25,7 @@ private:
 public:
     static const std::string DEFAULT_INTERFACE;
     static const int DEFAULT_PORT;
-    static const size_t DEFAULT_MAX_BODY_SIZE_BYTES;
+    static size_t defaultMaxClientBodySizeBytes();
     static const std::string DEFAULT_ROOT;
 
     Endpoint();
@@ -41,7 +40,8 @@ public:
     Endpoint& setInterface(std::string interface);
     Endpoint& setPort(const int& port);
     Endpoint& setRoot(const std::string& path);
-    Endpoint& setClientMaxBodySizeBytes(size_t size);
+    Endpoint& setMaxClientBodySizeBytes(size_t size);
+    size_t getMaxClientBodySizeBytes() const;
     Endpoint& addServerName(const std::string& name);
     Endpoint& addCgiHandler(const CgiHandlerConfig& config, std::string extension);
     Endpoint& addRoute(const RouteConfig& route);
@@ -49,13 +49,13 @@ public:
     std::string getInterface() const;
     std::string getRoot() const;
     int getPort() const;
-    RouteConfig getRoute(std::string route) const;
-    RouteConfig selectRoute(std::string route) const;
-    UploadConfig* getUploadConfig() const;
-    std::set<RouteConfig> getRoutes() const;
+    const RouteConfig& getRoute(std::string route) const;
+    const RouteConfig& selectRoute(std::string route) const;
+    const std::set<RouteConfig>& getRoutes() const;
     const std::map<std::string, CgiHandlerConfig*>& getCgiHandlers() const;
 
     static bool isAValidPort(int port);
+    friend std::ostream& operator<<(std::ostream& oss, const Endpoint& endpoint);
 };
 }  // namespace webserver
 

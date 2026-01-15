@@ -16,8 +16,8 @@ private:
     std::string _path;
     std::set<HttpMethodType> _allowedMethods;
     std::map<std::string, std::string> _redirections;  // NOTE: from:to
-    FolderConfig* _folderConfigSection;
-    UploadConfig* _uploadConfigSection;
+    FolderConfig _folderConfigSection;
+    UploadConfig _uploadConfigSection;
     std::map<std::string, CgiHandlerConfig*> _cgiHandlers;  // NOTE: extension:config
     bool compareCgiHandlers(const RouteConfig& other) const;
 
@@ -27,20 +27,21 @@ public:
     RouteConfig(const RouteConfig& other);
     ~RouteConfig();
 
-    const FolderConfig* getFolderConfig() const;
-    FolderConfig* getFolderConfig();
+    const FolderConfig& getFolderConfig() const;
 
     bool operator==(const RouteConfig& other) const;
     bool operator<(const RouteConfig& other) const;
+    bool isMethodAllowed(HttpMethodType method) const;
     RouteConfig& addAllowedMethod(HttpMethodType method);
     RouteConfig& addRedirection(const std::string& from, const std::string& toDir);
     RouteConfig& setFolderConfig(const FolderConfig& folder);
+    const UploadConfig& getUploadConfigSection() const;
     RouteConfig& setUploadConfig(const UploadConfig& upload);
-    UploadConfig* getUploadConfigSection() const;
     RouteConfig& setPath(std::string path);
     RouteConfig& addCgiHandler(const CgiHandlerConfig& cfg, std::string extension);
     std::string getPath() const;
     const std::map<std::string, CgiHandlerConfig*>& getCgiHandlers() const;
+    friend std::ostream& operator<<(std::ostream& oss, const RouteConfig& route);
 };
 }  // namespace webserver
 

@@ -8,7 +8,6 @@
 
 #include "configuration/CgiHandlerConfig.hpp"
 #include "configuration/Endpoint.hpp"
-#include "configuration/UploadConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
 #include "configuration/parser/ConfigParsingException.hpp"
 #include "file_system/FileSystem.hpp"
@@ -106,8 +105,7 @@ void ConfigParser::parseRoot(Endpoint& server) {
     server.setRoot(path);
 }
 
-namespace {
-size_t parseSizeValue(const string& value) {
+size_t ConfigParser::parseSizeValue(const string& value) {
     int multiplier = 1;
     string numbers = value;
 
@@ -132,7 +130,6 @@ size_t parseSizeValue(const string& value) {
 
     return (static_cast<size_t>(num) * multiplier);
 }
-}  // namespace
 
 void ConfigParser::parseBodySize(Endpoint& server) {
     _index++;
@@ -150,7 +147,7 @@ void ConfigParser::parseBodySize(Endpoint& server) {
     _index++;
 
     const size_t size = parseSizeValue(value);
-    server.setClientMaxBodySizeBytes(size);
+    server.setMaxClientBodySizeBytes(size);
 }
 
 void ConfigParser::parseErrorPage() {
@@ -239,41 +236,4 @@ void ConfigParser::parseCgi(Endpoint& server) {
     server.addCgiHandler(config, extension);
 }
 
-void ConfigParser::parseUpload(Endpoint& server) {
-    _index++;
-
-    if (isEnd(_tokens, _index)) {
-        throw ConfigParsingException("Expected 'on' or 'off' after 'upload'");
-    }
-
-    const string enabled = _tokens[_index];
-
-    _index++;
-
-    bool uploadEnabled;
-    if (enabled == "on") {
-        uploadEnabled = true;
-    } else if (enabled == "off") {
-        uploadEnabled = false;
-    } else {
-        throw ConfigParsingException("upload must be 'on' or 'off' at server level");
-    }
-
-    if (isEnd(_tokens, _index)) {
-        throw ConfigParsingException("Expected upload directory after upload");
-    }
-
-    const string uploadRoot = _tokens[_index];
-
-    _index++;
-
-    if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw ConfigParsingException("Missing ';' after upload directive");
-    }
-
-    _index++;
-
-    const UploadConfig cfg(uploadEnabled, uploadRoot);
-    server.setUploadConfig(cfg);
-}
 }  // namespace webserver

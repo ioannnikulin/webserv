@@ -23,7 +23,8 @@ for path in sys.argv[1:]:
                 failed += 1
                 toPrint.append(f"Test '{data[test]['name']}' failed:\n{data[test].get('error', 'no error')}\nexpected: {data[test].get('expected_body', 'none')}\ngot: {data[test].get('actual_body', 'none')}")
     elif p.suffix == ".log":
-        with open(path) as f:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            print(f"reading {path}")
             content = f.read()
             if "Using Valgrind" in content:
                 if "All heap blocks were freed -- no leaks are possible" not in content:

@@ -1,6 +1,7 @@
 
 #include "configuration/parser/LocationTempData.hpp"
 
+#include <cstddef>
 #include <string>
 
 using std::string;
@@ -11,7 +12,8 @@ LocationTempData::LocationTempData()
     , _listableSet(false)
     , _indexSet(false)
     , _uploadEnabled(false)
-    , _uploadSet(false) {
+    , _uploadSet(false)
+    , _maxClientBodySizeBytesSet(false) {
 }
 
 LocationTempData::~LocationTempData() {
@@ -30,6 +32,8 @@ void LocationTempData::clear() {
     _uploadSet = false;
     _uploadEnabled = false;
     _uploadRoot = "";
+
+    _maxClientBodySizeBytesSet = false;
 }
 
 void LocationTempData::setRootPath(const string& path) {
@@ -47,9 +51,11 @@ void LocationTempData::setListable(bool value) {
     _listable = value;
     _listableSet = true;
 }
+
 bool LocationTempData::listable() const {
     return (_listable);
 }
+
 bool LocationTempData::listableSet() const {
     return (_listableSet);
 }
@@ -58,9 +64,11 @@ void LocationTempData::setIndexPage(const string& page) {
     _indexPage = page;
     _indexSet = true;
 }
+
 const string& LocationTempData::indexPage() const {
     return (_indexPage);
 }
+
 bool LocationTempData::indexSet() const {
     return (_indexSet);
 }
@@ -68,6 +76,7 @@ bool LocationTempData::indexSet() const {
 void LocationTempData::setUploadEnabled(bool value) {
     _uploadEnabled = value;
 }
+
 bool LocationTempData::uploadEnabled() const {
     return (_uploadEnabled);
 }
@@ -76,11 +85,26 @@ void LocationTempData::setUploadRoot(const string& path) {
     _uploadRoot = path;
     _uploadSet = true;
 }
+
 const string& LocationTempData::uploadRoot() const {
     return (_uploadRoot);
 }
+
 bool LocationTempData::uploadSet() const {
     return (_uploadSet);
+}
+
+void LocationTempData::setMaxClientBodySizeBytes(size_t maxBodySizeBytes) {
+    _maxClientBodySizeBytes = maxBodySizeBytes;
+    _maxClientBodySizeBytesSet = true;
+}
+
+size_t LocationTempData::getMaxBodySizeBytes() const {
+    return (_maxClientBodySizeBytes);
+}
+
+bool LocationTempData::maxBodySizeBytesSet() const {
+    return (_maxClientBodySizeBytesSet);
 }
 
 }  // namespace webserver

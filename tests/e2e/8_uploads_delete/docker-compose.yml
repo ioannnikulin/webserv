@@ -9,7 +9,7 @@ services:
   webserv:
     image: webserv:latest
     volumes:
-      - ./requirements/webserv/conf/config.cnf:/usr/local/bin/config.cnf:ro
+      - ./requirements/webserv/conf/config.conf:/usr/local/bin/config.conf:ro
       - ./requirements/webserv/volume:/var/www/html
       - ./requirements/webserv/logs:/var/logs/webserv
     networks:
@@ -17,7 +17,7 @@ services:
         ipv4_address: 172.18.0.10
     ports:
       - "8080:8080"
-    command: ["run"]
+    command: ["valgrind"]
       
   tester0:
     image: tester:latest
@@ -29,14 +29,4 @@ services:
       - ./requirements/tester0/logs:/logs
     depends_on:
       - webserv
-      - tester42
     command: ["--id=tester0"]
-
-  tester42:
-    build: ./requirements/42/.
-    networks:
-      - net1
-    volumes:
-      - ./requirements/42/logs:/logs
-    depends_on:
-      - webserv

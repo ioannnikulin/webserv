@@ -1,7 +1,10 @@
 #include "RouteConfig.hpp"
 
 #include <cstddef>
+#include <cstring>
+#include <iostream>
 #include <map>
+#include <set>
 #include <string>
 
 #include "configuration/CgiHandlerConfig.hpp"
@@ -9,25 +12,27 @@
 #include "configuration/UploadConfig.hpp"
 #include "http_methods/HttpMethodType.hpp"
 
+using std::map;
+using std::ostream;
+using std::set;
 using std::string;
+
 namespace webserver {
 RouteConfig::RouteConfig()
-    : _folderConfigSection(NULL)
-    , _uploadConfigSection(NULL) {
+    : _path("")
+    , _allowedMethods()
+    , _redirections()
+    , _folderConfigSection()
+    , _uploadConfigSection()
+    , _cgiHandlers() {
 }
 
 RouteConfig::RouteConfig(const RouteConfig& other)
     : _path(other._path)
     , _allowedMethods(other._allowedMethods)
     , _redirections(other._redirections)
-    , _folderConfigSection(NULL)
-    , _uploadConfigSection(NULL) {
-    if (other._folderConfigSection != NULL) {
-        _folderConfigSection = new FolderConfig(*other._folderConfigSection);
-    }
-    if (other._uploadConfigSection != NULL) {
-        _uploadConfigSection = new UploadConfig(*other._uploadConfigSection);
-    }
+    , _folderConfigSection(other._folderConfigSection)
+    , _uploadConfigSection(other._uploadConfigSection) {
     for (std::map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
          ++it) {
@@ -42,10 +47,9 @@ RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
     _path = other._path;
     _allowedMethods = other._allowedMethods;
     _redirections = other._redirections;
+    _folderConfigSection = other._folderConfigSection;
+    _uploadConfigSection = other._uploadConfigSection;
     _cgiHandlers = other._cgiHandlers;
-
-    delete _folderConfigSection;
-    delete _uploadConfigSection;
 
     for (std::map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
          it != _cgiHandlers.end();
@@ -53,10 +57,8 @@ RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
         delete it->second;
     }
     _cgiHandlers.clear();
-    _folderConfigSection =
-        (other._folderConfigSection != NULL) ? new FolderConfig(*other._folderConfigSection) : NULL;
-    _uploadConfigSection =
-        (other._uploadConfigSection != NULL) ? new UploadConfig(*other._uploadConfigSection) : NULL;
+    _folderConfigSection = FolderConfig(other._folderConfigSection);
+    _uploadConfigSection = UploadConfig(other._uploadConfigSection);
 
     for (std::map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
@@ -67,16 +69,11 @@ RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
 }
 
 RouteConfig& RouteConfig::setFolderConfig(const FolderConfig& folder) {
-    delete _folderConfigSection;
-    _folderConfigSection = new FolderConfig(folder);
+    _folderConfigSection = FolderConfig(folder);
     return (*this);
 }
 
-const FolderConfig* RouteConfig::getFolderConfig() const {
-    return (_folderConfigSection);
-}
-
-FolderConfig* RouteConfig::getFolderConfig() {
+const FolderConfig& RouteConfig::getFolderConfig() const {
     return (_folderConfigSection);
 }
 
@@ -115,21 +112,13 @@ bool RouteConfig::operator==(const RouteConfig& other) const {
     if (_redirections != other._redirections) {
         return (false);
     }
-    if (_folderConfigSection == NULL && other._folderConfigSection == NULL) {
-    } else if (_folderConfigSection == NULL || other._folderConfigSection == NULL) {
+
+    if (_folderConfigSection != other._folderConfigSection) {
         return (false);
-    } else {
-        if (!(*_folderConfigSection == *other._folderConfigSection)) {
-            return (false);
-        }
     }
-    if (_uploadConfigSection == NULL && other._uploadConfigSection == NULL) {
-    } else if (_uploadConfigSection == NULL || other._uploadConfigSection == NULL) {
+
+    if (_uploadConfigSection != other._uploadConfigSection) {
         return (false);
-    } else {
-        if (!(*_uploadConfigSection == *other._uploadConfigSection)) {
-            return (false);
-        }
     }
     if (!compareCgiHandlers(other)) {
         return (false);
@@ -141,10 +130,11 @@ bool RouteConfig::operator<(const RouteConfig& other) const {
     return (_path < other._path);
 }
 
-RouteConfig::~RouteConfig() {
-    delete _folderConfigSection;
-    delete _uploadConfigSection;
+bool RouteConfig::isMethodAllowed(HttpMethodType method) const {
+    return (_allowedMethods.find(method) != _allowedMethods.end());
+}
 
+RouteConfig::~RouteConfig() {
     for (std::map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
          it != _cgiHandlers.end();
          ++it) {
@@ -157,9 +147,12 @@ RouteConfig& RouteConfig::setPath(string path) {
     return (*this);
 }
 
+const UploadConfig& RouteConfig::getUploadConfigSection() const {
+    return (_uploadConfigSection);
+}
+
 RouteConfig& RouteConfig::setUploadConfig(const UploadConfig& upload) {
-    delete _uploadConfigSection;
-    _uploadConfigSection = new UploadConfig(upload);
+    _uploadConfigSection = UploadConfig(upload);
     return (*this);
 }
 
@@ -178,15 +171,36 @@ RouteConfig& RouteConfig::addCgiHandler(const CgiHandlerConfig& cfg, string exte
     return (*this);
 }
 
-UploadConfig* RouteConfig::getUploadConfigSection() const {
-    return (_uploadConfigSection);
-}
-
 const std::map<std::string, CgiHandlerConfig*>& RouteConfig::getCgiHandlers() const {
     return (_cgiHandlers);
 }
 
 string RouteConfig::getPath() const {
     return (_path);
+}
+
+ostream& operator<<(ostream& oss, const RouteConfig& route) {
+    oss << route._path;
+    oss << "\n";
+    for (set<HttpMethodType>::const_iterator itr = route._allowedMethods.begin();
+         itr != route._allowedMethods.end();
+         itr++) {
+        oss << methodToString(*itr) << " ";
+    }
+    oss << "\n";
+    for (map<string, string>::const_iterator itr = route._redirections.begin();
+         itr != route._redirections.end();
+         itr++) {
+        oss << itr->first << "->" << itr->second << "\n";
+    }
+    oss << route._folderConfigSection;
+    oss << route._uploadConfigSection;
+    oss << "\n";
+    for (map<string, CgiHandlerConfig*>::const_iterator itr = route._cgiHandlers.begin();
+         itr != route._cgiHandlers.end();
+         itr++) {
+        oss << itr->first << "->" << *itr->second << "\n";
+    }
+    return (oss);
 }
 }  // namespace webserver

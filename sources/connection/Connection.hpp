@@ -41,6 +41,7 @@ private:
     uint32_t _clientIp;
     uint16_t _clientPort;
     const Endpoint& _configuration;
+    const RouteConfig* _route;
 
     Connection();
     Connection(const Connection& other);

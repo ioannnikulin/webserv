@@ -7,9 +7,17 @@
 #include <stdexcept>
 #include <string>
 
+#include "file_system/MimeType.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "logger/Logger.hpp"
+#include "response/Response.hpp"
 
 #define DEFAULT_BUFFER_SIZE 4096
+
+using std::string;
+using webserver::HttpStatus;
+using webserver::MimeType;
+using webserver::Response;
 
 namespace file_system {
 bool isFile(const char* path) {
@@ -129,6 +137,31 @@ bool canCreateDirectory(const char* path) {
     }
 
     return (isDirectory(parent.c_str()) && access(parent.c_str(), W_OK) == 0);
+}
+
+Response serveFile(const std::string& path, int statusCode) {
+    const string ext = file_system::getFileExtension(path);
+    const Response resp(
+        statusCode,
+        file_system::readFile(path.c_str()),
+        MimeType::getMimeType(ext)
+    );
+    return (resp);
+}
+
+Response serveStatusPage(int statusCode) {
+    const string path = HttpStatus::getPageFileLocation(statusCode);
+    if (!fileExists(path.c_str())) {
+        webserver::Logger log;
+        log.stream(LOG_WARN) << "Status page file not found: " << path
+                             << ". Serving default message.\n";
+        return (Response(
+            statusCode,
+            HttpStatus::getReasonPhrase(statusCode),
+            MimeType::getMimeType("txt")
+        ));
+    }
+    return (serveFile(path, statusCode));
 }
 
 }  // namespace file_system

@@ -32,7 +32,6 @@ collect() {
 # without this it complains about every field in a class declaration
 # that is not used immediately in the same header
 NO_UNUSED_FIELDS_IN_HEADERS="--suppress=unusedStructMember:*.hpp"
-NO_UNUSED_FIELDS_IN_HEADERS="--suppress=unusedStructMember:*.hpp"
 # some are used in tests, which are generated on the fly and are not analyzed by cppcheck
 NO_UNUSED_FUNCTIONS="--suppress=unusedFunction/*"
 
