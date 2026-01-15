@@ -21,7 +21,7 @@ for path in sys.argv[1:]:
                 passed += 1
             else:
                 failed += 1
-                toPrint.append(f"Test '{data[test]['name']}' failed:\n{data[test].get('error', 'no error')}\nexpected: {data[test].get('expected_body', 'none')}\ngot: {data[test].get('actual_body', 'none')}")
+                toPrint.append(f"Test '{data[test]['name']}' failed:\n{data[test].get('error', 'no error')}\nexpected status: {data[test].get('expected_status')}\ngot status: {data[test].get('actual_status')}\nexpected body: {data[test].get('expected_body', 'none')}\ngot body: {data[test].get('actual_body', 'none')}")
     elif p.suffix == ".log":
         with open(path, "r", encoding="utf-8", errors="replace") as f:
             print(f"reading {path}")

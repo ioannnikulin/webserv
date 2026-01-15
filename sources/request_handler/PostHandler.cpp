@@ -35,7 +35,7 @@ Response PostHandler::handleRequest(string target, string body, const RouteConfi
     std::ofstream file(target.c_str(), std::ios::binary);
     file.write(body.data(), static_cast<std::streamsize>(body.size()));
     file.close();
-    return (file_system::serveStatusPage(HttpStatus::CREATED));
+    return (file_system::serveFile(target, HttpStatus::CREATED));
 }
 
 }  // namespace webserver

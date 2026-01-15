@@ -216,7 +216,7 @@ test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
 	@set -o pipefail; \
 	$(VALGRIND) ./$(TEST_EXECUTABLE) 2>&1 | tee unit_test_valgrind.log
 
-LOCAL_RUN_CONFIG=./tests/config_files/local_42.conf
+LOCAL_RUN_CONFIG=./tests/config_files/local_run.conf
 
 run: $(MAIN_EXECUTABLE)
 	@./$(MAIN_EXECUTABLE) $(LOCAL_RUN_CONFIG)
@@ -240,6 +240,7 @@ TEST_LOGS = $(shell find tests/e2e -type f -name "*.log")
 
 clean:
 	@rm -rf $(OBJ_F) $(TEST_EXECUTABLE) $(CXXTEST_F) $(TEST_RESULTS) $(TEST_WEBSERV) $(TEST_LOGS) tests/e2e/webserv/tools/status_pages
+
 fclean: clean docker-down
 	@rm -f $(MAIN_EXECUTABLE)
 
