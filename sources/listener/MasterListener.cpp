@@ -304,7 +304,7 @@ MasterListener::handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewC
     if (ret != Connection::IGNORED) {
         return (ret);
     }
-    _log.stream(LOG_WARN) << "Unknown socket fd " << activeFd.fd + " has sent data, ignoring.\n";
+    _log.stream(LOG_WARN) << "Unknown socket fd " << activeFd.fd << " has sent data, ignoring.\n";
     return (Connection::IGNORED);
 }
 

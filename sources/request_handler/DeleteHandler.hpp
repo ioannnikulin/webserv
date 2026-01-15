@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "configuration/RouteConfig.hpp"
 #include "http_methods/HttpMethodType.hpp"
 #include "request_handler/RequestHandler.hpp"
 #include "response/Response.hpp"
@@ -16,7 +17,7 @@ private:
     ~DeleteHandler();
 
 public:
-    static Response handleRequest(std::string target, const Endpoint& configuration);
+    static Response handleRequest(std::string target, const RouteConfig& configuration);
 };
 }  // namespace webserver
 #endif

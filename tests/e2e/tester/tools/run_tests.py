@@ -39,7 +39,7 @@ def run_single_test(test):
             p = Path(filename)
             files[key] = (p.name, p.read_bytes())
 
-    data = test.get("data")
+    data = test.get("body")
     headers = test.get("headers", {})
 
     result = {

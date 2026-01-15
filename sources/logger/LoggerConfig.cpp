@@ -4,7 +4,7 @@
 
 namespace webserver {
 
-LogLevel LoggerConfig::_globalLevel = GLOBAL_LOG_LEVEL;
+LogLevel LoggerConfig::_globalLevel = LOG_INFO;
 bool LoggerConfig::_includeLevel = true;
 bool LoggerConfig::_includeTimestamp = true;
 

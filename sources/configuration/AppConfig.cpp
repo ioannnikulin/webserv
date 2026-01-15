@@ -1,11 +1,13 @@
 #include "AppConfig.hpp"
 
+#include <iostream>
 #include <set>
 #include <stdexcept>
 #include <string>
 
 #include "configuration/Endpoint.hpp"
 
+using std::ostream;
 using std::set;
 using std::string;
 
@@ -18,7 +20,7 @@ AppConfig::AppConfig(const AppConfig& other)
 }
 
 AppConfig& AppConfig::operator=(const AppConfig& other) {
-    if (*this == other) {
+    if (this == &other) {
         return (*this);
     }
     _endpoints = other._endpoints;
@@ -48,6 +50,15 @@ const Endpoint& AppConfig::getEndpoint(string interface, int port) const {
 }
 
 AppConfig::~AppConfig() {
+}
+
+ostream& operator<<(ostream& oss, const AppConfig& config) {
+    for (set<Endpoint>::const_iterator itr = config._endpoints.begin();
+         itr != config._endpoints.end();
+         itr++) {
+        oss << "{" << *itr << "}\n";
+    }
+    return (oss);
 }
 
 }  // namespace webserver

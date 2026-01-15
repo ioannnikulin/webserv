@@ -1,6 +1,8 @@
 #include "Endpoint.hpp"
 
 #include <cstddef>
+#include <iostream>
+#include <limits>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -8,9 +10,9 @@
 
 #include "configuration/CgiHandlerConfig.hpp"
 #include "configuration/RouteConfig.hpp"
-#include "configuration/UploadConfig.hpp"
 
 using std::map;
+using std::ostream;
 using std::set;
 using std::string;
 
@@ -18,22 +20,27 @@ namespace webserver {
 const string Endpoint::DEFAULT_ROOT;
 const string Endpoint::DEFAULT_INTERFACE = "127.0.0.1";
 const int Endpoint::DEFAULT_PORT = 8888;
-const unsigned long Endpoint::DEFAULT_MAX_BODY_SIZE_BYTES = 1 << 20;
+
+size_t Endpoint::defaultMaxClientBodySizeBytes() {
+    // NOTE: cannot be a static constant field due to initialization order problems
+    return (std::numeric_limits<std::streamsize>::max());
+}
 
 Endpoint::Endpoint()
     : _interface(DEFAULT_INTERFACE)
     , _port(DEFAULT_PORT)
+    , _serverName("")
     , _rootDirectory(DEFAULT_ROOT)
-    , _maxRequestBodySizeBytes(DEFAULT_MAX_BODY_SIZE_BYTES)
-    , _uploadConfig(NULL) {
+    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes())
+    , _cgiHandlers()
+    , _routes() {
 }
 
 Endpoint::Endpoint(const std::string& interface, int port)
     : _interface(interface)
     , _port(port)
     , _rootDirectory(DEFAULT_ROOT)
-    , _maxRequestBodySizeBytes(DEFAULT_MAX_BODY_SIZE_BYTES)
-    , _uploadConfig(NULL) {
+    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes()) {
 }
 
 Endpoint::Endpoint(const Endpoint& other)
@@ -41,16 +48,12 @@ Endpoint::Endpoint(const Endpoint& other)
     , _port(other._port)
     , _serverName(other._serverName)
     , _rootDirectory(other._rootDirectory)
-    , _maxRequestBodySizeBytes(other._maxRequestBodySizeBytes)
-    , _routes(other._routes)
-    , _uploadConfig(NULL) {
+    , _maxClientBodySizeBytes(other._maxClientBodySizeBytes)
+    , _routes(other._routes) {
     for (map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
          ++it) {
         _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
-    }
-    if (other._uploadConfig != NULL) {
-        _uploadConfig = new UploadConfig(*other._uploadConfig);
     }
 }
 
@@ -68,9 +71,6 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
     }
     _cgiHandlers.clear();
 
-    delete _uploadConfig;
-    _uploadConfig = NULL;
-
     // NOTE: copying
 
     for (map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
@@ -79,13 +79,11 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
         _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
     }
 
-    _uploadConfig = (other._uploadConfig != NULL) ? new UploadConfig(*other._uploadConfig) : NULL;
-
     _interface = other._interface;
     _port = other._port;
     _serverName = other._serverName;
     _rootDirectory = other._rootDirectory;
-    _maxRequestBodySizeBytes = other._maxRequestBodySizeBytes;
+    _maxClientBodySizeBytes = other._maxClientBodySizeBytes;
     _routes = other._routes;
 
     return (*this);
@@ -97,6 +95,10 @@ int Endpoint::getPort(void) const {
 
 string Endpoint::getInterface(void) const {
     return (_interface);
+}
+
+size_t Endpoint::getMaxClientBodySizeBytes() const {
+    return (_maxClientBodySizeBytes);
 }
 
 bool Endpoint::operator<(const Endpoint& other) const {
@@ -119,7 +121,7 @@ bool Endpoint::operator==(const Endpoint& other) const {
     if (_rootDirectory != other._rootDirectory) {
         return (false);
     }
-    if (_maxRequestBodySizeBytes != other._maxRequestBodySizeBytes) {
+    if (_maxClientBodySizeBytes != other._maxClientBodySizeBytes) {
         return (false);
     }
 
@@ -150,20 +152,10 @@ bool Endpoint::operator==(const Endpoint& other) const {
         return (false);
     }
 
-    if (_uploadConfig == NULL && other._uploadConfig == NULL) {
-    } else if (_uploadConfig == NULL || other._uploadConfig == NULL) {
-        return (false);
-    } else {
-        if (!(*_uploadConfig == *other._uploadConfig)) {
-            return (false);
-        }
-    }
-
     return (true);
 }
 
 Endpoint::~Endpoint() {
-    delete _uploadConfig;
     for (map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
          it != _cgiHandlers.end();
          ++it) {
@@ -192,8 +184,12 @@ Endpoint& Endpoint::setRoot(const string& path) {
     return (*this);
 }
 
-Endpoint& Endpoint::setClientMaxBodySizeBytes(size_t size) {
-    _maxRequestBodySizeBytes = size;
+Endpoint& Endpoint::setMaxClientBodySizeBytes(size_t size) {
+    if (size > defaultMaxClientBodySizeBytes()) {
+        _maxClientBodySizeBytes = defaultMaxClientBodySizeBytes();
+    } else {
+        _maxClientBodySizeBytes = size;
+    }
     return (*this);
 }
 
@@ -207,19 +203,15 @@ Endpoint& Endpoint::addRoute(const RouteConfig& route) {
     return (*this);
 }
 
-set<RouteConfig> Endpoint::getRoutes() const {
+const set<RouteConfig>& Endpoint::getRoutes() const {
     return (_routes);
-}
-
-UploadConfig* Endpoint::getUploadConfig() const {
-    return (_uploadConfig);
 }
 
 string Endpoint::getRoot() const {
     return (_rootDirectory);
 }
 
-RouteConfig Endpoint::getRoute(std::string route) const {
+const RouteConfig& Endpoint::getRoute(std::string route) const {
     for (std::set<RouteConfig>::const_iterator it = _routes.begin(); it != _routes.end(); ++it) {
         if (it->getPath() == route) {
             return (*it);
@@ -228,13 +220,13 @@ RouteConfig Endpoint::getRoute(std::string route) const {
     throw std::out_of_range("Route not found");
 }
 
-RouteConfig Endpoint::selectRoute(std::string route) const {
-    RouteConfig bestMatch;
+const RouteConfig& Endpoint::selectRoute(std::string route) const {
+    set<RouteConfig>::const_iterator bestMatch = _routes.end();
     size_t bestLength = 0;
-    for (std::set<RouteConfig>::const_iterator itr = _routes.begin(); itr != _routes.end(); ++itr) {
+    for (set<RouteConfig>::const_iterator itr = _routes.begin(); itr != _routes.end(); ++itr) {
         if (route.substr(0, itr->getPath().length()) == itr->getPath()) {
             if (itr->getPath().length() > bestLength) {
-                bestMatch = *itr;
+                bestMatch = itr;
                 bestLength = itr->getPath().length();
             }
         }
@@ -242,13 +234,7 @@ RouteConfig Endpoint::selectRoute(std::string route) const {
     if (bestLength == 0) {
         throw std::out_of_range("Route not found; is there a root location in the configuration?");
     }
-    return (bestMatch);
-}
-
-Endpoint& Endpoint::setUploadConfig(const UploadConfig& cfg) {
-    delete _uploadConfig;
-    _uploadConfig = new UploadConfig(cfg);
-    return (*this);
+    return (*bestMatch);
 }
 
 const std::map<std::string, CgiHandlerConfig*>& Endpoint::getCgiHandlers() const {
@@ -257,5 +243,27 @@ const std::map<std::string, CgiHandlerConfig*>& Endpoint::getCgiHandlers() const
 
 bool Endpoint::isAValidPort(int port) {
     return (port >= MIN_PORT && port <= MAX_PORT);
+}
+
+ostream& operator<<(ostream& oss, const Endpoint& endpoint) {
+    oss << endpoint._interface;
+    oss << " " << endpoint._port;
+    oss << " " << endpoint._serverName;
+    oss << " " << endpoint._rootDirectory;
+    oss << " " << endpoint._maxClientBodySizeBytes;
+    oss << "\n";
+    for (map<string, CgiHandlerConfig*>::const_iterator itr = endpoint._cgiHandlers.begin();
+         itr != endpoint._cgiHandlers.end();
+         itr++) {
+        oss << "{" << itr->first << ": " << *(itr->second) << "}\n";
+    }
+    oss << "\n";
+    for (set<RouteConfig>::const_iterator itr = endpoint._routes.begin();
+         itr != endpoint._routes.end();
+         itr++) {
+        oss << "{" << *itr << "}\n";
+    }
+    oss << "\n";
+    return (oss);
 }
 }  // namespace webserver

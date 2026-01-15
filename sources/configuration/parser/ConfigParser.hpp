@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "configuration/AppConfig.hpp"
+#include "configuration/Endpoint.hpp"
 #include "configuration/parser/LocationTempData.hpp"
 
 namespace webserver {
@@ -26,9 +27,15 @@ private:
     void parseErrorPage();
     void parseCgi(Endpoint& server);
     void parseLocation(Endpoint& server);
-    void parseUpload(Endpoint& server);
 
+    void setupLocationFolder(
+        const std::string& locationPath,
+        const Endpoint& server,
+        RouteConfig& route
+    );
+    void setupLocationUpload(RouteConfig& route);
     void parseLocationRoot();
+    void parseLocationMaxBodySize();
     void parseLocationListable();
     void parseLocationIndex();
     void parseLocationMethods(RouteConfig& route);
@@ -38,6 +45,7 @@ private:
     void parseLocationCgi(RouteConfig& route);
 
     static bool isEnd(const std::vector<std::string>& tokens, size_t index);
+    static size_t parseSizeValue(const std::string& value);
 
 public:
     ConfigParser();

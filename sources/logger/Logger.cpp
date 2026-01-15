@@ -28,7 +28,7 @@ namespace webserver {
 
 Logger::Logger()
     : _hasLocalLevel(false)
-    , _localLevel(DEFAULT_LOG_LEVEL) {
+    , _localLevel(LoggerConfig::getGlobalLevel()) {
 }
 
 Logger::Logger(LogLevel level)

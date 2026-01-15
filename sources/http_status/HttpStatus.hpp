@@ -34,6 +34,7 @@ public:
     ~HttpStatus();
 
     static void initStatusMap();
+    static void clearStatusMap();
 
     static const std::string UNKNOWN_STATUS;
 

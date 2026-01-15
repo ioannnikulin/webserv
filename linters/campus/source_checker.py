@@ -52,6 +52,12 @@ regexpPoll = re.compile(f"^bpoll\\(")
 regexpErrno = re.compile(r".*\n.*\n.*\n.*\berrno\b")
 regexpIoOperations = re.compile(r"\b(read|write|recv|send)\(")
 regexpForbiddenStdStreams = re.compile(r"\bstd::(cout|clog|cerr|endl)\b")
+regexpInvalidSelfAssignmentCheck = re.compile(r"operator=.*\n.*\*this", re.M)
+
+ALLOWED_STD_STREAM_FILES = {
+    "Logger.cpp",
+    "Logger.hpp",
+}
 
 def main():
     print("Running source-checker...")
@@ -78,7 +84,7 @@ def main():
         for match in regexpUsingNamespace.finditer(s):
             issues.append(f"{f}:{lineNum(match, s)} contains 'using namespace' directive; please switch to explicit directive like 'using std::string' etc.")
 
-        checkCommentPrefixes(s, issues)
+        checkCommentPrefixes(f, s, issues)
 
         for match in regexpIncludeRelative.finditer(s):
             issues.append(f"{f}:{lineNum(match, s)} please specify the path starting from the project source root")
@@ -87,6 +93,9 @@ def main():
             if regexpIoOperations.search(match.group(0)):
                 issues.append(f"{f}:{lineNum(match, s)} using errno with IO operations is forbidden by the subject")
             
+        for match in regexpInvalidSelfAssignmentCheck.finditer(s):
+            issues.append(f"{f}:{lineNum(match, s)} should be if (this == &other)")
+
         if regexpPoll.search(s):
             pollCalls += 1
 
@@ -95,8 +104,7 @@ def main():
             clean = stripCommentsPreserveLines(s)
             for match in regexpForbiddenStdStreams.finditer(clean):
                 issues.append(
-                    lineNum(match, clean)
-                    + "use of std::cout / cin / clog / endl is forbidden; use Logger instead"
+                    f"{f}:{lineNum(match, clean)} use of std::cout / cin / clog / endl is forbidden; use Logger and \\n instead"
                 )
         
         if issues:

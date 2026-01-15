@@ -1,11 +1,16 @@
 #include "CgiHandlerConfig.hpp"
 
+#include <iostream>
 #include <string>
+
+using std::ostream;
 
 using std::string;
 namespace webserver {
 CgiHandlerConfig::CgiHandlerConfig()
-    : _timeoutSeconds(0) {
+    : _timeoutSeconds(0)
+    , _executablePath("")
+    , _storageRootPath("") {
 }
 
 CgiHandlerConfig::CgiHandlerConfig(const CgiHandlerConfig& other)
@@ -26,7 +31,8 @@ CgiHandlerConfig& CgiHandlerConfig::operator=(const CgiHandlerConfig& other) {
 
 CgiHandlerConfig::CgiHandlerConfig(int timeoutSeconds, const string& executablePath)
     : _timeoutSeconds(timeoutSeconds)
-    , _executablePath(executablePath) {
+    , _executablePath(executablePath)
+    , _storageRootPath("") {
 }
 
 std::string CgiHandlerConfig::getExecutablePath() const {
@@ -41,6 +47,14 @@ bool CgiHandlerConfig::operator==(const CgiHandlerConfig& other) const {
 }
 
 CgiHandlerConfig::~CgiHandlerConfig() {
+}
+
+ostream& operator<<(ostream& oss, const CgiHandlerConfig& cgi) {
+    oss << cgi._timeoutSeconds;
+    oss << " " << cgi._executablePath;
+    oss << " " << cgi._storageRootPath;
+    oss << "\n";
+    return (oss);
 }
 
 }  // namespace webserver

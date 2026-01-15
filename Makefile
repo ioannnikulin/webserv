@@ -207,7 +207,7 @@ build-cxxtest-tests: $(MAIN_NONENDPOINT_OBJS)
 	@$(CPP) -std=c++98 -g -O0 -I$(CXXTEST_F) $(LINK_FLAGS) -o $(TEST_EXECUTABLE) $(OBJ_F)/cxx_runner.cpp $^
 
 VALGRIND=valgrind \
-		--leak-check=full --show-leak-kinds=all --track-fds=yes \
+		--track-origins=yes --leak-check=full --show-leak-kinds=all --track-fds=yes \
 		--child-silent-after-fork=yes \
 		--error-exitcode=1 \
 
@@ -227,7 +227,7 @@ debug: $(MAIN_EXECUTABLE)
 valgrind: $(MAIN_EXECUTABLE)
 	@set -o pipefail; $(VALGRIND) ./$(MAIN_EXECUTABLE) $(LOCAL_RUN_CONFIG) 2>&1 | tee valgrind.log
 
-TESTER_42 = tests/e2e/2/requirements/42/tools/tester
+TESTER_42 = tests/e2e/2_42_checker/requirements/42/tools/tester
 
 tester-42: # set LOCAL_RUN_CONFIG to local_42.conf and make run
 	printf '\n\n\n\n\n' | $(TESTER_42) http://127.0.0.1:8080 > 42.log 2>&1
@@ -308,7 +308,7 @@ makefile-check:
 
 # manual docker testing
 
-DEMO_DOCKER=tests/e2e/0
+DEMO_DOCKER=tests/e2e/0_get_200_403_404
 
 COMPOSE=docker compose -f $(DEMO_DOCKER)/docker-compose.yml
 
@@ -338,7 +338,7 @@ docker-cleanup:
 # automated e2e docker tests
 
 E2E_SCENARIOS = $(shell find tests/e2e -maxdepth 1 -mindepth 1 -type d \
-	! -name "tester" ! -name "webserv" ! -name "2" ! -name "3" ! -name "4" ! -name "5" ! -name "6" ! -name "7")
+	! -name "tester" ! -name "webserv" ! -name "2_42_checker" )
 
 docker-build-images: $(MAIN_EXECUTABLE)
 	@cp $(MAIN_EXECUTABLE) tests/e2e/webserv/tools/$(MAIN_EXECUTABLE)

@@ -46,7 +46,8 @@ Connection::Connection(int listeningSocketFd, const Endpoint& configuration)
     : _state(NEWBORN)
     , _clientIp(0)
     , _clientPort(0)
-    , _configuration(configuration) {
+    , _configuration(configuration)
+    , _route(NULL) {
     const uint32_t SHIFT24 = 24;
     const uint32_t SHIFT16 = 16;
     const uint32_t SHIFT8 = 8;
@@ -86,7 +87,24 @@ bool Connection::fullRequestReceived() {
     const string requestBuffer = _requestBuffer.str();
     _log.stream(LOG_TRACE) << "checking [" + requestBuffer + "]\n";
     try {
-        const webserver::Request tmp(requestBuffer);
+        webserver::Request tmp(requestBuffer);
+        if (!tmp.isRequestTargetReceived()) {
+            return (false);
+        }
+        if (_route == NULL) {
+            /* NOTE: this is the first time we see the first line received.
+            we extract the path and try to match it to a route configuration.
+            we need the body size limit here, so that we can terminate the request parsing early.
+            */
+            try {
+                _route = &(_configuration.selectRoute(tmp.getPath()));
+            } catch (const std::out_of_range& e) {
+                return (true);
+            }
+        }
+        // NOTE: we have the route already, but since we reparse the request for every check, we recast the max size into it again
+        tmp.setMaxClientBodySizeBytes(_route->getFolderConfig().getMaxClientBodySizeBytes());
+        tmp.getBody();  // NOTE: lazy body init
         return (true);
     } catch (const IncompleteRequest& e) {
         return (false);
@@ -152,7 +170,7 @@ Connection::State Connection::generateResponse() {
         _log.stream(LOG_TRACE) << "Received HTTP request on socket " << _clientSocketFd << ":\n"
                                << _requestBuffer.str();
         _request = Request(_requestBuffer.str());
-        _responseBuffer = RequestHandler::handleRequest(_request, _configuration);
+        _responseBuffer = RequestHandler::handleRequest(_request, *_route);
     } catch (const HttpException& e) {
         // NOTE: webserver-logic-related errors
         ostringstream oss;

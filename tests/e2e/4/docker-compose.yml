@@ -9,7 +9,7 @@ services:
   webserv:
     image: webserv:latest
     volumes:
-      - ./requirements/webserv/conf/config.cnf:/usr/local/bin/config.cnf:ro
+      - ./requirements/webserv/conf/config.conf:/usr/local/bin/config.conf:ro
       - ./requirements/webserv/volume:/srv
       - ./requirements/webserv/logs:/var/logs/webserv
     networks:

@@ -16,6 +16,7 @@
 #include "configuration/FolderConfig.hpp"
 #include "configuration/RouteConfig.hpp"
 #include "http_methods/HttpMethodType.hpp"
+#include "http_status/HttpStatus.hpp"
 #include "request_handler/GetHandler.hpp"
 
 using std::map;
@@ -66,59 +67,49 @@ public:
         _emptyFolders.insert("/another/empty");
         _emptyFolders.insert("/third");
         createTestFiles();
-        webserver::Endpoint config =
-            webserver::Endpoint().addRoute(webserver::RouteConfig().setPath("/").setFolderConfig(
-                webserver::FolderConfig("/", _rootFolder, false, "index.html")
+        webserver::HttpStatus::clearStatusMap();
+        webserver::HttpStatus::initStatusMap();
+        webserver::HttpStatus::setPage(404, _rootFolder + "/folder/foo.txt");
+        webserver::RouteConfig config =
+            webserver::RouteConfig().setPath("/").setFolderConfig(webserver::FolderConfig(
+                "/",
+                _rootFolder,
+                false,
+                "index.html",
+                webserver::FolderConfig::defaultMaxClientBodySizeBytes()
             ));
 
         webserver::Response actual =
-            webserver::GetHandler::handleRequest("/folder/foo.txt", config);
+            webserver::GetHandler::handleRequest(_rootFolder + "/folder/foo.txt", config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("7", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("footext", actual.getBody());
         TS_ASSERT_EQUALS("text/plain", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest("/folder/bar.xml", config);
+        actual = webserver::GetHandler::handleRequest(_rootFolder + "/folder/bar.xml", config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("7", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("bartext", actual.getBody());
         TS_ASSERT_EQUALS("application/xml", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest("/another/key.jpg", config);
+        actual = webserver::GetHandler::handleRequest(_rootFolder + "/another/key.jpg", config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("13", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("communication", actual.getBody());
         TS_ASSERT_EQUALS("image/jpeg", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest("/another/empty.mp3", config);
+        actual = webserver::GetHandler::handleRequest(_rootFolder + "/another/empty.mp3", config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("0", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("", actual.getBody());
         TS_ASSERT_EQUALS("audio/mpeg", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest("/another/doesnotexist.txt", config);
+        actual =
+            webserver::GetHandler::handleRequest(_rootFolder + "/another/doesnotexist.txt", config);
         TS_ASSERT_EQUALS(404, actual.getStatus());
-        TS_ASSERT_EQUALS("798", actual.getHeader("Content-Length"));
-        TS_ASSERT_EQUALS(
-            "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    "
-            "<title>404 Not Found</title>\n    <style>\n        body {\n            margin: 0;\n   "
-            "         "
-            "height: 100vh;\n            background: #000000;\n            color: #ffffff;\n       "
-            "     "
-            "font-family: Helvetica, Arial, sans-serif;\n            display: flex;\n            "
-            "align-items: center;\n            justify-content: center;\n        }\n        .box "
-            "{\n            "
-            "text-align: center;\n        }\n        h1 {\n            font-size: 6rem;\n          "
-            "  "
-            "margin: 0;\n        }\n        p {\n            margin-top: 1rem;\n            "
-            "font-size: 1.1rem;\n            opacity: 0.9;\n        }\n    "
-            "</style>\n</head>\n<body>\n    "
-            "<div class=\"box\">\n        <h1>404</h1>\n        <p>The page you were looking for "
-            "doesn't exist.</p>\n    "
-            "</div>\n</body>\n</html>",
-            actual.getBody()
-        );
-        TS_ASSERT_EQUALS("text/html", actual.getHeader("Content-Type"));
+        TS_ASSERT_EQUALS("7", actual.getHeader("Content-Length"));
+        TS_ASSERT_EQUALS("footext", actual.getBody());
+        TS_ASSERT_EQUALS("text/plain", actual.getHeader("Content-Type"));
     }
 
     // deletes test files

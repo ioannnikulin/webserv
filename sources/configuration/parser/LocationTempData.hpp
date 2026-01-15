@@ -22,6 +22,9 @@ private:
     std::string _uploadRoot;
     bool _uploadSet;
 
+    bool _maxClientBodySizeBytesSet;
+    size_t _maxClientBodySizeBytes;
+
 public:
     LocationTempData();
     ~LocationTempData();
@@ -46,6 +49,10 @@ public:
     void setUploadRoot(const std::string& path);
     const std::string& uploadRoot() const;
     bool uploadSet() const;
+
+    void setMaxClientBodySizeBytes(size_t maxBodySizeBytes);
+    size_t getMaxBodySizeBytes() const;
+    bool maxBodySizeBytesSet() const;
 };
 }  // namespace webserver
 

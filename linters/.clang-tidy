@@ -3,6 +3,8 @@ Checks: >-
   -modernize-*, # disable, since it mostly targets c++11 and later
   performance-*,
   readability-*,
+  -readability-redundant-member-init,
+  -readability-redundant-string-init,
   misc-*,
   -cppcoreguidelines-pro-type-vararg, # doesn't allow to call C vararg functions, including fcntl
   -cppcoreguidelines-special-member-functions, # requires move and move assign, 

@@ -15,6 +15,28 @@
 using std::string;
 
 namespace webserver {
+void ConfigParser::setupLocationUpload(RouteConfig& route) {
+    if (_tmp.uploadSet()) {
+        const UploadConfig upload(_tmp.uploadEnabled(), _tmp.uploadRoot());
+        route.setUploadConfig(upload);
+    }
+}
+
+void ConfigParser::setupLocationFolder(
+    const string& locationPath,
+    const Endpoint& server,
+    RouteConfig& route
+) {
+    const FolderConfig folder(
+        locationPath,
+        _tmp.rootSet() ? _tmp.rootPath() : server.getRoot(),
+        _tmp.listableSet() ? _tmp.listable() : false,
+        _tmp.indexSet() ? _tmp.indexPage() : "",
+        _tmp.maxBodySizeBytesSet() ? _tmp.getMaxBodySizeBytes() : server.getMaxClientBodySizeBytes()
+    );
+    route.setFolderConfig(folder);
+}
+
 void ConfigParser::parseLocation(Endpoint& server) {
     _index++;
 
@@ -22,7 +44,13 @@ void ConfigParser::parseLocation(Endpoint& server) {
         throw ConfigParsingException("Expected path after 'location'");
     }
 
-    const string locationPath = _tokens[_index];
+    string locationPath = _tokens[_index];
+    if (locationPath.at(0) != '/') {
+        throw ConfigParsingException("Location path must start with '/'");
+    }
+    if (locationPath.at(locationPath.size() - 1) == '/' && locationPath.size() > 1) {
+        locationPath = locationPath.substr(0, locationPath.size() - 1);
+    }
     _tmp.clear();
     _index++;
 
@@ -38,6 +66,8 @@ void ConfigParser::parseLocation(Endpoint& server) {
 
         if (token == "root") {
             parseLocationRoot();
+        } else if (token == "client_max_body_size") {
+            parseLocationMaxBodySize();
         } else if (token == "listable") {
             parseLocationListable();
         } else if (token == "index") {
@@ -64,22 +94,32 @@ void ConfigParser::parseLocation(Endpoint& server) {
         throw ConfigParsingException("Unexpected end of file in location block (missing '}')");
     }
 
-    const FolderConfig folder(
-        locationPath,
-        _tmp.rootSet() ? _tmp.rootPath() : server.getRoot(),
-        _tmp.listableSet() ? _tmp.listable() : false,
-        _tmp.indexSet() ? _tmp.indexPage() : ""
-    );
-    route.setFolderConfig(folder);
-
     route.setPath(locationPath);
 
-    if (_tmp.uploadSet()) {
-        const UploadConfig upload(_tmp.uploadEnabled(), _tmp.uploadRoot());
-        route.setUploadConfig(upload);
-    }
+    setupLocationFolder(locationPath, server, route);
+
+    setupLocationUpload(route);
 
     server.addRoute(route);
+}
+
+void ConfigParser::parseLocationMaxBodySize() {
+    _index++;
+    if (isEnd(_tokens, _index)) {
+        throw ConfigParsingException("Expected value after 'client_max_body_size'");
+    }
+
+    const string value = _tokens[_index];
+    _index++;
+
+    if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
+        throw ConfigParsingException("Missing ';' after client_max_body_size");
+    }
+
+    _index++;
+
+    const size_t size = parseSizeValue(value);
+    _tmp.setMaxClientBodySizeBytes(size);
 }
 
 void ConfigParser::parseLocationRoot() {

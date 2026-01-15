@@ -25,6 +25,7 @@ public:
     ~CgiHandlerConfig();
 
     bool operator==(const CgiHandlerConfig& other) const;
+    friend std::ostream& operator<<(std::ostream& oss, const CgiHandlerConfig& cgi);
 };
 }  // namespace webserver
 

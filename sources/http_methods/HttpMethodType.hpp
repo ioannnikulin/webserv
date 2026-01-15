@@ -7,5 +7,6 @@ namespace webserver {
 enum HttpMethodType { GET, POST, DELETE, SHUTDOWN };
 
 HttpMethodType stringToMethod(const std::string& str);
+std::string methodToString(const HttpMethodType& method);
 }  // namespace webserver
 #endif

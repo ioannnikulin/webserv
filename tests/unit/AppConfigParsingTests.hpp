@@ -69,7 +69,6 @@ private:
                 cout << "Actual path:   '" << itRA->getPath() << "'" << endl;
                 cout << "Expected path: '" << itRE->getPath() << "'" << endl;
                 cout << "Match: " << (itRA->getPath() == itRE->getPath() ? "YES" : "NO") << endl;
-
                 try {
                     bool routesEqual = (*itRA == *itRE);
                     cout << "Routes equal: " << (routesEqual ? "YES" : "NO") << endl;
@@ -113,7 +112,8 @@ public:
             "/",
             "tests/e2e/5/requirements/webserv/volume/www/html",
             false,
-            "index.html"
+            "index.html",
+            webserver::FolderConfig::defaultMaxClientBodySizeBytes()
         ));
 
         ep.addRoute(route);
@@ -134,6 +134,7 @@ public:
 
         string serverName = "nested.local";
         ep.addServerName(serverName);
+        ep.setMaxClientBodySizeBytes(1000);
         // Location /
         webserver::RouteConfig route1;
         route1.setPath("/");
@@ -141,7 +142,8 @@ public:
             "/",
             "tests/e2e/6/requirements/webserv/volume/www",
             false,
-            "index.html"
+            "index.html",
+            2000
         ));
         ep.addRoute(route1);
 
@@ -152,7 +154,8 @@ public:
             "/admin",
             "tests/e2e/6/requirements/webserv/volume/www/admin",
             false,
-            "dashboard.html"
+            "dashboard.html",
+            1000
         ));
         route2.addAllowedMethod(webserver::GET);
         route2.addAllowedMethod(webserver::POST);
@@ -166,7 +169,8 @@ public:
             "/uploads",
             "tests/e2e/6/requirements/webserv/volume/www/uploads",
             false,
-            ""
+            "",
+            1000
         ));
         route3.setUploadConfig(
             webserver::UploadConfig(true, "tests/e2e/6/requirements/webserv/volume/www/uploads")
@@ -197,7 +201,8 @@ public:
             "/",
             "tests/e2e/7/requirements/webserv/volume/www/example",
             false,
-            "index.html"
+            "index.html",
+            webserver::FolderConfig::defaultMaxClientBodySizeBytes()
         ));
         ep1.addRoute(route1);
         expected.addEndpoint(ep1);
@@ -212,7 +217,8 @@ public:
             "/api",
             "tests/e2e/7/requirements/webserv/volume/www/api",
             false,
-            "index.html"
+            "index.html",
+            webserver::FolderConfig::defaultMaxClientBodySizeBytes()
         ));
         ep2.addRoute(route2);
         expected.addEndpoint(ep2);
@@ -251,7 +257,13 @@ public:
         ep.addServerName(serverName);
         webserver::RouteConfig route;
         route.setPath("/");
-        route.setFolderConfig(webserver::FolderConfig("/", "/srv/www/cgi", false, "index.py"));
+        route.setFolderConfig(webserver::FolderConfig(
+            "/",
+            "/srv/www/cgi",
+            false,
+            "index.py",
+            webserver::FolderConfig::defaultMaxClientBodySizeBytes()
+        ));
         ep.addRoute(route);
 
         // Add CGI handlers
@@ -275,7 +287,7 @@ public:
         string serverName = "secure.example.com";
 
         ep.addServerName(serverName);
-        ep.setClientMaxBodySizeBytes(1 * utils::MIB);
+        ep.setMaxClientBodySizeBytes(1 * utils::MIB);
 
         // Location /
         webserver::RouteConfig route1;
@@ -284,7 +296,8 @@ public:
             "/",
             "tests/e2e/4/requirements/webserv/volume/secure",
             false,
-            "index.html"
+            "index.html",
+            1 * utils::MIB
         ));
         ep.addRoute(route1);
 
@@ -295,7 +308,8 @@ public:
             "/upload",
             "tests/e2e/4/requirements/webserv/volume/uploads",
             false,
-            ""
+            "",
+            1 * utils::MIB
         ));
         route2.addAllowedMethod(webserver::POST);
         route2.setUploadConfig(
@@ -306,7 +320,7 @@ public:
         // Location /redirect
         webserver::RouteConfig route3;
         route3.setPath("/redirect");
-        route3.setFolderConfig(webserver::FolderConfig("/redirect", "", false, ""));
+        route3.setFolderConfig(webserver::FolderConfig("/redirect", "", false, "", 1 * utils::MIB));
         route3.addRedirection("/redirect", "http://example.com");
         ep.addRoute(route3);
 

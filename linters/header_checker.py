@@ -80,15 +80,21 @@ def textChecks(f):
     checkGuard(f, s, issues)
     return issues
 
+def safe_kind(node):
+    try:
+        return node.kind
+    except ValueError:
+        return None
+
 def getNamespaces(node, ns_stack=None):
     if ns_stack is None:
         ns_stack = [] # we're currently at level zero of possible namespace enclosures
     result = []
-
-    if node.kind == cindex.CursorKind.NAMESPACE:
+    kind = safe_kind(node)
+    if kind == cindex.CursorKind.NAMESPACE:
         ns_stack = ns_stack + [node.spelling] # if we're on a namespace declaration, increase the level
 
-    if node.kind in (cindex.CursorKind.FUNCTION_DECL,
+    if kind in (cindex.CursorKind.FUNCTION_DECL,
                      cindex.CursorKind.VAR_DECL,
                      cindex.CursorKind.CLASS_DECL,
                      cindex.CursorKind.STRUCT_DECL):
@@ -101,7 +107,7 @@ def getNamespaces(node, ns_stack=None):
 
 def isMain(node):
     return (
-        node.kind == cindex.CursorKind.FUNCTION_DECL and
+        safe_kind(node) == cindex.CursorKind.FUNCTION_DECL and
         node.spelling == "main"
     )
 
@@ -125,7 +131,7 @@ def checkAST(file, index, roots):
         if not ns_stack and not isMain(node):
             issues.append(f"{file}: {node.spelling} is not inside any namespace\n")
 
-        if node.kind == cindex.CursorKind.CLASS_DECL:
+        if safe_kind(node) == cindex.CursorKind.CLASS_DECL:
             cls_name = node.spelling
             has_ctor = False
             has_dtor = False
