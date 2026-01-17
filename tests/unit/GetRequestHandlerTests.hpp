@@ -79,33 +79,36 @@ public:
                 webserver::FolderConfig::defaultMaxClientBodySizeBytes()
             ));
 
-        webserver::Response actual =
-            webserver::GetHandler::handleRequest(_rootFolder + "/folder/foo.txt", config);
+        string tgt = _rootFolder + "/folder/foo.txt";
+        webserver::Response actual = webserver::GetHandler::handleRequest(tgt, tgt, config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("7", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("footext", actual.getBody());
         TS_ASSERT_EQUALS("text/plain", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest(_rootFolder + "/folder/bar.xml", config);
+        tgt = _rootFolder + "/folder/bar.xml";
+        actual = webserver::GetHandler::handleRequest(tgt, tgt, config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("7", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("bartext", actual.getBody());
         TS_ASSERT_EQUALS("application/xml", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest(_rootFolder + "/another/key.jpg", config);
+        tgt = _rootFolder + "/another/key.jpg";
+        actual = webserver::GetHandler::handleRequest(tgt, tgt, config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("13", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("communication", actual.getBody());
         TS_ASSERT_EQUALS("image/jpeg", actual.getHeader("Content-Type"));
 
-        actual = webserver::GetHandler::handleRequest(_rootFolder + "/another/empty.mp3", config);
+        tgt = _rootFolder + "/another/empty.mp3";
+        actual = webserver::GetHandler::handleRequest(tgt, tgt, config);
         TS_ASSERT_EQUALS(200, actual.getStatus());
         TS_ASSERT_EQUALS("0", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("", actual.getBody());
         TS_ASSERT_EQUALS("audio/mpeg", actual.getHeader("Content-Type"));
 
-        actual =
-            webserver::GetHandler::handleRequest(_rootFolder + "/another/doesnotexist.txt", config);
+        tgt = _rootFolder + "/another/doesnotexist.txt";
+        actual = webserver::GetHandler::handleRequest(tgt, tgt, config);
         TS_ASSERT_EQUALS(404, actual.getStatus());
         TS_ASSERT_EQUALS("7", actual.getHeader("Content-Length"));
         TS_ASSERT_EQUALS("footext", actual.getBody());

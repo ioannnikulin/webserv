@@ -33,6 +33,7 @@ Response::Response(int status, const std::string& body, const std::string& type)
     _headers["Content-Length"] = utils::toString(body.size());
     _headers["Server"] = SERVER_NAME;
     _headers["Date"] = utils::getTimestamp();
+    _headers["Connection"] = "close";
 }
 
 Response::Response(const Response& other)

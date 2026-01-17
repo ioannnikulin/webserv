@@ -309,7 +309,7 @@ MasterListener::handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewC
 }
 
 void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
-    _log.stream(LOG_TRACE) << "Starting sending response back to " << activeFd.fd;
+    _log.stream(LOG_TRACE) << "Starting sending response back to " << activeFd.fd << "\n";
     Listener* listener = findListener(_clientListeners, activeFd.fd);
 
     if (listener == NULL) {

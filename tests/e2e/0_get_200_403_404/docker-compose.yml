@@ -17,6 +17,9 @@ services:
       - ./requirements/webserv/conf/config.conf:/usr/local/bin/config.conf:ro
       - ./requirements/webserv/volume:/var/www/html
       - ./requirements/webserv/logs:/var/logs/webserv
+    environment:
+      FILE_PERMISSIONS: |
+        /var/www/html/:0755
     networks:
       net1:
         ipv4_address: 172.18.0.10

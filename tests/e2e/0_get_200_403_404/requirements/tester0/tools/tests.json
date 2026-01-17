@@ -7,7 +7,7 @@
       "url": "http://172.18.0.10:8080/",
       "delay_before_ms": 0,
       "expected": {
-        "status_code": 403
+        "status_code": 200
       }
     },
     {
@@ -17,7 +17,7 @@
       "url": "http://172.18.0.10:8080",
       "delay_before_ms": 0,
       "expected": {
-        "status_code": 403
+        "status_code": 200
       }
     },
     {
@@ -85,6 +85,38 @@
       "expected": {
         "status_code": 200,
         "body": "<html>\n<body>\n\t<h1>Hello World!</h1>\n\t<div>Sample page</div>\n</body>\n</html>"
+      }
+    },
+    {
+      "name": "autolisting",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/listme/",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "<html><head><title>/listme/</title></head><body>Contents of folder /listme/:\n<hr/>\n<ul><li><a href=\"/listme/.\">.</a></li><li><a href=\"/listme/..\">..</a></li><li><a href=\"/listme/listmetoo\">listmetoo</a></li><li><a href=\"/listme/stub\">stub</a></li></ul></body></html>"
+      }
+    },
+    {
+      "name": "no autolisting",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/dontlistme/",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 403
+      }
+    },
+    {
+      "name": "folder/subfolder no index.html, falling back to autoindex",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder/subfolder/",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "<html><head><title>/folder/subfolder/</title></head><body>Contents of folder /folder/subfolder/:\n<hr/>\n<ul><li><a href=\"/folder/subfolder/.\">.</a></li><li><a href=\"/folder/subfolder/..\">..</a></li><li><a href=\"/folder/subfolder/stub\">stub</a></li></ul></body></html>"
       }
     },
     {

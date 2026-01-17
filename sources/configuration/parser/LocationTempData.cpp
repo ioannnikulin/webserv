@@ -8,8 +8,8 @@ using std::string;
 namespace webserver {
 LocationTempData::LocationTempData()
     : _rootSet(false)
-    , _listable(false)
-    , _listableSet(false)
+    , _autoindex(false)
+    , _autoindexSet(false)
     , _indexSet(false)
     , _uploadEnabled(false)
     , _uploadSet(false)
@@ -23,8 +23,8 @@ void LocationTempData::clear() {
     _rootSet = false;
     _storageRootPath = "";
 
-    _listableSet = false;
-    _listable = false;
+    _autoindexSet = false;
+    _autoindex = false;
 
     _indexSet = false;
     _indexPage = "";
@@ -47,17 +47,17 @@ bool LocationTempData::rootSet() const {
     return (_rootSet);
 }
 
-void LocationTempData::setListable(bool value) {
-    _listable = value;
-    _listableSet = true;
+void LocationTempData::setAutoindex(bool value) {
+    _autoindex = value;
+    _autoindexSet = true;
 }
 
-bool LocationTempData::listable() const {
-    return (_listable);
+bool LocationTempData::autoindex() const {
+    return (_autoindex);
 }
 
-bool LocationTempData::listableSet() const {
-    return (_listableSet);
+bool LocationTempData::autoindexSet() const {
+    return (_autoindexSet);
 }
 
 void LocationTempData::setIndexPage(const string& page) {
