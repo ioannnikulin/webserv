@@ -12,8 +12,8 @@ private:
     std::string _storageRootPath;
     bool _rootSet;
 
-    bool _listable;
-    bool _listableSet;
+    bool _autoindex;
+    bool _autoindexSet;
 
     std::string _indexPage;
     bool _indexSet;
@@ -35,9 +35,9 @@ public:
     const std::string& rootPath() const;
     bool rootSet() const;
 
-    void setListable(bool value);
-    bool listable() const;
-    bool listableSet() const;
+    void setAutoindex(bool value);
+    bool autoindex() const;
+    bool autoindexSet() const;
 
     void setIndexPage(const std::string& page);
     const std::string& indexPage() const;

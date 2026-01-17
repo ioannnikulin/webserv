@@ -14,8 +14,6 @@
 #include "request_handler/GetHandler.hpp"
 #include "request_handler/PostHandler.hpp"
 #include "response/Response.hpp"
-#include "utils/colors.hpp"
-#include "utils/utils.hpp"
 
 using std::string;
 
@@ -25,8 +23,7 @@ Logger RequestHandler::_log;
 string RequestHandler::serializeAndPrint(const Response& response) {
     const std::string resp = response.serialize();
     if (MimeType::isPrintable(response.getHeader("Content-Type"))) {
-        _log.stream(LOG_TRACE) << utils::separator() << "Response:\n"
-                               << GREY << resp << RESET_COLOR << utils::separator() << "\n";
+        _log.stream(LOG_TRACE) << "Response:\n" << resp << "\n";
     }
     return (resp);
 }
@@ -49,7 +46,7 @@ string RequestHandler::handleRequest(Request& request, const RouteConfig& config
     switch (request.getType()) {
         case GET: {
             _log.stream(LOG_TRACE) << "Preresolved path: " << resolvedTarget << "\n";
-            response = GetHandler::handleRequest(resolvedTarget, configuration);
+            response = GetHandler::handleRequest(request.getPath(), resolvedTarget, configuration);
             break;
         }
         case POST: {

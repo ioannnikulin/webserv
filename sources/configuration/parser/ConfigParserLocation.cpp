@@ -30,7 +30,7 @@ void ConfigParser::setupLocationFolder(
     const FolderConfig folder(
         locationPath,
         _tmp.rootSet() ? _tmp.rootPath() : server.getRoot(),
-        _tmp.listableSet() ? _tmp.listable() : false,
+        _tmp.autoindexSet() ? _tmp.autoindex() : false,
         _tmp.indexSet() ? _tmp.indexPage() : "",
         _tmp.maxBodySizeBytesSet() ? _tmp.getMaxBodySizeBytes() : server.getMaxClientBodySizeBytes()
     );
@@ -68,8 +68,8 @@ void ConfigParser::parseLocation(Endpoint& server) {
             parseLocationRoot();
         } else if (token == "client_max_body_size") {
             parseLocationMaxBodySize();
-        } else if (token == "listable") {
-            parseLocationListable();
+        } else if (token == "autoindex") {
+            parseLocationAutoindex();
         } else if (token == "index") {
             parseLocationIndex();
         } else if (token == "methods") {
@@ -139,25 +139,25 @@ void ConfigParser::parseLocationRoot() {
     _index++;
 }
 
-void ConfigParser::parseLocationListable() {
+void ConfigParser::parseLocationAutoindex() {
     _index++;
 
     if (isEnd(_tokens, _index)) {
-        throw ConfigParsingException("Expected 'true' or 'false' after listable");
+        throw ConfigParsingException("Expected 'on' or 'off' after autoindex");
     }
 
     const std::string val = _tokens[_index++];
 
-    if (val == "true") {
-        _tmp.setListable(true);
-    } else if (val == "false") {
-        _tmp.setListable(false);
+    if (val == "on") {
+        _tmp.setAutoindex(true);
+    } else if (val == "off") {
+        _tmp.setAutoindex(false);
     } else {
-        throw ConfigParsingException("listable must be true/false");
+        throw ConfigParsingException("autoindex must be on/off");
     }
 
     if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
-        throw ConfigParsingException("Missing ';' after listable");
+        throw ConfigParsingException("Missing ';' after autoindex");
     }
 
     _index++;

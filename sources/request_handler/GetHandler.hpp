@@ -27,9 +27,14 @@ private:
     GetHandler(const GetHandler& other);
     GetHandler& operator=(const GetHandler& other);
     ~GetHandler();
+    static Response listDirectory(std::string originalTarget, std::string resolvedTarget);
 
 public:
-    static Response handleRequest(std::string target, const RouteConfig& routeConfig);
+    static Response handleRequest(
+        std::string originalTarget,
+        std::string resolvedTarget,
+        const RouteConfig& routeConfig
+    );
 };
 }  // namespace webserver
 #endif

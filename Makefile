@@ -217,6 +217,7 @@ test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
 	$(VALGRIND) ./$(TEST_EXECUTABLE) 2>&1 | tee unit_test_valgrind.log
 
 LOCAL_RUN_CONFIG=./tests/config_files/local_run.conf
+WEBSERV_ADDRESS=127.0.0.1:8888
 
 run: $(MAIN_EXECUTABLE)
 	@./$(MAIN_EXECUTABLE) $(LOCAL_RUN_CONFIG)
@@ -230,7 +231,16 @@ valgrind: $(MAIN_EXECUTABLE)
 TESTER_42 = tests/e2e/2_42_checker/requirements/42/tools/tester
 
 tester-42: # set LOCAL_RUN_CONFIG to local_42.conf and make run
-	printf '\n\n\n\n\n' | $(TESTER_42) http://127.0.0.1:8080 > 42.log 2>&1
+	printf '\n\n\n\n\n' | $(TESTER_42) http://$(WEBSERV_ADDRESS) > 42.log 2>&1
+
+siege: 	# local_run.conf
+# terminal 1: make valgrind
+# terminal 2: make siege, press ctrl-c after half a minute, make shutdown
+# terminal 1: see no leaks
+	@siege -b http://$(WEBSERV_ADDRESS) -c 50
+
+shutdown:
+	@curl -X SHUTDOWN $(WEBSERV_ADDRESS)
 
 # ------------------------------------------------------------
 

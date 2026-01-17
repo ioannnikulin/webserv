@@ -36,7 +36,7 @@ private:
     void setupLocationUpload(RouteConfig& route);
     void parseLocationRoot();
     void parseLocationMaxBodySize();
-    void parseLocationListable();
+    void parseLocationAutoindex();
     void parseLocationIndex();
     void parseLocationMethods(RouteConfig& route);
     void parseLocationLimitExcept(RouteConfig& route);
