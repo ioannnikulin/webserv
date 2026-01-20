@@ -165,15 +165,29 @@ vpath %.cpp \
 	$(TEST_F)/unit \
 	$(TEST_F)/e2e \
 
+# ------------------------------------------------------------
+
+SEPARATOR := --------------------------------------------------------------------
+
+define status
+	@echo "$(SEPARATOR)"
+	@echo "$(2)>>> $(1) ${RST}"
+	@echo "$(SEPARATOR)"
+endef
+
+# =================== Rules ===================
 
 all: $(MAIN_EXECUTABLE)
 
 # MAIN_ENDPOINT - main function of webserv, MAIN_NONENDPOINT - all other components except main
 $(MAIN_EXECUTABLE): $(MAIN_ENDPOINT_OBJ) $(MAIN_NONENDPOINT_OBJS) | $(OBJ_F) $(MAIN_OBJ_DIRS)
-	@$(CPP) $(LINK_FLAGS) $^ -o $@
+	$(call status, Linking object (.o) files, $(GREEN))
+	$(CPP) $(LINK_FLAGS) $^ -o $@
+	$(call status,✅ $(MAIN_EXECUTABLE) compilation completed, $(GREEN))
 
 $(OBJ_F)/%.o: %.cpp | $(OBJ_F) $(MAIN_OBJ_DIRS) $(TEST_OBJ_DIRS)
-	@$(CPP) $(COMPILE_FLAGS) $(LINK_FLAGS) -c $(PREPROC_DEFINES) $< -o $@
+	$(CPP) $(COMPILE_FLAGS) $(LINK_FLAGS) -c $(PREPROC_DEFINES) $< -o $@
+
 
 $(OBJ_F): #ensure it exists
 	@mkdir -p $@
@@ -181,7 +195,7 @@ $(OBJ_F): #ensure it exists
 $(MAIN_OBJ_DIRS): | $(OBJ_F)
 	@mkdir -p $@
 
-# ------------------------------------------------------------
+# =================== Tests ===================
 
 CXXTEST_F=cxxtest
 CXXTEST_ZIP=$(CXXTEST_F)/master.zip
@@ -249,14 +263,17 @@ TEST_WEBSERV = $(shell find tests/e2e -type f -name "webserv")
 TEST_LOGS = $(shell find tests/e2e -type f -name "*.log")
 
 clean:
-	@rm -rf $(OBJ_F) $(TEST_EXECUTABLE) $(CXXTEST_F) $(TEST_RESULTS) $(TEST_WEBSERV) $(TEST_LOGS) tests/e2e/webserv/tools/status_pages
+	$(call status,🟡 Removing object (.o) files, $(YELLOW))
+	rm -rf $(OBJ_F) $(TEST_EXECUTABLE) $(CXXTEST_F) $(TEST_RESULTS) $(TEST_WEBSERV) $(TEST_LOGS) tests/e2e/webserv/tools/status_pages
 
-fclean: clean docker-down
+fclean: clean docker-down 
+	$(call status,🟡 Removing binary, $(YELLOW))
 	@rm -f $(MAIN_EXECUTABLE)
 
 re: fclean all
 
-# ------------------------------------------------------------
+
+# =================== Linters ===================
 
 LINTERS_F = linters
 
@@ -315,7 +332,8 @@ source-check:
 makefile-check:
 	@python3 ${LINTERS_F}/makefile_checker.py $(SOURCE_F) Makefile
 
-# ------------------------------------------------------------
+
+# =================== Docker ===================
 
 # manual docker testing
 
@@ -388,7 +406,7 @@ test-github: external-calls format-check cppcheck tidy-check header-check source
 # ------------------------------------------------------------
 
 separator-%:
-	@echo "-------------------------------------------------"
+	@echo "$(SEPARATOR)"
 
 %:
 	@echo "What do you mean, '$@'?"
