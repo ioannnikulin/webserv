@@ -1,4 +1,3 @@
-#pragma once
 #ifndef MASTERLISTENER_HPP
 #define MASTERLISTENER_HPP
 
@@ -15,7 +14,6 @@ namespace webserver {
 class MasterListener {
 private:
     static Logger _log;
-    MasterListener(const MasterListener& other);
 
     std::vector<struct ::pollfd> _pollFds;
     /* NOTE:
@@ -33,6 +31,8 @@ private:
     std::map<int, int> _responseWorkers;
     // NOTE: reading pipe end fd with an expected generated response: client socket fd
 
+    MasterListener(const MasterListener& other);
+
     int registerNewConnection(int listeningFd, Listener* listener);
     void removePollFd(int fdesc);
     void populateFdsFromListeners();
@@ -46,14 +46,17 @@ private:
     Connection::State isItAResponseFromAResponseGeneratorWorker(::pollfd& activeFd);
     Connection::State handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewConnections);
     void handleOutgoingConnection(const ::pollfd& activeFd);
+    void resetPollEvents();
+    void handlePollEvents(bool& acceptingNewConnections);
     static void reapChildren();
 
 public:
     MasterListener();
     explicit MasterListener(const AppConfig& configuration);
     MasterListener& operator=(const MasterListener& other);
-    void listenAndHandle(volatile __sig_atomic_t& isRunning);
     ~MasterListener();
+
+    void listenAndHandle(volatile __sig_atomic_t& isRunning, volatile __sig_atomic_t& signals);
 };
 }  // namespace webserver
 #endif

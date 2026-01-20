@@ -20,6 +20,7 @@
 #include "connection/Connection.hpp"
 #include "listener/Listener.hpp"
 #include "logger/Logger.hpp"
+#include "signals/ServerSignal.hpp"
 
 using std::map;
 using std::ostringstream;
@@ -304,7 +305,7 @@ MasterListener::handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewC
     if (ret != Connection::IGNORED) {
         return (ret);
     }
-    _log.stream(LOG_WARN) << "Unknown socket fd " << activeFd.fd << " has sent data, ignoring.\n";
+    _log.stream(LOG_WARN) << "Unknown socket fd " << activeFd.fd << " has sent data, ignoring\n";
     return (Connection::IGNORED);
 }
 
@@ -314,7 +315,7 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
 
     if (listener == NULL) {
         _log.stream(LOG_WARN) << "Tried to send data to an unknown socket fd " << activeFd.fd
-                              << ", ignoring.\n";
+                              << ", ignoring\n";
         return;
     }
     listener->sendResponse(activeFd.fd);
@@ -326,39 +327,59 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
     removePollFd(activeFd.fd);
 }
 
-void MasterListener::listenAndHandle(volatile __sig_atomic_t& isRunning) {
-    populateFdsFromListeners();
+void MasterListener::resetPollEvents() {
+    for (size_t i = 0; i < _pollFds.size(); ++i) {
+        _pollFds[i].revents = 0;
+    }
+}
+
+void MasterListener::handlePollEvents(bool& acceptingNewConnections) {
+    for (size_t i = 0; i < _pollFds.size(); i++) {
+        if ((_pollFds[i].revents & POLLIN) > 0) {
+            // NOTE: something happened on that listening socket, let's dive in
+            handleIncomingConnection(_pollFds[i], acceptingNewConnections);
+            continue;
+        }
+        if ((_pollFds[i].revents & POLLOUT) > 0) {
+            // NOTE: the response is ready to be sent back
+            handleOutgoingConnection(_pollFds[i]);
+            continue;
+        }
+        if ((_pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) > 0) {
+            close(_pollFds[i].fd);
+            removePollFd(_pollFds[i].fd);
+            continue;
+        }
+    }
+}
+
+void MasterListener::listenAndHandle(
+    volatile __sig_atomic_t& isRunning,
+    volatile __sig_atomic_t& signals
+) {
     bool acceptingNewConnections = true;
 
+    populateFdsFromListeners();
     while (isRunning == 1) {
-        for (size_t i = 0; i < _pollFds.size(); ++i) {
-            _pollFds[i].revents = 0;
-        }
+        resetPollEvents();
         const int ret = poll(_pollFds.data(), _pollFds.size(), -1);
         if (ret == -1) {
             if (errno == EINTR) {
-                continue;  // NOTE: interrupted by signal, retry
+                if (((signals & SIG_SHUTDOWN) != 0)) {
+                    _log.stream(LOG_INFO)
+                        << "Shutdown requested; stopped accepting new connections\n";
+                    acceptingNewConnections = false;
+                    // NOTE: force loop to re-check exit condition. won't stop immediately otherwise
+                    if (_clientListeners.empty()) {
+                        isRunning = 0;
+                    }
+                }
+                continue;
             }
             throw runtime_error(string("poll() failed: ") + strerror(errno));
         }
         reapChildren();
-        for (size_t i = 0; i < _pollFds.size(); i++) {
-            if ((_pollFds[i].revents & POLLIN) > 0) {
-                // NOTE: something happened on that listening socket, let's dive in
-                handleIncomingConnection(_pollFds[i], acceptingNewConnections);
-                continue;
-            }
-            if ((_pollFds[i].revents & POLLOUT) > 0) {
-                // NOTE: the response is ready to be sent back
-                handleOutgoingConnection(_pollFds[i]);
-                continue;
-            }
-            if ((_pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) > 0) {
-                close(_pollFds[i].fd);
-                removePollFd(_pollFds[i].fd);
-                continue;
-            }
-        }
+        handlePollEvents(acceptingNewConnections);
         if (!acceptingNewConnections && _clientListeners.empty()) {
             isRunning = 0;
         }
@@ -385,4 +406,5 @@ MasterListener::~MasterListener() {
         delete it->second;
     }  // NOTE: deleting from listeners only, clientListeners contains pointers to the same Listener objects
 }
+
 }  // namespace webserver

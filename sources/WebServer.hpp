@@ -14,6 +14,7 @@ private:
     // NOTE: DL: __sig_atomic_t is a special int type guaranteed to be writable in one atomic CPU operation & safe to modify inside a signal handler
     // NOTE: DL: volatile tells the compiler: “Don’t optimize access to this variable. Always read/write it directly from memory.”
     volatile __sig_atomic_t _isRunning;
+
     MasterListener _masterListener;
     static Logger _log;
 
@@ -26,6 +27,12 @@ private:
     static void handleSignals();
 
 public:
+    /* NOTE: Flag used for communication with signal handlers.
+    * sig_atomic_t guarantees that reads/writes are not interrupted,
+    * and static storage duration makes it safe to access from a signal handler.
+    */
+    static volatile __sig_atomic_t serverSignals;
+
     ~WebServer();
 
     /* NOTE: we're not allowed to use sigaction function, only signal.
