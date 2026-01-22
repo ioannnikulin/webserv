@@ -77,7 +77,7 @@ void ConfigParser::parseLocation(Endpoint& server) {
         } else if (token == "limit_except") {
             parseLocationLimitExcept(route);
         } else if (token == "return") {
-            parseLocationReturn(route, locationPath);
+            parseLocationReturn(route);
         } else if (token == "upload") {
             parseLocationUpload();
         } else if (token == "cgi") {
@@ -221,7 +221,7 @@ void ConfigParser::parseLocationLimitExcept(RouteConfig& route) {
     _index++;
 }
 
-void ConfigParser::parseLocationReturn(RouteConfig& route, const string& locationPath) {
+void ConfigParser::parseLocationReturn(RouteConfig& route) {
     _index++;
 
     if (isEnd(_tokens, _index)) {
@@ -238,7 +238,7 @@ void ConfigParser::parseLocationReturn(RouteConfig& route, const string& locatio
 
     _index++;
 
-    route.addRedirection(locationPath, target);
+    route.setRedirection(target);
 }
 
 void ConfigParser::parseLocationUpload() {

@@ -95,6 +95,80 @@
       "expected": {
         "status_code": 404
       }
+    },
+    {
+      "name": "redirect to google",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/external",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 301,
+        "Location": "https://google.com"
+      }
+    },
+    {
+      "name": "redirect to folder1",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/internal",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 301,
+        "Location": "http://localhost:8080/folder1"
+      }
+    },
+    {
+      "name": "redirect to folder2",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/relative",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 301,
+        "Location": "/folder2"
+      }
+    },
+    {
+      "name": "redirect to nowhere",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/nowhere",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 301,
+        "Location": "/doesntexist"
+      }
+    },
+    {
+      "name": "preventing prefix route matching on a folder name",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder11",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 404
+      }
+    },
+    {
+      "name": "preventing prefix route matching on a redirect",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/external_",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 404
+      }
+    },
+    {
+      "name": "shutdown",
+      "tester": "tester0",
+      "method": "SHUTDOWN",
+      "url": "http://172.18.0.10:8080/external",
+      "expected": {
+        "status_code": 503,
+        "body": "Server is shutting down"
+      }
     }
   ]
 }

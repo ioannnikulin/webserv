@@ -73,6 +73,7 @@ void HttpStatus::initStatusMap() {
     addStatus(CREATED, "Created");
     addStatus(ACCEPTED, "Accepted");
     addStatus(NO_CONTENT, "No Content");
+    addStatus(MOVED_PERMANENTLY, "Moved permanently");
     addStatus(BAD_REQUEST, "Bad Request");
     addStatus(FORBIDDEN, "Forbidden");
     addStatus(NOT_FOUND, "Not Found");

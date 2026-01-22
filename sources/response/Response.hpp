@@ -28,9 +28,9 @@ public:
     const std::string& getBody() const;
     std::string getHeader(const std::string& key) const;
 
-    void setStatus(int status);
-    void setBody(std::string fileContent);
-    void setHeader(const std::string& key, const std::string& value);
+    Response& setStatus(int status);
+    Response& setBody(std::string fileContent);
+    Response& setHeader(const std::string& key, const std::string& value);
 };
 }  // namespace webserver
 #endif

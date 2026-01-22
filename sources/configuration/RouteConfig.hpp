@@ -15,7 +15,8 @@ class RouteConfig {
 private:
     std::string _path;
     std::set<HttpMethodType> _allowedMethods;
-    std::map<std::string, std::string> _redirections;  // NOTE: from:to
+    bool _isRedirection;
+    std::string _redirectTo;
     FolderConfig _folderConfigSection;
     UploadConfig _uploadConfigSection;
     std::map<std::string, CgiHandlerConfig*> _cgiHandlers;  // NOTE: extension:config
@@ -33,7 +34,9 @@ public:
     bool operator<(const RouteConfig& other) const;
     bool isMethodAllowed(HttpMethodType method) const;
     RouteConfig& addAllowedMethod(HttpMethodType method);
-    RouteConfig& addRedirection(const std::string& from, const std::string& toDir);
+    RouteConfig& setRedirection(const std::string& redirectTo);
+    bool isRedirection() const;
+    const std::string& getRedirection() const;
     RouteConfig& setFolderConfig(const FolderConfig& folder);
     const UploadConfig& getUploadConfigSection() const;
     RouteConfig& setUploadConfig(const UploadConfig& upload);

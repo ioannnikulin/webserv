@@ -24,6 +24,7 @@ Response::Response() {
     _headers["Content-Length"] = "0";
     _headers["Server"] = SERVER_NAME;
     _headers["Date"] = utils::getTimestamp();
+    _headers["Connection"] = "close";
 }
 
 Response::Response(int status, const std::string& body, const std::string& type)
@@ -70,17 +71,20 @@ std::string Response::getHeader(const std::string& key) const {
     return ("");
 }
 
-void Response::setStatus(int status) {
+Response& Response::setStatus(int status) {
     _statusCode = status;
+    return (*this);
 }
 
-void Response::setBody(std::string fileContent) {
+Response& Response::setBody(std::string fileContent) {
     _body = fileContent;
     _headers["Content-Length"] = utils::toString(_body.size());
+    return (*this);
 }
 
-void Response::setHeader(const std::string& key, const std::string& value) {
+Response& Response::setHeader(const std::string& key, const std::string& value) {
     _headers[key] = value;
+    return (*this);
 }
 
 string Response::serialize(void) const {

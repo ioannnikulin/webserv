@@ -40,7 +40,7 @@ private:
     void parseLocationIndex();
     void parseLocationMethods(RouteConfig& route);
     void parseLocationLimitExcept(RouteConfig& route);
-    void parseLocationReturn(RouteConfig& route, const std::string& locationPath);
+    void parseLocationReturn(RouteConfig& route);
     void parseLocationUpload();
     void parseLocationCgi(RouteConfig& route);
 

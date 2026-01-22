@@ -94,6 +94,7 @@ public:
     void setUp() {
         webserver::HttpStatus::initStatusMap();
     }
+
     void testConfig0_BasicServer() {
         const string fname = "tests/config_files/basic.conf";
 
@@ -321,7 +322,7 @@ public:
         webserver::RouteConfig route3;
         route3.setPath("/redirect");
         route3.setFolderConfig(webserver::FolderConfig("/redirect", "", false, "", 1 * utils::MIB));
-        route3.addRedirection("/redirect", "http://example.com");
+        route3.setRedirection("http://example.com");
         ep.addRoute(route3);
 
         expected.addEndpoint(ep);
