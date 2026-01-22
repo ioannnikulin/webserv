@@ -17,6 +17,7 @@
 #include "configuration/RouteConfig.hpp"
 #include "http_methods/HttpMethodType.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "logger/LoggerConfig.hpp"
 #include "request_handler/GetHandler.hpp"
 
 using std::map;
@@ -58,6 +59,10 @@ private:
     }
 
 public:
+    void setUp() {
+        webserver::LoggerConfig::setGlobalLevel(LOG_SILENT);
+    }
+
     void testThatGetFetchesFilesAndGeneratesCorrectResponseHeaders() {
         _files["/folder/foo.txt"] = "footext";
         _files["/folder/bar.xml"] = "bartext";

@@ -4,7 +4,7 @@
 #include <ostream>
 #include <string>
 
-enum LogLevel { LOG_SILENT, LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+enum LogLevel { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL, LOG_SILENT };
 
 namespace webserver {
 

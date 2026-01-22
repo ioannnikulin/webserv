@@ -53,7 +53,7 @@ def run_single_test(test):
     try:
         time.sleep(delay / 1000.0)
         start = time.time()
-        r = requests.request(method, url, data=data, files=files, headers=headers, timeout=5)
+        r = requests.request(method, url, data=data, files=files, headers=headers, timeout=5, allow_redirects=False)
         elapsed = time.time() - start
 
         if expect_error:
@@ -83,6 +83,14 @@ def run_single_test(test):
                 success = False
                 result["expected_body"] = expect["body"]
                 result["actual_body"] = actual_utf8
+
+        if "Location" in expect:
+            actual = r.headers["Location"]
+            if actual != expect["Location"]:
+                success = False
+                result["expected_location"] = expect["Location"]
+                result["actual_location"] = actual
+
 
         result["ok"] = success
         return result

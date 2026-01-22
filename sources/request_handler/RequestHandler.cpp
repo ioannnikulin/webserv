@@ -29,6 +29,21 @@ string RequestHandler::serializeAndPrint(const Response& response) {
 }
 
 string RequestHandler::handleRequest(Request& request, const RouteConfig& configuration) {
+    if (request.getType() == SHUTDOWN) {
+        const Response resp = Response(
+            HttpStatus::HTTP_SERVICE_UNAVAILABLE,
+            "Server is shutting down",
+            MimeType::getMimeType("txt")
+        );
+        return (serializeAndPrint(resp));
+    }
+    if (configuration.isRedirection()) {
+        // NOTE: yes, redirects are checked before allowed methods
+        return (serializeAndPrint(
+            Response(HttpStatus::MOVED_PERMANENTLY, "", MimeType::getMimeType("txt"))
+                .setHeader("Location", configuration.getRedirection())
+        ));
+    }
     if (request.getType() != SHUTDOWN && !configuration.isMethodAllowed(request.getType())) {
         return (serializeAndPrint(file_system::serveStatusPage(HttpStatus::METHOD_NOT_ALLOWED)));
     }
@@ -57,15 +72,6 @@ string RequestHandler::handleRequest(Request& request, const RouteConfig& config
         case DELETE: {
             _log.stream(LOG_TRACE) << "Preresolved path: " << resolvedTarget << "\n";
             response = DeleteHandler::handleRequest(resolvedTarget);
-            break;
-        }
-        case SHUTDOWN: {
-            response = Response(
-                HttpStatus::HTTP_SERVICE_UNAVAILABLE,
-                "Server is shutting down",
-                "text/html"
-            );
-            response.setHeader("Connection", "close");
             break;
         }
         default: {

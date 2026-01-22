@@ -182,8 +182,7 @@ Connection::State Connection::generateResponse() {
             // NOTE: fallback if custom error page cannot be loaded
             errorPageContent = e.what();
         }
-        Response response(e.getCode(), errorPageContent, "text/html");
-        response.setHeader("Connection", "close");
+        const Response response(e.getCode(), errorPageContent, "text/html");
         _responseBuffer = response.serialize();
     } catch (const exception& e) {
         const string pageLocation =
@@ -195,8 +194,7 @@ Connection::State Connection::generateResponse() {
             // NOTE: fallback if error page cannot be loaded
             errorPageContent = e.what();
         }
-        Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
-        response.setHeader("Connection", "close");
+        const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
         _responseBuffer = response.serialize();
     }
     if (_request.getType() == SHUTDOWN) {

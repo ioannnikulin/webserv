@@ -21,7 +21,8 @@ namespace webserver {
 RouteConfig::RouteConfig()
     : _path("")
     , _allowedMethods()
-    , _redirections()
+    , _isRedirection(false)
+    , _redirectTo("")
     , _folderConfigSection()
     , _uploadConfigSection()
     , _cgiHandlers() {
@@ -30,7 +31,8 @@ RouteConfig::RouteConfig()
 RouteConfig::RouteConfig(const RouteConfig& other)
     : _path(other._path)
     , _allowedMethods(other._allowedMethods)
-    , _redirections(other._redirections)
+    , _isRedirection(other._isRedirection)
+    , _redirectTo(other._redirectTo)
     , _folderConfigSection(other._folderConfigSection)
     , _uploadConfigSection(other._uploadConfigSection) {
     for (std::map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
@@ -46,7 +48,8 @@ RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
     }
     _path = other._path;
     _allowedMethods = other._allowedMethods;
-    _redirections = other._redirections;
+    _isRedirection = other._isRedirection;
+    _redirectTo = other._redirectTo;
     _folderConfigSection = other._folderConfigSection;
     _uploadConfigSection = other._uploadConfigSection;
     _cgiHandlers = other._cgiHandlers;
@@ -109,7 +112,10 @@ bool RouteConfig::operator==(const RouteConfig& other) const {
     if (_allowedMethods != other._allowedMethods) {
         return (false);
     }
-    if (_redirections != other._redirections) {
+    if (_isRedirection != other._isRedirection) {
+        return (false);
+    }
+    if (_redirectTo != other._redirectTo) {
         return (false);
     }
 
@@ -161,9 +167,18 @@ RouteConfig& RouteConfig::addAllowedMethod(HttpMethodType method) {
     return (*this);
 }
 
-RouteConfig& RouteConfig::addRedirection(const string& from, const string& toDir) {
-    _redirections[from] = toDir;
+RouteConfig& RouteConfig::setRedirection(const string& redirectTo) {
+    _isRedirection = true;
+    _redirectTo = redirectTo;
     return (*this);
+}
+
+bool RouteConfig::isRedirection() const {
+    return (_isRedirection);
+}
+
+const string& RouteConfig::getRedirection() const {
+    return (_redirectTo);
 }
 
 RouteConfig& RouteConfig::addCgiHandler(const CgiHandlerConfig& cfg, string extension) {
@@ -188,11 +203,7 @@ ostream& operator<<(ostream& oss, const RouteConfig& route) {
         oss << methodToString(*itr) << " ";
     }
     oss << "\n";
-    for (map<string, string>::const_iterator itr = route._redirections.begin();
-         itr != route._redirections.end();
-         itr++) {
-        oss << itr->first << "->" << itr->second << "\n";
-    }
+    oss << route._isRedirection << " " << route._redirectTo << "\n";
     oss << route._folderConfigSection;
     oss << route._uploadConfigSection;
     oss << "\n";
