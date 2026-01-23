@@ -258,9 +258,8 @@ Connection::State MasterListener::isItAResponseFromAResponseGeneratorWorker(int 
 
     const int clientFd = responseReadyFor->second;
 
-    _log.stream(LOG_TRACE) << "Response for " << responseReadyFor->second
-                           << " made by worker on fd " << responseReadyFor->first
-                           << " is being picked up by main thread\n";
+    _log.stream(LOG_TRACE) << "Response for " << clientFd << " made by worker on fd "
+                           << responseReadyFor->first << " is being picked up by main thread\n";
     const string rawOutput = readStringAndClose(responseReadyFor->first);
     _log.stream(LOG_TRACE) << rawOutput << "\n";
 

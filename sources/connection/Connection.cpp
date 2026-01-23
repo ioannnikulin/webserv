@@ -109,16 +109,6 @@ bool Connection::fullRequestReceived() {
             }
         }
 
-        string path = tmp.getPath();
-
-        if (path[path.length() - 1] == '/') {
-            const string indexFile = _route->getFolderConfig().getIndexPageFilename();
-            if (!indexFile.empty()) {
-                path += indexFile;
-                tmp.setPath(path);
-            }
-        }
-
         // NOTE: we have the route already, but since we reparse the request for every check, we recast the max size into it again
         tmp.setMaxClientBodySizeBytes(_route->getFolderConfig().getMaxClientBodySizeBytes());
         tmp.getBody();  // NOTE: lazy body init
@@ -138,7 +128,14 @@ bool Connection::itsACgiRequest() {
     }
 
     try {
-        const string path = _request.getPath();
+        string path = _request.getPath();
+        if (!path.empty() && path[path.length() - 1] == '/') {
+            const string indexFile = _route->getFolderConfig().getIndexPageFilename();
+            if (!indexFile.empty()) {
+                path += indexFile;
+            }
+        }
+
         const size_t dotPos = path.find_last_of('.');
 
         if (dotPos == string::npos) {
@@ -163,7 +160,15 @@ string Connection::getRequestBody() {
 }
 
 const CgiHandlerConfig* Connection::resolveCgiHandler(const Endpoint& config) {
-    const string path = _request.getPath();
+    string path = _request.getPath();
+    if (!path.empty() && path[path.length() - 1] == '/') {
+        if (_route != NULL) {
+            const string indexFile = _route->getFolderConfig().getIndexPageFilename();
+            if (!indexFile.empty()) {
+                path += indexFile;
+            }
+        }
+    }
 
     const size_t dotPos = path.find_last_of('.');
     if (dotPos == string::npos) {
@@ -191,21 +196,22 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
             return (WRITING_COMPLETE);
         }
 
-        /* NOTE: implement without alarm
-        const int timeoutSeconds = cgiConfig.getTimeoutSeconds();
-        if (timeoutSeconds > 0) {
-            alarm(timeoutSeconds);
-        }
-        */
-
         if (_route == NULL) {
             _log.stream(LOG_ERROR) << "No route found for CGI request\n";
             return (WRITING_COMPLETE);
         }
 
-        const string scriptPath = _route->getFolderConfig().getResolvedPath(_request.getPath());
+        string requestPath = _request.getPath();
+        if (!requestPath.empty() && requestPath[requestPath.length() - 1] == '/') {
+            const string indexFile = _route->getFolderConfig().getIndexPageFilename();
+            if (!indexFile.empty()) {
+                requestPath += indexFile;
+            }
+        }
 
-        CgiHandler handler(*cgiConfig, _request, scriptPath, _configuration.getPort());
+        const string scriptPath = _route->getFolderConfig().getResolvedPath(requestPath);
+
+        CgiHandler handler(*cgiConfig, _request, scriptPath, _configuration.getPort(), *_route);
 
         char** env = handler.prepareEnvironment();
 

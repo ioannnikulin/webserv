@@ -18,26 +18,35 @@ CgiHandler::CgiHandler(
     const CgiHandlerConfig& config,
     const Request& request,
     const string& scriptPath,
-    int serverPort
+    int serverPort,
+    const RouteConfig& route
 )
     : _config(config)
     , _request(request)
     , _scriptPath(scriptPath)
-    , _serverPort(serverPort) {
+    , _serverPort(serverPort)
+    , _route(route) {
 }
 
 CgiHandler::~CgiHandler() {
 }
 
 void CgiHandler::setupEnvironment() {
+    string resolvedPath = _request.getPath();
+    if (!resolvedPath.empty() && resolvedPath[resolvedPath.length() - 1] == '/') {
+        const string indexFile = _route.getFolderConfig().getIndexPageFilename();
+        if (!indexFile.empty()) {
+            resolvedPath += indexFile;
+        }
+    }
     const HttpMethodType httpMethod = _request.getType();
     const string method = methodToString(httpMethod);
 
     addEnvVar("REQUEST_METHOD", method);
-    addEnvVar("SCRIPT_NAME", _request.getPath());
+    addEnvVar("SCRIPT_NAME", resolvedPath);
     addEnvVar("SCRIPT_FILENAME", _scriptPath);
     addEnvVar("QUERY_STRING", _request.getQuery());
-    addEnvVar("PATH_INFO", _request.getPath());
+    addEnvVar("PATH_INFO", resolvedPath);
     addEnvVar("REDIRECT_STATUS", "200");
     if (method == "POST") {
         const string contentType = _request.getHeader("Content-Type");
