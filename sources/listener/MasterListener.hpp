@@ -64,5 +64,9 @@ public:
 
     void listenAndHandle(volatile __sig_atomic_t& isRunning, volatile __sig_atomic_t& signals);
 };
+Listener* findListener(std::map<int, Listener*> where, int byFd);
+void markConnectionClosedToAvoidRequestOverlapping(::pollfd& activeFd);
+Connection::State readControlMessageAndClose(int pipeFd);
+std::string readStringAndClose(int pipeFd);
 }  // namespace webserver
 #endif

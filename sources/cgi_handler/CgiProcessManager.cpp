@@ -153,18 +153,6 @@ void CgiProcessManager::runCgiChild(
     if (close(controlPipe[WRITING_PIPE_END]) == -1) {
         _log.stream(LOG_ERROR) << "close() failed on child's control pipe writing end\n";
     }
-
-    char* argv[] = {
-        const_cast<char*>("/bin/sh"),
-        const_cast<char*>("-c"),
-        const_cast<char*>("exit 0"),
-        // clang-format off
-        NULL};
-    // clang-format on
-    char* envp[] = {NULL};
-    execve("/bin/sh", argv, envp);
-    while (true) {
-    }
 }
 
 pid_t CgiProcessManager::startCgiProcess(
@@ -187,6 +175,7 @@ pid_t CgiProcessManager::startCgiProcess(
 
     if (pid == 0) {
         runCgiChild(listener, clientFd, pipes.toProcess, pipes.fromProcess, pipes.control);
+        return (pid);
     }
 
     setupParentPipes(pipes);

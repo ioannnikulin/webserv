@@ -35,131 +35,9 @@ using std::set;
 using std::string;
 using std::vector;
 
-namespace {
-using webserver::Connection;
-using webserver::Listener;
-using webserver::Logger;
-
-Listener* findListener(map<int, Listener*> where, int byFd) {
-    const map<int, Listener*>::const_iterator res = where.find(byFd);
-    if (res == where.end()) {
-        return (NULL);
-    }
-    return (res->second);
-}
-
-void markConnectionClosedToAvoidRequestOverlapping(::pollfd& activeFd) {
-    activeFd.events = 0;
-}
-
-Connection::State readControlMessageAndClose(int pipeFd) {
-    Connection::State state;
-    const ssize_t result = read(pipeFd, &state, sizeof(state));
-
-    if (result == -1) {
-        close(pipeFd);
-        throw runtime_error("Failed to read from control pipe");
-    }
-
-    if (result != sizeof(state)) {
-        close(pipeFd);
-        throw runtime_error("Incomplete read from control pipe");
-    }
-
-    close(pipeFd);
-    return (state);
-}
-
-string readStringAndClose(int pipeFd) {
-    const int RESPONSE_STRING_BUFFER_SIZE = 4096;
-    char buffer[RESPONSE_STRING_BUFFER_SIZE];
-    ostringstream oss;
-    ssize_t bytesRead = 0;
-
-    while ((bytesRead = read(pipeFd, buffer, sizeof(buffer))) > 0) {
-        oss << string(buffer, bytesRead);
-    }
-
-    close(pipeFd);
-    return (oss.str());
-}
-
-}  // namespace
-
 namespace webserver {
-
-Logger MasterListener::_log;
-
-MasterListener::MasterListener(const AppConfig& configuration)
-    : _cgiManager(_log) {
-    const set<Endpoint>& endpoints = configuration.getEndpoints();
-    for (set<Endpoint>::const_iterator itr = endpoints.begin(); itr != endpoints.end(); ++itr) {
-        Listener* newListener = new Listener(*itr);
-        _listeners[newListener->getListeningSocketFd()] = newListener;
-    }
-}
-
-MasterListener& MasterListener::operator=(const MasterListener& other) {
-    if (this == &other) {
-        return (*this);
-    }
-    _pollFds = other._pollFds;
-    _listeners = other._listeners;
-    _clientListeners = other._clientListeners;
-    return (*this);
-}
-
-int MasterListener::registerNewConnection(int listeningFd, Listener* listener) {
-    _log.stream(LOG_DEBUG) << "A new connection on socket fd " << listeningFd << "\n";
-    struct ::pollfd clientPfd;
-    clientPfd.fd = listener->acceptConnection();
-    clientPfd.events = POLLIN;
-    clientPfd.revents = 0;
-    _pollFds.push_back(clientPfd);
-    _log.stream(LOG_DEBUG) << "Connection accepted, client socket " << clientPfd.fd << "\n";
-    return (clientPfd.fd);
-}
-
-void MasterListener::populateFdsFromListeners() {
-    for (map<int, Listener*>::const_iterator it = _listeners.begin(); it != _listeners.end();
-         ++it) {
-        struct ::pollfd pfd;
-        pfd.fd = it->first;
-        pfd.events = POLLIN;
-        pfd.revents = 0;
-        _pollFds.push_back(pfd);
-    }
-}
-
-void MasterListener::registerResponseWorker(
-    int controlPipeReadingEnd,
-    int responsePipeReadingEnd,
-    int clientFd
-) {
-    struct ::pollfd controlPipePollFd;
-    controlPipePollFd.fd = controlPipeReadingEnd;
-    controlPipePollFd.events = POLLIN;
-    controlPipePollFd.revents = 0;
-    _pollFds.push_back(controlPipePollFd);
-    struct ::pollfd responsePipePollFd;
-    responsePipePollFd.fd = responsePipeReadingEnd;
-    responsePipePollFd.events = POLLIN;
-    responsePipePollFd.revents = 0;
-    _pollFds.push_back(responsePipePollFd);
-    _responseWorkerControls[controlPipeReadingEnd] = clientFd;
-    _responseWorkers[responsePipeReadingEnd] = clientFd;
-}
-
-void MasterListener::markResponseReadyForReturn(int clientFd) {
-    for (vector<struct ::pollfd>::iterator itr = _pollFds.begin(); itr != _pollFds.end(); itr++) {
-        if (itr->fd == clientFd) {
-            itr->events = POLLOUT;
-            return;
-        }
-    }
-}
-
 Connection::State MasterListener::callCgi(Listener* listener, int activeFd) {
+	_log.stream(LOG_TRACE) << "processing cgi request: " << listener->getRequestFor(activeFd) << "\n";
     const string requestBody = listener->getRequestBody(activeFd);
 
     int controlPipeReadEnd = -1;
@@ -175,7 +53,6 @@ Connection::State MasterListener::callCgi(Listener* listener, int activeFd) {
 
     _cgiManager.registerWorker(activeFd, pid);
     registerResponseWorker(controlPipeReadEnd, responsePipeReadEnd, activeFd);
-
     return (Connection::WRITING);
 }
 
@@ -187,15 +64,6 @@ Connection::State MasterListener::generateResponse(Listener* listener, int activ
     }
     markResponseReadyForReturn(activeFd);
     return (connState);
-}
-
-void MasterListener::removePollFd(int fdesc) {
-    for (vector<pollfd>::iterator it = _pollFds.begin(); it != _pollFds.end(); ++it) {
-        if (it->fd == fdesc) {
-            _pollFds.erase(it);
-            return;
-        }
-    }
 }
 
 Connection::State MasterListener::isItANewConnectionOnAListeningSocket(int activeFd) {
@@ -328,12 +196,6 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
     removePollFd(activeFd.fd);
 }
 
-void MasterListener::resetPollEvents() {
-    for (size_t i = 0; i < _pollFds.size(); ++i) {
-        _pollFds[i].revents = 0;
-    }
-}
-
 void MasterListener::handlePollEvents(bool& acceptingNewConnections) {
     for (size_t i = 0; i < _pollFds.size(); i++) {
         if ((_pollFds[i].revents & POLLIN) > 0) {
@@ -365,46 +227,40 @@ void MasterListener::listenAndHandle(
         resetPollEvents();
         const int ret = poll(_pollFds.data(), _pollFds.size(), -1);
         if (ret == -1) {
-            if (errno == EINTR) {
-                if (((signals & SIG_SHUTDOWN) != 0)) {
-                    _log.stream(LOG_INFO)
-                        << "Shutdown requested; stopped accepting new connections\n";
-                    acceptingNewConnections = false;
-
-                    const vector<int> timedOut = _cgiManager.checkTimeouts();
-                    for (size_t i = 0; i < timedOut.size(); ++i) {
-                        const pid_t pid = _cgiManager.getProcessId(timedOut[i]);
-                        if (pid > 0) {
-                            kill(pid, SIGKILL);
-                        }
-                        cleanupCgiProcess(timedOut[i], false);
-                    }
-
-                    isRunning = 0;
-                }
-                continue;
+            if (errno != EINTR) {
+                throw runtime_error(string("poll() failed: ") + strerror(errno));
             }
-            throw runtime_error(string("poll() failed: ") + strerror(errno));
-        }
-        checkCgiTimeouts();
-        reapChildren();
-        handlePollEvents(acceptingNewConnections);
-        if (!acceptingNewConnections && _clientListeners.empty()) {
-            isRunning = 0;
-        }
-    }
-}
+            if (((signals & SIG_SHUTDOWN) != 0)) {
+                _log.stream(LOG_INFO) << "Shutdown requested; stopped accepting new connections; "
+                                      << _clientListeners.size() << " existing connections left\n";
+                acceptingNewConnections = false;
 
-void MasterListener::reapChildren() {
-    int status = 0;
-    pid_t pid;
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-        if (WIFEXITED(status)) {
-            _log.stream(LOG_DEBUG)
-                << "Child " << pid << " exited with code " << WEXITSTATUS(status) << "\n";
-        } else if (WIFSIGNALED(status)) {
-            _log.stream(LOG_DEBUG)
-                << "Child " << pid << " killed by signal " << WTERMSIG(status) << "\n";
+                const vector<int> timedOut = _cgiManager.checkTimeouts();
+                for (size_t i = 0; i < timedOut.size(); ++i) {
+                    const pid_t pid = _cgiManager.getProcessId(timedOut[i]);
+                    if (pid > 0) {
+                        kill(pid, SIGKILL);
+                    }
+                    cleanupCgiProcess(timedOut[i], false);
+                }
+            }
+            _log.stream(LOG_INFO) << "proceeding ending existing connections\n";
+        }
+        _log.stream(LOG_TRACE) << "0\n";
+        checkCgiTimeouts();
+        _log.stream(LOG_TRACE) << "1\n";
+        reapChildren();
+        _log.stream(LOG_TRACE) << "2\n";
+        handlePollEvents(acceptingNewConnections);
+        _log.stream(LOG_TRACE) << "accepting? " << acceptingNewConnections << "\n";
+        if (!acceptingNewConnections) {
+            _log.stream(LOG_TRACE) << _clientListeners.size() << " existing connections left\n";
+			for (map<int, Listener*>::const_iterator itr = _clientListeners.begin(); itr != _clientListeners.end(); itr ++) {
+				_log.stream(LOG_TRACE) << itr->second->getRequestFor(itr->first) << "\n";
+			}
+            if (_clientListeners.empty()) {
+                isRunning = 0;
+            }
         }
     }
 }
@@ -468,17 +324,6 @@ void MasterListener::checkCgiTimeouts() {
     for (size_t i = 0; i < timedOutFds.size(); ++i) {
         cleanupCgiProcess(timedOutFds[i], true);
     }
-}
-
-MasterListener::~MasterListener() {
-    for (map<int, Listener*>::iterator it = _clientListeners.begin(); it != _clientListeners.end();
-         ++it) {
-        it->second->killConnection(it->first);
-    }
-    for (map<int, Listener*>::const_iterator it = _listeners.begin(); it != _listeners.end();
-         ++it) {
-        delete it->second;
-    }  // NOTE: deleting from listeners only, clientListeners contains pointers to the same Listener objects
 }
 
 }  // namespace webserver

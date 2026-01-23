@@ -130,6 +130,10 @@ Listener& Listener::setResponse(int clientSocketFd, string response) {
     return (*this);
 }
 
+Request Listener::getRequestFor(int clientSocketFd) const {
+	return (_clientConnections.at(clientSocketFd)->getRequest());
+}
+
 int Listener::getListeningSocketFd() const {
     return (_listeningSocketFd);
 }
