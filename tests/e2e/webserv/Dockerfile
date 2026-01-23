@@ -1,5 +1,9 @@
 FROM debian:trixie
-RUN apt-get update && apt-get install valgrind -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    valgrind \
+    python3 \
+    php-cgi \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/local/bin
 COPY tools/startup.sh startup.sh
 RUN chmod +x startup.sh

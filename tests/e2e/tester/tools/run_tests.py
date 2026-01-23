@@ -79,9 +79,24 @@ def run_single_test(test):
 
         if "body" in expect:
             actual_utf8 = r.content.decode("utf-8", errors="replace")
-            if expect["body"] != actual_utf8:
+            expected_body = expect["body"]
+            
+            # Check if it's a contains check
+            if isinstance(expected_body, dict) and "contains" in expected_body:
+                required = expected_body["contains"]
+                if isinstance(required, str):
+                    required = [required]
+                
+                missing = [req for req in required if req not in actual_utf8]
+                if missing:
+                    success = False
+                    result["expected_contains"] = required
+                    result["missing_strings"] = missing
+                    result["actual_body"] = actual_utf8
+            # Otherwise do exact match
+            elif expected_body != actual_utf8:
                 success = False
-                result["expected_body"] = expect["body"]
+                result["expected_body"] = expected_body
                 result["actual_body"] = actual_utf8
 
         if "Location" in expect:

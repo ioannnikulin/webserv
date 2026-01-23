@@ -19,6 +19,7 @@ public:
         NEWBORN,
         READING,
         READING_COMPLETE,
+        READING_CGI_REQUEST_COMPLETE,
         WRITING,
         WRITING_COMPLETE,
         RESPONSE_SENT,
@@ -48,6 +49,7 @@ private:
     Connection& operator=(const Connection& other);
 
     bool fullRequestReceived();
+    bool itsACgiRequest();
 
 public:
     explicit Connection(int listeningSocketFd, const Endpoint& configuration);
@@ -60,6 +62,10 @@ public:
     State receiveRequestContent();
     State generateResponse();
     void sendResponse();
+
+    const CgiHandlerConfig* resolveCgiHandler(const Endpoint& config);
+    Connection::State executeCgi(const Endpoint& config);
+    std::string getRequestBody();
 };
 }  // namespace webserver
 #endif

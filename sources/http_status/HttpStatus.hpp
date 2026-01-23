@@ -63,6 +63,7 @@ public:
         NOT_IMPLEMENTED = 501,
         BAD_GATEWAY = 502,
         HTTP_SERVICE_UNAVAILABLE = 503,
+        GATEWAY_TIMEOUT = 504,
         HTTP_VERSION_NOT_SUPPORTED = 505
     };
 };

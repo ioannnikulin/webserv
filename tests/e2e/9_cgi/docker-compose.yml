@@ -1,0 +1,32 @@
+networks:
+  net1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+
+services:
+  webserv:
+    image: webserv:latest
+    volumes:
+      - ./requirements/webserv/conf/config.conf:/usr/local/bin/config.conf:ro
+      - ./requirements/webserv/volume:/srv
+      - ./requirements/webserv/logs:/var/logs/webserv
+    networks:
+      net1:
+        ipv4_address: 172.18.0.10
+    ports:
+      - "8080:8080"
+    command: ["run"]
+      
+  tester0:
+    image: tester:latest
+    networks:
+      - net1
+    volumes:
+      - ./requirements/tester0/tools/tests.json:/tests/tests.json:ro
+      - ./requirements/tester0/results:/out
+      - ./requirements/tester0/logs:/logs
+    depends_on:
+      - webserv
+    command: ["--id=tester0"]

@@ -57,6 +57,12 @@ CONNECTION_SRCS = $(addprefix $(SOURCE_F)/$(CONNECTION_F)/,$(CONNECTION_SRC_NAME
 
 # ------------------------------------------------------------
 
+CGI_HANDLER_F = cgi_handler
+CGI_HANDLER_SRC_NAMES = CgiHandler.cpp CgiProcessManager.cpp
+CGI_HANDLER_SRCS = $(addprefix $(SOURCE_F)/$(CGI_HANDLER_F)/,$(CGI_HANDLER_SRC_NAMES))
+
+# ------------------------------------------------------------
+
 REQUEST_F = request
 REQUEST_SRC_NAMES = Request.cpp
 REQUEST_SRCS = $(addprefix $(SOURCE_F)/$(REQUEST_F)/,$(REQUEST_SRC_NAMES))
@@ -116,6 +122,7 @@ MAIN_NONENDPOINT_SRCS = \
 	$(CONNECTION_SRCS) \
 	$(REQUEST_SRCS) \
 	$(REQUEST_HANDLER_SRCS) \
+	$(CGI_HANDLER_SRCS)\
 	$(RESPONSE_SRCS) \
 	$(WEBSERV_SRCS) \
 	$(LOGGER_SRCS) \
@@ -142,6 +149,7 @@ MAIN_DIRS = \
 	$(SOURCE_F)/$(CONNECTION_F) \
 	$(SOURCE_F)/$(REQUEST_F) \
 	$(SOURCE_F)/$(REQUEST_HANDLER_F) \
+	$(SOURCE_F)/$(CGI_HANDLER_F) \
 	$(SOURCE_F)/$(RESPONSE_F) \
 	$(SOURCE_F)/$(LOGGER_F) \
 	$(SOURCE_F)/$(HTTP_STATUSES_F) \
@@ -230,7 +238,7 @@ test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
 	@set -o pipefail; \
 	$(VALGRIND) ./$(TEST_EXECUTABLE) 2>&1 | tee unit_test_valgrind.log
 
-LOCAL_RUN_CONFIG=./tests/config_files/local_run.conf
+LOCAL_RUN_CONFIG=./tests/config_files/cgi_example.conf
 WEBSERV_ADDRESS=127.0.0.1:8888
 
 run: $(MAIN_EXECUTABLE)

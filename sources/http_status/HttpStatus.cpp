@@ -85,6 +85,7 @@ void HttpStatus::initStatusMap() {
     addStatus(NOT_IMPLEMENTED, "Not Implemented");
     addStatus(BAD_GATEWAY, "Bad Gateway");
     addStatus(HTTP_SERVICE_UNAVAILABLE, "Service Unavailable");
+    addStatus(GATEWAY_TIMEOUT, "Gateway Timeout");
     addStatus(HTTP_VERSION_NOT_SUPPORTED, "HTTP Version Not Supported");
 }
 
