@@ -66,6 +66,7 @@ public:
     const CgiHandlerConfig* resolveCgiHandler(const Endpoint& config);
     Connection::State executeCgi(const Endpoint& config);
     std::string getRequestBody();
+	const Request& getRequest() const;
 };
 }  // namespace webserver
 #endif

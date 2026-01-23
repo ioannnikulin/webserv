@@ -46,7 +46,7 @@ APP_CONFIG_PARSER_SRCS = $(addprefix $(SOURCE_F)/$(APP_CONFIG_PARSER_F)/,$(APP_C
 # ------------------------------------------------------------
 
 LISTENER_F = listener
-LISTENER_SRC_NAMES = Listener.cpp MasterListener.cpp
+LISTENER_SRC_NAMES = Listener.cpp MasterListener.cpp MasterListener_tech.cpp MasterListener_net_utils.cpp
 LISTENER_SRCS = $(addprefix $(SOURCE_F)/$(LISTENER_F)/,$(LISTENER_SRC_NAMES))
 
 # ------------------------------------------------------------

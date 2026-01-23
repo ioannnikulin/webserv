@@ -330,6 +330,10 @@ Connection::State Connection::generateResponse() {
     return (_state);
 }
 
+const Request& Connection::getRequest() const {
+	return(_request);
+}
+
 Connection::~Connection() {
 }
 
