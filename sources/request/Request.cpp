@@ -304,6 +304,9 @@ Request& Request::setPath(string path) {
     _path = path;
     return (*this);
 }
+string Request::getQuery() const {
+    return (_query);
+}
 
 Request::~Request() {
 }

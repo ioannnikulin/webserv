@@ -6,14 +6,18 @@
 #include <stdint.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include <cstring>
 #include <exception>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
+#include "cgi_handler/CgiHandler.hpp"
+#include "configuration/CgiHandlerConfig.hpp"
 #include "configuration/Endpoint.hpp"
 #include "file_system/FileSystem.hpp"
 #include "http_methods/HttpMethodType.hpp"
@@ -104,15 +108,130 @@ bool Connection::fullRequestReceived() {
                 return (true);
             }
         }
+
+        string path = tmp.getPath();
+
+        if (path[path.length() - 1] == '/') {
+            const string indexFile = _route->getFolderConfig().getIndexPageFilename();
+            if (!indexFile.empty()) {
+                path += indexFile;
+                tmp.setPath(path);
+            }
+        }
+
         // NOTE: we have the route already, but since we reparse the request for every check, we recast the max size into it again
         tmp.setMaxClientBodySizeBytes(_route->getFolderConfig().getMaxClientBodySizeBytes());
         tmp.getBody();  // NOTE: lazy body init
+
+        _request = tmp;
         return (true);
     } catch (const IncompleteRequest& e) {
         return (false);
     } catch (const BadRequest& e) {
         return (true);
     }
+}
+
+bool Connection::itsACgiRequest() {
+    if (_route == NULL) {
+        return (false);
+    }
+
+    try {
+        const string path = _request.getPath();
+        const size_t dotPos = path.find_last_of('.');
+
+        if (dotPos == string::npos) {
+            return (false);
+        }
+
+        const string extension = path.substr(dotPos);
+        const std::map<string, CgiHandlerConfig*>& handlers = _configuration.getCgiHandlers();
+
+        return (handlers.find(extension) != handlers.end());
+    } catch (...) {
+        return (false);
+    }
+}
+
+string Connection::getRequestBody() {
+    try {
+        return (_request.getBody());
+    } catch (...) {
+        return ("");
+    }
+}
+
+const CgiHandlerConfig* Connection::resolveCgiHandler(const Endpoint& config) {
+    const string path = _request.getPath();
+
+    const size_t dotPos = path.find_last_of('.');
+    if (dotPos == string::npos) {
+        _log.stream(LOG_ERROR) << "No extension found in CGI path\n";
+        return (NULL);
+    }
+
+    const string extension = path.substr(dotPos);
+    const std::map<string, CgiHandlerConfig*>& handlers = config.getCgiHandlers();
+
+    const std::map<string, CgiHandlerConfig*>::const_iterator iter = handlers.find(extension);
+
+    if (iter == handlers.end()) {
+        _log.stream(LOG_ERROR) << "No CGI handler for extension: " << extension << "\n";
+        return (NULL);
+    }
+
+    return (iter->second);
+}
+
+Connection::State Connection::executeCgi(const Endpoint& config) {
+    try {
+        const CgiHandlerConfig* cgiConfig = resolveCgiHandler(config);
+        if (cgiConfig == NULL) {
+            return (WRITING_COMPLETE);
+        }
+
+        /* NOTE: implement without alarm
+        const int timeoutSeconds = cgiConfig.getTimeoutSeconds();
+        if (timeoutSeconds > 0) {
+            alarm(timeoutSeconds);
+        }
+        */
+
+        if (_route == NULL) {
+            _log.stream(LOG_ERROR) << "No route found for CGI request\n";
+            return (WRITING_COMPLETE);
+        }
+
+        const string scriptPath = _route->getFolderConfig().getResolvedPath(_request.getPath());
+
+        CgiHandler handler(*cgiConfig, _request, scriptPath, _configuration.getPort());
+
+        char** env = handler.prepareEnvironment();
+
+        const string interpreterPath = handler.getExecutablePath();
+        const string scriptPathStr = handler.getScriptPath();
+
+        char* argv[] = {
+            const_cast<char*>(interpreterPath.c_str()),
+            const_cast<char*>(scriptPathStr.c_str()),
+            // clang-format off
+            NULL};
+        // clang-format on
+        execve(interpreterPath.c_str(), argv, env);
+
+        _log.stream(LOG_ERROR) << "execve() failed for CGI script: " << scriptPathStr << "\n";
+
+        for (size_t i = 0; env[i] != NULL; ++i) {
+            delete[] env[i];
+        }
+        delete[] env;
+
+    } catch (const std::exception& e) {
+        _log.stream(LOG_ERROR) << "Exception in executeCgi: " << e.what() << "\n";
+    }
+
+    return (WRITING_COMPLETE);
 }
 
 Connection::State Connection::receiveRequestContent() {
@@ -126,7 +245,7 @@ Connection::State Connection::receiveRequestContent() {
         if (bytesRead > 0) {
             _requestBuffer << string(readBuffer, bytesRead);
             if (fullRequestReceived()) {
-                _state = READING_COMPLETE;
+                _state = itsACgiRequest() ? READING_CGI_REQUEST_COMPLETE : READING_COMPLETE;
                 return (_state);
             }
             continue;

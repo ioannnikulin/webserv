@@ -229,24 +229,7 @@ public:
     }
 
     void testConfig3_CgiHandler() {
-        TS_SKIP("Temporarily disabled: CGI handler config is under refactor");
-
-        const string fname = "cgi_example.conf";
-        _configFilenames.insert(fname);
-        ofstream f(fname.c_str());
-        f << "server {\n"
-          << "    listen 8000;\n"
-          << "    server_name cgi.local;\n"
-          << "\n"
-          << "    location / {\n"
-          << "        root /srv/www/cgi;\n"
-          << "        index index.py;\n"
-          << "    }\n"
-          << "\n"
-          << "    cgi .py /usr/bin/python3;\n"
-          << "    cgi .php /usr/bin/php-cgi;\n"
-          << "}" << endl;
-        f.close();
+        const string fname = "tests/config_files/cgi_example.conf";
 
         webserver::ConfigParser parser;
         webserver::AppConfig actual = parser.parse(fname);
@@ -260,11 +243,16 @@ public:
         route.setPath("/");
         route.setFolderConfig(webserver::FolderConfig(
             "/",
-            "/srv/www/cgi",
+            "tests/e2e/9_cgi/requirements/webserv/volume/www/cgi",
             false,
             "index.py",
             webserver::FolderConfig::defaultMaxClientBodySizeBytes()
         ));
+
+        route.addAllowedMethod(webserver::GET);
+        route.addAllowedMethod(webserver::POST);
+        route.addAllowedMethod(webserver::DELETE);
+
         ep.addRoute(route);
 
         // Add CGI handlers

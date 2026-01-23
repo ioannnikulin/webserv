@@ -164,6 +164,14 @@ void Listener::killConnection(int clientSocketFd) {
     _clientConnections.erase(itr);
 }
 
+Connection::State Listener::executeCgi(int clientSocketFd) {
+    return (_clientConnections.at(clientSocketFd)->executeCgi(_configuration));
+}
+
+std::string Listener::getRequestBody(int clientSocketFd) {
+    return (_clientConnections.at(clientSocketFd)->getRequestBody());
+}
+
 Listener::~Listener() {
     if (_listeningSocketFd != -1) {
         close(_listeningSocketFd);

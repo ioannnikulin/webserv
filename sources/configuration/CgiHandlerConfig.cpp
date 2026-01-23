@@ -46,6 +46,10 @@ bool CgiHandlerConfig::operator==(const CgiHandlerConfig& other) const {
     );
 }
 
+int CgiHandlerConfig::getTimeoutSeconds() const {
+    return (_timeoutSeconds);
+}
+
 CgiHandlerConfig::~CgiHandlerConfig() {
 }
 

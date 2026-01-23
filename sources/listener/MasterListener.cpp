@@ -1,12 +1,15 @@
 #include "MasterListener.hpp"
 
+#include <signal.h>
 #include <string.h>
 #include <sys/poll.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <cerrno>
+#include <exception>
 #include <iostream>
 #include <map>
 #include <set>
@@ -18,8 +21,11 @@
 #include "configuration/AppConfig.hpp"
 #include "configuration/Endpoint.hpp"
 #include "connection/Connection.hpp"
+#include "file_system/FileSystem.hpp"
+#include "http_status/HttpStatus.hpp"
 #include "listener/Listener.hpp"
 #include "logger/Logger.hpp"
+#include "response/Response.hpp"
 #include "signals/ServerSignal.hpp"
 
 using std::map;
@@ -32,6 +38,7 @@ using std::vector;
 namespace {
 using webserver::Connection;
 using webserver::Listener;
+using webserver::Logger;
 
 Listener* findListener(map<int, Listener*> where, int byFd) {
     const map<int, Listener*>::const_iterator res = where.find(byFd);
@@ -47,9 +54,18 @@ void markConnectionClosedToAvoidRequestOverlapping(::pollfd& activeFd) {
 
 Connection::State readControlMessageAndClose(int pipeFd) {
     Connection::State state;
-    if (read(pipeFd, &state, sizeof(state)) == -1) {
+    const ssize_t result = read(pipeFd, &state, sizeof(state));
+
+    if (result == -1) {
+        close(pipeFd);
         throw runtime_error("Failed to read from control pipe");
     }
+
+    if (result != sizeof(state)) {
+        close(pipeFd);
+        throw runtime_error("Incomplete read from control pipe");
+    }
+
     close(pipeFd);
     return (state);
 }
@@ -59,22 +75,23 @@ string readStringAndClose(int pipeFd) {
     char buffer[RESPONSE_STRING_BUFFER_SIZE];
     ostringstream oss;
     ssize_t bytesRead = 0;
+
     while ((bytesRead = read(pipeFd, buffer, sizeof(buffer))) > 0) {
         oss << string(buffer, bytesRead);
     }
-    if (bytesRead == -1) {
-        throw runtime_error("Failed to read from response pipe");
-    }
+
     close(pipeFd);
     return (oss.str());
 }
+
 }  // namespace
 
 namespace webserver {
 
 Logger MasterListener::_log;
 
-MasterListener::MasterListener(const AppConfig& configuration) {
+MasterListener::MasterListener(const AppConfig& configuration)
+    : _cgiManager(_log) {
     const set<Endpoint>& endpoints = configuration.getEndpoints();
     for (set<Endpoint>::const_iterator itr = endpoints.begin(); itr != endpoints.end(); ++itr) {
         Listener* newListener = new Listener(*itr);
@@ -142,67 +159,34 @@ void MasterListener::markResponseReadyForReturn(int clientFd) {
     }
 }
 
-Connection::State MasterListener::generateResponse(Listener* listener, ::pollfd& activeFd) {
-    const int READING_PIPE_END = 0;
-    const int WRITING_PIPE_END = 1;
-    int responsePipe[2];
-    int controlPipe[2];
-    if (pipe(responsePipe) == -1 || pipe(controlPipe) == -1) {
-        throw runtime_error("pipe() failed");
-    }
-    const int pid = fork();
-    if (pid == -1) {
-        throw runtime_error("fork() failed");
-    }
-    if (pid == 0) {
-        // NOTE: child; generates response and sends it to pipe for the parent to fetch and dispatch
-        if (close(responsePipe[READING_PIPE_END]) == -1) {
-            _log.stream(LOG_ERROR) << "close() failed on child's reading response pipe end\n";
-        }
-        if (close(controlPipe[READING_PIPE_END]) == -1) {
-            _log.stream(LOG_ERROR) << "close() failed on child's reading control pipe end\n";
-        }
-        Connection::State connState = listener->generateResponse(activeFd.fd);
-        if (write(controlPipe[WRITING_PIPE_END], &connState, sizeof(connState)) == -1) {
-            _log.stream(LOG_ERROR) << "Failed to write to control pipe in child process\n";
-        }
-        const string response = listener->getResponse(activeFd.fd);
-        if (write(responsePipe[WRITING_PIPE_END], response.data(), response.size()) == -1) {
-            _log.stream(LOG_ERROR) << "Failed to write to response pipe in child process\n";
-        }
-        if (close(controlPipe[WRITING_PIPE_END]) == -1) {
-            _log.stream(LOG_ERROR) << "close() failed on child's writing control pipe end\n";
-        }
-        if (close(responsePipe[WRITING_PIPE_END]) == -1) {
-            _log.stream(LOG_ERROR) << "close() failed on child's writing response pipe end\n";
-        }
-        // NOTE: circumventing forbidden _exit()
-        char* argv[] = {
-            const_cast<char*>("/bin/sh"),
-            const_cast<char*>("-c"),
-            const_cast<char*>("exit 0"),
-            // clang-format off
-            NULL
-        };
-        // clang-format on
-        char* envp[] = {NULL};
-        execve("/bin/sh", argv, envp);
-        // NOTE: should not get to this point, but if it got here, it's a zombie that the parent can kill
-        while (true) {
-        }
-    } else {
-        // NOTE: parent; registers the reading end of the pipe in the common poll() queue
-        if (close(controlPipe[WRITING_PIPE_END]) == -1 ||
-            close(responsePipe[WRITING_PIPE_END]) == -1) {
-            throw runtime_error("close() failed on parent's writing pipe ends");
-        }
-        registerResponseWorker(
-            controlPipe[READING_PIPE_END],
-            responsePipe[READING_PIPE_END],
-            activeFd.fd
-        );
-    }
+Connection::State MasterListener::callCgi(Listener* listener, int activeFd) {
+    const string requestBody = listener->getRequestBody(activeFd);
+
+    int controlPipeReadEnd = -1;
+    int responsePipeReadEnd = -1;
+
+    const pid_t pid = _cgiManager.startCgiProcess(
+        listener,
+        activeFd,
+        requestBody,
+        controlPipeReadEnd,
+        responsePipeReadEnd
+    );
+
+    _cgiManager.registerWorker(activeFd, pid);
+    registerResponseWorker(controlPipeReadEnd, responsePipeReadEnd, activeFd);
+
     return (Connection::WRITING);
+}
+
+Connection::State MasterListener::generateResponse(Listener* listener, int activeFd) {
+    const Connection::State connState = listener->generateResponse(activeFd);
+    if (connState != Connection::WRITING_COMPLETE &&
+        connState != Connection::SERVER_SHUTTING_DOWN) {
+        _log.stream(LOG_WARN) << "Connection in unexpected state " << connState << "\n";
+    }
+    markResponseReadyForReturn(activeFd);
+    return (connState);
 }
 
 void MasterListener::removePollFd(int fdesc) {
@@ -214,12 +198,12 @@ void MasterListener::removePollFd(int fdesc) {
     }
 }
 
-Connection::State MasterListener::isItANewConnectionOnAListeningSocket(::pollfd& activeFd) {
-    Listener* listener = findListener(_listeners, activeFd.fd);
+Connection::State MasterListener::isItANewConnectionOnAListeningSocket(int activeFd) {
+    Listener* listener = findListener(_listeners, activeFd);
     if (listener == NULL) {
         return (Connection::IGNORED);
     }
-    const int clientSocket = registerNewConnection(activeFd.fd, listener);
+    const int clientSocket = registerNewConnection(activeFd, listener);
     _clientListeners[clientSocket] = listener;
     return (Connection::NEWBORN);
 }
@@ -244,15 +228,17 @@ Connection::State MasterListener::isItADataRequestOnAClientSocketFromARegistered
     }
     if (connState == Connection::READING_COMPLETE) {
         markConnectionClosedToAvoidRequestOverlapping(activeFd);
-        return (generateResponse(listener, activeFd));
+        return (generateResponse(listener, activeFd.fd));
+    }
+    if (connState == Connection::READING_CGI_REQUEST_COMPLETE) {
+        markConnectionClosedToAvoidRequestOverlapping(activeFd);
+        return (callCgi(listener, activeFd.fd));
     }
     return (connState);  // NOTE: READING
 }
 
-Connection::State MasterListener::isItAControlMessageFromAResponseGeneratorWorker(::pollfd& activeFd
-) {
-    const map<int, int>::iterator controlMessageReadyFor =
-        _responseWorkerControls.find(activeFd.fd);
+Connection::State MasterListener::isItAControlMessageFromAResponseGeneratorWorker(int activeFd) {
+    const map<int, int>::iterator controlMessageReadyFor = _responseWorkerControls.find(activeFd);
     if (controlMessageReadyFor == _responseWorkerControls.end()) {
         return (Connection::IGNORED);
     }
@@ -264,18 +250,31 @@ Connection::State MasterListener::isItAControlMessageFromAResponseGeneratorWorke
     return (connState);
 }
 
-Connection::State MasterListener::isItAResponseFromAResponseGeneratorWorker(::pollfd& activeFd) {
-    const map<int, int>::iterator responseReadyFor = _responseWorkers.find(activeFd.fd);
+Connection::State MasterListener::isItAResponseFromAResponseGeneratorWorker(int activeFd) {
+    const map<int, int>::iterator responseReadyFor = _responseWorkers.find(activeFd);
     if (responseReadyFor == _responseWorkers.end()) {
         return (Connection::IGNORED);
     }
+
+    const int clientFd = responseReadyFor->second;
+
     _log.stream(LOG_TRACE) << "Response for " << responseReadyFor->second
                            << " made by worker on fd " << responseReadyFor->first
                            << " is being picked up by main thread\n";
-    const string response = readStringAndClose(responseReadyFor->first);
-    _log.stream(LOG_TRACE) << response << "\n";
-    _clientListeners.at(responseReadyFor->second)->setResponse(responseReadyFor->second, response);
-    markResponseReadyForReturn(responseReadyFor->second);
+    const string rawOutput = readStringAndClose(responseReadyFor->first);
+    _log.stream(LOG_TRACE) << rawOutput << "\n";
+
+    string finalResponse;
+    if (_cgiManager.isWorker(clientFd)) {
+        _log.stream(LOG_DEBUG) << "Parsing CGI output for client " << clientFd << "\n";
+        finalResponse = CgiProcessManager::parseCgiResponse(rawOutput);
+        _cgiManager.unregisterWorker(clientFd);
+    } else {
+        finalResponse = rawOutput;
+    }
+
+    _clientListeners.at(clientFd)->setResponse(clientFd, finalResponse);
+    markResponseReadyForReturn(clientFd);
     removePollFd(responseReadyFor->first);
     _responseWorkers.erase(responseReadyFor);
     return (Connection::WRITING_COMPLETE);
@@ -285,23 +284,26 @@ Connection::State
 MasterListener::handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewConnections) {
     Connection::State ret;
     if (acceptingNewConnections) {
-        ret = isItANewConnectionOnAListeningSocket(activeFd);
+        ret = isItANewConnectionOnAListeningSocket(activeFd.fd);
         if (ret != Connection::IGNORED) {
             return (ret);
         }
     }
     ret = isItADataRequestOnAClientSocketFromARegisteredClient(activeFd);
     if (ret != Connection::IGNORED) {
+        if (ret == Connection::SERVER_SHUTTING_DOWN) {
+            acceptingNewConnections = false;
+        }
         return (ret);
     }
-    ret = isItAControlMessageFromAResponseGeneratorWorker(activeFd);
+    ret = isItAControlMessageFromAResponseGeneratorWorker(activeFd.fd);
     if (ret != Connection::IGNORED) {
         if (ret == Connection::SERVER_SHUTTING_DOWN) {
             acceptingNewConnections = false;
         }
         return (ret);
     }
-    ret = isItAResponseFromAResponseGeneratorWorker(activeFd);
+    ret = isItAResponseFromAResponseGeneratorWorker(activeFd.fd);
     if (ret != Connection::IGNORED) {
         return (ret);
     }
@@ -369,15 +371,23 @@ void MasterListener::listenAndHandle(
                     _log.stream(LOG_INFO)
                         << "Shutdown requested; stopped accepting new connections\n";
                     acceptingNewConnections = false;
-                    // NOTE: force loop to re-check exit condition. won't stop immediately otherwise
-                    if (_clientListeners.empty()) {
-                        isRunning = 0;
+
+                    const vector<int> timedOut = _cgiManager.checkTimeouts();
+                    for (size_t i = 0; i < timedOut.size(); ++i) {
+                        const pid_t pid = _cgiManager.getProcessId(timedOut[i]);
+                        if (pid > 0) {
+                            kill(pid, SIGKILL);
+                        }
+                        cleanupCgiProcess(timedOut[i], false);
                     }
+
+                    isRunning = 0;
                 }
                 continue;
             }
             throw runtime_error(string("poll() failed: ") + strerror(errno));
         }
+        checkCgiTimeouts();
         reapChildren();
         handlePollEvents(acceptingNewConnections);
         if (!acceptingNewConnections && _clientListeners.empty()) {
@@ -400,7 +410,72 @@ void MasterListener::reapChildren() {
     }
 }
 
+void MasterListener::cleanupCgiProcess(int clientFd, bool sendTimeoutResponse) {
+    _log.stream(LOG_DEBUG) << "Cleaning up CGI process for client " << clientFd << "\n";
+
+    for (map<int, int>::iterator it = _responseWorkers.begin(); it != _responseWorkers.end();) {
+        if (it->second == clientFd) {
+            close(it->first);
+            removePollFd(it->first);
+            const map<int, int>::iterator toErase = it;
+            ++it;
+            _responseWorkers.erase(toErase);
+        } else {
+            ++it;
+        }
+    }
+
+    for (map<int, int>::iterator it = _responseWorkerControls.begin();
+         it != _responseWorkerControls.end();) {
+        if (it->second == clientFd) {
+            close(it->first);
+            removePollFd(it->first);
+            const map<int, int>::iterator toErase = it;
+            ++it;
+            _responseWorkerControls.erase(toErase);
+        } else {
+            ++it;
+        }
+    }
+
+    _cgiManager.cleanupProcess(clientFd);
+
+    if (sendTimeoutResponse) {
+        const map<int, Listener*>::iterator listenerIt = _clientListeners.find(clientFd);
+        if (listenerIt != _clientListeners.end()) {
+            Listener* listener = listenerIt->second;
+
+            const string pageLocation =
+                HttpStatus::getPageFileLocation(HttpStatus::GATEWAY_TIMEOUT);
+            string errorPageContent;
+
+            try {
+                errorPageContent = file_system::readFile(pageLocation.c_str());
+            } catch (const std::exception& e) {
+                errorPageContent = "CGI script execution timed out";
+            }
+
+            Response timeoutResponse(HttpStatus::GATEWAY_TIMEOUT, errorPageContent, "text/html");
+            timeoutResponse.setHeader("Connection", "close");
+            listener->setResponse(clientFd, timeoutResponse.serialize());
+            markResponseReadyForReturn(clientFd);
+        }
+    }
+}
+
+void MasterListener::checkCgiTimeouts() {
+    const vector<int> timedOutFds = _cgiManager.checkTimeouts();
+
+    for (size_t i = 0; i < timedOutFds.size(); ++i) {
+        cleanupCgiProcess(timedOutFds[i], true);
+    }
+}
+
 MasterListener::~MasterListener() {
+    for (map<int, Listener*>::iterator it = _clientListeners.begin(); it != _clientListeners.end();
+         ++it) {
+        it->second->killConnection(it->first);
+    }
     for (map<int, Listener*>::const_iterator it = _listeners.begin(); it != _listeners.end();
          ++it) {
         delete it->second;

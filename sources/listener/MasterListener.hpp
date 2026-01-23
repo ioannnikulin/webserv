@@ -2,12 +2,14 @@
 #define MASTERLISTENER_HPP
 
 #include <poll.h>
+#include <time.h>
 
 #include <map>
 #include <set>
 #include <vector>
 
 #include "Listener.hpp"
+#include "cgi_handler/CgiProcessManager.hpp"
 #include "configuration/AppConfig.hpp"
 
 namespace webserver {
@@ -30,6 +32,7 @@ private:
     // NOTE: reading pipe end fd with an expected control message: client socket fd
     std::map<int, int> _responseWorkers;
     // NOTE: reading pipe end fd with an expected generated response: client socket fd
+    CgiProcessManager _cgiManager;
 
     MasterListener(const MasterListener& other);
 
@@ -39,16 +42,19 @@ private:
     void
     registerResponseWorker(int controlPipeReadingEnd, int responsePipeReadingEnd, int clientFd);
     void markResponseReadyForReturn(int clientFd);
-    Connection::State generateResponse(Listener* listener, ::pollfd& activeFd);
-    Connection::State isItANewConnectionOnAListeningSocket(::pollfd& activeFd);
+    Connection::State callCgi(Listener* listener, int activeFd);
+    Connection::State generateResponse(Listener* listener, int activeFd);
+    Connection::State isItANewConnectionOnAListeningSocket(int activeFd);
     Connection::State isItADataRequestOnAClientSocketFromARegisteredClient(::pollfd& activeFd);
-    Connection::State isItAControlMessageFromAResponseGeneratorWorker(::pollfd& activeFd);
-    Connection::State isItAResponseFromAResponseGeneratorWorker(::pollfd& activeFd);
+    Connection::State isItAControlMessageFromAResponseGeneratorWorker(int activeFd);
+    Connection::State isItAResponseFromAResponseGeneratorWorker(int activeFd);
     Connection::State handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewConnections);
     void handleOutgoingConnection(const ::pollfd& activeFd);
     void resetPollEvents();
     void handlePollEvents(bool& acceptingNewConnections);
     static void reapChildren();
+    void cleanupCgiProcess(int clientFd, bool sendTimeoutResponse);
+    void checkCgiTimeouts();
 
 public:
     MasterListener();

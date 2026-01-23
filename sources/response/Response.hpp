@@ -6,6 +6,9 @@
 
 #include "logger/Logger.hpp"
 
+#define HTTP_PROTOCOL "HTTP/1.0"
+#define SERVER_NAME "OurWebServer/1.0"
+
 namespace webserver {
 
 class Response {

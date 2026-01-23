@@ -47,6 +47,9 @@ public:
     void sendResponse(int clientSocketFd);
     void killConnection(int clientSocketFd);
 
+    Connection::State executeCgi(int clientSocketFd);
+    std::string getRequestBody(int clientSocketFd);
+
     ~Listener();
 };
 }  // namespace webserver

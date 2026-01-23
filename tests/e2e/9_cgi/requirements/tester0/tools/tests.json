@@ -1,0 +1,187 @@
+{
+  "tests": [
+    {
+      "name": "cgi_hello_py",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8000/hello.py",
+      "expected": {
+        "body": {
+          "contains": ["Hello", "<!DOCTYPE html>"]
+        }
+      }
+    },
+    {
+      "name": "cgi_index_py",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8000/index.py",
+      "expected": {
+        "body": {
+          "contains": ["CGI", "Python CGI is running successfully"]
+        }
+      }
+    },
+    {
+      "name": "cgi_index_py_default",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8000/",
+      "expected": {
+        "body": {
+          "contains": ["CGI", "Python CGI is running successfully"]
+        }
+      }
+    },
+    {
+      "name": "cgi_env_variables",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8000/env.py",
+      "expected": {
+        "body": {
+          "contains": [
+            "REQUEST_METHOD",
+            "GET",
+            "SERVER_SOFTWARE",
+            "SERVER_PROTOCOL",
+            "GATEWAY_INTERFACE"
+          ]
+        }
+      }
+    },
+    {
+      "name": "cgi_form_get",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8000/form.py?field1=value1&field2=value2",
+      "expected": {
+        "body": {
+          "contains": [
+            "Method: GET",
+            "field1=value1&field2=value2",
+            "field1 = value1",
+            "field2 = value2"
+          ]
+        }
+      }
+    },
+    {
+      "name": "cgi_form_post_urlencoded",
+      "tester": "tester0",
+      "method": "POST",
+      "url": "http://172.18.0.10:8000/form.py",
+      "headers": {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      "body": "field1=value1&field2=value2",
+      "expected": {
+        "body": {
+          "contains": [
+            "Method: POST",
+            "field1=value1&field2=value2",
+            "field1 = value1",
+            "field2 = value2"
+          ]
+        }
+      }
+    },
+    {
+      "name": "cgi_form_post_chunked",
+      "tester": "tester0",
+      "method": "POST",
+      "url": "http://172.18.0.10:8000/form.py",
+      "headers": {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Transfer-Encoding": "chunked"
+      },
+      "body": "field1=value1&field2=value2",
+      "expected": {
+        "body": {
+          "contains": [
+            "Method: POST",
+            "field1=value1&field2=value2",
+            "field1 = value1",
+            "field2 = value2"
+          ]
+        }
+      }
+    },
+    {
+      "name": "cgi_server_port_env",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8000/env.py",
+      "expected": {
+        "body": {
+          "contains": [
+            "SERVER_PORT",
+            "8000"
+          ]
+        }
+      }
+    },
+    {
+      "name": "cgi_content_length_set",
+      "tester": "tester0",
+      "method": "POST",
+      "url": "http://172.18.0.10:8000/form.py",
+      "headers": {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      "body": "test=data",
+      "expected": {
+        "body": {
+          "contains": ["test = data"]
+        }
+      }
+    },
+    {
+      "name": "cgi_php_hello",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8000/hello.php",
+      "expected": {
+        "body": {
+          "contains": ["PHP CGI", "Version:"]
+        }
+      }
+    },
+    {
+      "name": "cgi_static_html",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8000/form.html",
+      "expected": {
+        "body": {
+          "contains": ["Form Test", "POST Request", "GET Request"]
+        }
+      }
+    },
+    {
+      "name": "cgi_query_string_set",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8000/form.py?search=test&page=1",
+      "expected": {
+        "body": {
+          "contains": [
+            "search=test&page=1",
+            "search = test",
+            "page = 1"
+          ]
+        }
+      }
+    },
+    {
+      "name": "shutdown",
+      "tester": "tester0",
+      "method": "SHUTDOWN",
+      "url": "http://172.18.0.10:8000/stub",
+      "expected": {
+        "status_code": 503,
+        "body": "Server is shutting down"
+      }
+    }
+  ]
+}
