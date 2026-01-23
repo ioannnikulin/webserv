@@ -2,6 +2,7 @@
 #define CGIHANDLER_HPP
 
 #include "configuration/CgiHandlerConfig.hpp"
+#include "configuration/RouteConfig.hpp"
 #include "request/Request.hpp"
 #include "response/Response.hpp"
 
@@ -13,6 +14,7 @@ private:
     const Request& _request;
     const std::string& _scriptPath;
     int _serverPort;
+    const RouteConfig& _route;
     std::map<std::string, std::string> _env;
 
     CgiHandler();
@@ -29,7 +31,8 @@ public:
         const CgiHandlerConfig& config,
         const Request& request,
         const std::string& scriptPath,
-        int serverPort
+        int serverPort,
+        const RouteConfig& route
     );
     ~CgiHandler();
 

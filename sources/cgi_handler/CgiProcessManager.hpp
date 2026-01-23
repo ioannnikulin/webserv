@@ -23,7 +23,7 @@ public:
         int control[2];
     };
 
-    explicit CgiProcessManager(Logger& logger);
+    CgiProcessManager(Logger& logger);
     ~CgiProcessManager();
 
     pid_t startCgiProcess(
