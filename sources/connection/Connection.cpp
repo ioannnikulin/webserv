@@ -219,12 +219,16 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
         const CgiHandlerConfig* cgiConfig = resolveCgiHandler(config);
 
         if (cgiConfig == NULL) {
-            cgiError("Status: 500\r\nContent-Type: text/html\r\n\r\nCGI handler configuration error\r\n");
+            cgiError(
+                "Status: 500\r\nContent-Type: text/html\r\n\r\nCGI handler configuration error\r\n"
+            );
         }
 
         if (_route == NULL) {
             _log.stream(LOG_ERROR) << "No route found for CGI request\n";
-            cgiError("Status: 500\r\nContent-Type: text/html\r\n\r\nNo route configuration found\r\n");
+            cgiError(
+                "Status: 500\r\nContent-Type: text/html\r\n\r\nNo route configuration found\r\n"
+            );
         }
 
         const string scriptPath = resolveScriptPath();
@@ -252,7 +256,10 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
         cgiError("Status: 500\r\nContent-Type: text/html\r\n\r\nFailed to execute CGI script\r\n");
     } catch (const std::exception& e) {
         _log.stream(LOG_ERROR) << "Exception in executeCgi: " << e.what() << "\n";
-        cgiError("Status: 500\r\nContent-Type: text/html\r\n\r\nInternal server error in CGI execution\r\n");
+        cgiError(
+            "Status: 500\r\nContent-Type: text/html\r\n\r\nInternal server error in CGI "
+            "execution\r\n"
+        );
     }
 
     return (Connection::IGNORED);  // NOTE: not returned anyway
