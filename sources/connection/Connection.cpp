@@ -250,7 +250,9 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
         char* argv[] = {
             const_cast<char*>(interpreterPath.c_str()),
             const_cast<char*>(scriptPathStr.c_str()),
+            // clang-format off
             NULL};
+        // clang-format on
 
         execve(interpreterPath.c_str(), argv, env);
 
