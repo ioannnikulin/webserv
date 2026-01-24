@@ -305,19 +305,18 @@ string CgiProcessManager::emptyOutput() {
 }
 
 string CgiProcessManager::noHeaders() {
-        _log.stream(LOG_ERROR) << "CGI script produced invalid output (no proper headers)\n";
+    _log.stream(LOG_ERROR) << "CGI script produced invalid output (no proper headers)\n";
 
-        const string pageLocation =
-            HttpStatus::getPageFileLocation(HttpStatus::INTERNAL_SERVER_ERROR);
-        string errorPageContent;
-        try {
-            errorPageContent = file_system::readFile(pageLocation.c_str());
-        } catch (const std::exception& e) {
-            errorPageContent = "CGI script produced invalid output";
-        }
+    const string pageLocation = HttpStatus::getPageFileLocation(HttpStatus::INTERNAL_SERVER_ERROR);
+    string errorPageContent;
+    try {
+        errorPageContent = file_system::readFile(pageLocation.c_str());
+    } catch (const std::exception& e) {
+        errorPageContent = "CGI script produced invalid output";
+    }
 
-        const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
-        return (response.serialize());
+    const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
+    return (response.serialize());
 }
 string CgiProcessManager::parseCgiResponse(const string& cgiOutput) {
     if (cgiOutput.empty()) {
