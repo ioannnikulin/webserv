@@ -181,11 +181,6 @@ const CgiHandlerConfig* Connection::resolveCgiHandler(const Endpoint& config) {
 
     const std::map<string, CgiHandlerConfig*>::const_iterator iter = handlers.find(extension);
 
-    if (iter == handlers.end()) {
-        _log.stream(LOG_ERROR) << "No CGI handler for extension: " << extension << "\n";
-        return (NULL);
-    }
-
     return (iter->second);
 }
 

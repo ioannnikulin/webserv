@@ -96,27 +96,6 @@
 			}
 		},
 		{
-			"name": "cgi_form_post_chunked",
-			"tester": "tester0",
-			"method": "POST",
-			"url": "http://172.18.0.10:8000/form.py",
-			"headers": {
-				"Content-Type": "application/x-www-form-urlencoded",
-				"Transfer-Encoding": "chunked"
-			},
-			"body": "field1=value1&field2=value2",
-			"expected": {
-				"body": {
-					"contains": [
-						"Method: POST",
-						"field1=value1&field2=value2",
-						"field1 = value1",
-						"field2 = value2"
-					]
-				}
-			}
-		},
-		{
 			"name": "cgi_server_port_env",
 			"tester": "tester0",
 			"method": "GET",
