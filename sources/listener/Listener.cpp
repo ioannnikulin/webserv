@@ -17,6 +17,7 @@
 
 #include "configuration/Endpoint.hpp"
 #include "logger/Logger.hpp"
+#include "request/Request.hpp"
 
 using std::map;
 using std::runtime_error;
@@ -131,7 +132,7 @@ Listener& Listener::setResponse(int clientSocketFd, string response) {
 }
 
 Request Listener::getRequestFor(int clientSocketFd) const {
-	return (_clientConnections.at(clientSocketFd)->getRequest());
+    return (_clientConnections.at(clientSocketFd)->getRequest());
 }
 
 int Listener::getListeningSocketFd() const {
@@ -145,6 +146,8 @@ bool Listener::hasActiveClientSocket(int clientSocketFd) const {
 int Listener::acceptConnection() {
     Connection* nconn = new Connection(_listeningSocketFd, _configuration);
     _clientConnections[nconn->getClientSocketFd()] = nconn;
+    _log.stream(LOG_TRACE) << "CONN_TRACK: Created connection for fd " << nconn->getClientSocketFd()
+                           << "\n";
     return (nconn->getClientSocketFd());
 }
 
@@ -162,6 +165,7 @@ void Listener::sendResponse(int clientSocketFd) {
 
 void Listener::killConnection(int clientSocketFd) {
     _log.stream(LOG_INFO) << "Killing connection\n";
+    _log.stream(LOG_TRACE) << "CONN_TRACK: Killing connection for fd " << clientSocketFd << "\n";
     close(clientSocketFd);
     const map<int, Connection*>::iterator itr = _clientConnections.find(clientSocketFd);
     delete itr->second;

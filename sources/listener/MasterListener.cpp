@@ -3,8 +3,6 @@
 #include <signal.h>
 #include <string.h>
 #include <sys/poll.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -12,32 +10,30 @@
 #include <exception>
 #include <iostream>
 #include <map>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#include "configuration/AppConfig.hpp"
-#include "configuration/Endpoint.hpp"
 #include "connection/Connection.hpp"
 #include "file_system/FileSystem.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "listener/Listener.hpp"
 #include "logger/Logger.hpp"
+#include "request/Request.hpp"
 #include "response/Response.hpp"
 #include "signals/ServerSignal.hpp"
 
 using std::map;
 using std::ostringstream;
 using std::runtime_error;
-using std::set;
 using std::string;
 using std::vector;
 
 namespace webserver {
 Connection::State MasterListener::callCgi(Listener* listener, int activeFd) {
-	_log.stream(LOG_TRACE) << "processing cgi request: " << listener->getRequestFor(activeFd) << "\n";
+    _log.stream(LOG_TRACE) << "processing cgi request: " << listener->getRequestFor(activeFd)
+                           << "\n";
     const string requestBody = listener->getRequestBody(activeFd);
 
     int controlPipeReadEnd = -1;
@@ -73,6 +69,9 @@ Connection::State MasterListener::isItANewConnectionOnAListeningSocket(int activ
     }
     const int clientSocket = registerNewConnection(activeFd, listener);
     _clientListeners[clientSocket] = listener;
+    _log.stream(LOG_TRACE) << "CONN_TRACK: Added fd " << clientSocket
+                           << " to _clientListeners map (total: " << _clientListeners.size()
+                           << ")\n";
     return (Connection::NEWBORN);
 }
 
@@ -84,6 +83,7 @@ Connection::State MasterListener::isItADataRequestOnAClientSocketFromARegistered
         return (Connection::IGNORED);
     }
     _log.stream(LOG_TRACE) << "Existing client on socket fd " << activeFd.fd << " has sent data\n";
+    _log.stream(LOG_TRACE) << "CONN_TRACK: Processing data for fd " << activeFd.fd << "\n";
     const Connection::State connState = listener->receiveRequest(activeFd.fd);
     if (connState == Connection::CLOSED_BY_CLIENT) {
         _log.stream(LOG_TRACE) << "Client on socket fd " << activeFd.fd
@@ -191,7 +191,12 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
     // NOTE: no keep-alive in HTTP 1.0, so killing right away
     // NOTE: if he wants to go on, he'd have to go to listening socket again
     _log.stream(LOG_INFO) << "Sent response to socket fd " << activeFd.fd << "\n";
+    _log.stream(LOG_TRACE) << "CONN_TRACK: Removing fd " << activeFd.fd
+                           << " from _clientListeners (before: " << _clientListeners.size()
+                           << ")\n";
     _clientListeners.erase(_clientListeners.find(activeFd.fd));
+    _log.stream(LOG_TRACE) << "CONN_TRACK: Removed fd " << activeFd.fd
+                           << " from _clientListeners (after: " << _clientListeners.size() << ")\n";
     listener->killConnection(activeFd.fd);
     removePollFd(activeFd.fd);
 }
@@ -230,39 +235,84 @@ void MasterListener::listenAndHandle(
             if (errno != EINTR) {
                 throw runtime_error(string("poll() failed: ") + strerror(errno));
             }
-            if (((signals & SIG_SHUTDOWN) != 0)) {
-                _log.stream(LOG_INFO) << "Shutdown requested; stopped accepting new connections; "
-                                      << _clientListeners.size() << " existing connections left\n";
+            if ((signals & SIG_SHUTDOWN) != 0) {
+                handleShutdownSignal();
                 acceptingNewConnections = false;
-
-                const vector<int> timedOut = _cgiManager.checkTimeouts();
-                for (size_t i = 0; i < timedOut.size(); ++i) {
-                    const pid_t pid = _cgiManager.getProcessId(timedOut[i]);
-                    if (pid > 0) {
-                        kill(pid, SIGKILL);
-                    }
-                    cleanupCgiProcess(timedOut[i], false);
-                }
             }
-            _log.stream(LOG_INFO) << "proceeding ending existing connections\n";
         }
-        _log.stream(LOG_TRACE) << "0\n";
         checkCgiTimeouts();
-        _log.stream(LOG_TRACE) << "1\n";
         reapChildren();
-        _log.stream(LOG_TRACE) << "2\n";
         handlePollEvents(acceptingNewConnections);
-        _log.stream(LOG_TRACE) << "accepting? " << acceptingNewConnections << "\n";
-        if (!acceptingNewConnections) {
-            _log.stream(LOG_TRACE) << _clientListeners.size() << " existing connections left\n";
-			for (map<int, Listener*>::const_iterator itr = _clientListeners.begin(); itr != _clientListeners.end(); itr ++) {
-				_log.stream(LOG_TRACE) << itr->second->getRequestFor(itr->first) << "\n";
-			}
-            if (_clientListeners.empty()) {
-                isRunning = 0;
-            }
+        if (!acceptingNewConnections && shouldContinueRunning()) {
+            isRunning = 0;
         }
     }
+}
+
+void MasterListener::handleShutdownSignal() {
+    _log.stream(LOG_INFO) << "Shutdown requested; stopped accepting new connections; "
+                          << _clientListeners.size() << " existing connections left\n";
+
+    cleanupTimedOutCgiProcesses();
+    cleanupIdleConnections();
+}
+
+void MasterListener::cleanupTimedOutCgiProcesses() {
+    const vector<int> timedOut = _cgiManager.checkTimeouts();
+    for (size_t i = 0; i < timedOut.size(); ++i) {
+        const pid_t pid = _cgiManager.getProcessId(timedOut[i]);
+        if (pid > 0) {
+            kill(pid, SIGKILL);
+        }
+        cleanupCgiProcess(timedOut[i], false);
+    }
+}
+
+void MasterListener::cleanupIdleConnections() {
+    for (map<int, Listener*>::iterator it = _clientListeners.begin();
+         it != _clientListeners.end();) {
+        const int clientFd = it->first;
+        Listener* listener = it->second;
+
+        if (!listener->hasActiveClientSocket(clientFd)) {
+            _log.stream(LOG_WARN) << "Connection fd " << clientFd
+                                  << " in _clientListeners but not in listener's connections!\n";
+            _clientListeners.erase(it);
+            it = _clientListeners.begin();
+            continue;
+        }
+
+        const Request req = listener->getRequestFor(clientFd);
+        if (!req.isRequestTargetReceived()) {
+            _log.stream(LOG_INFO) << "Forcing closure of idle connection fd " << clientFd
+                                  << " during shutdown\n";
+            removePollFd(clientFd);
+            listener->killConnection(clientFd);
+            _clientListeners.erase(it);
+            it = _clientListeners.begin();
+            continue;
+        }
+
+        ++it;
+    }
+}
+
+bool MasterListener::shouldContinueRunning() const {
+    _log.stream(LOG_TRACE) << "CONN_TRACK: Dumping all _clientListeners entries:\n";
+    for (map<int, Listener*>::const_iterator itr = _clientListeners.begin();
+         itr != _clientListeners.end();
+         itr++) {
+        _log.stream(LOG_TRACE) << "  CONN_TRACK: fd=" << itr->first << " listener=" << itr->second
+                               << " hasActiveClientSocket="
+                               << itr->second->hasActiveClientSocket(itr->first) << "\n";
+        try {
+            _log.stream(LOG_TRACE)
+                << "  CONN_TRACK: request=" << itr->second->getRequestFor(itr->first) << "\n";
+        } catch (...) {
+            _log.stream(LOG_TRACE) << "  CONN_TRACK: (no request available)\n";
+        }
+    }
+    return (_clientListeners.empty());
 }
 
 void MasterListener::cleanupCgiProcess(int clientFd, bool sendTimeoutResponse) {

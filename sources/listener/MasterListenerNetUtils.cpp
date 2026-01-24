@@ -1,44 +1,32 @@
-#include "MasterListener.hpp"
-
 #include <signal.h>
 #include <string.h>
 #include <sys/poll.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
 #include <cerrno>
-#include <exception>
 #include <iostream>
 #include <map>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#include "configuration/AppConfig.hpp"
-#include "configuration/Endpoint.hpp"
+#include "MasterListener.hpp"
 #include "connection/Connection.hpp"
-#include "file_system/FileSystem.hpp"
-#include "http_status/HttpStatus.hpp"
 #include "listener/Listener.hpp"
 #include "logger/Logger.hpp"
-#include "response/Response.hpp"
-#include "signals/ServerSignal.hpp"
 
 using std::map;
 using std::ostringstream;
 using std::runtime_error;
-using std::set;
 using std::string;
 using std::vector;
 
 namespace webserver {
 using webserver::Connection;
 using webserver::Listener;
-using webserver::Logger;
 
 Listener* findListener(map<int, Listener*> where, int byFd) {
     const map<int, Listener*>::const_iterator res = where.find(byFd);
@@ -92,6 +80,8 @@ int MasterListener::registerNewConnection(int listeningFd, Listener* listener) {
     clientPfd.revents = 0;
     _pollFds.push_back(clientPfd);
     _log.stream(LOG_DEBUG) << "Connection accepted, client socket " << clientPfd.fd << "\n";
+    _log.stream(LOG_TRACE) << "CONN_TRACK: Added fd " << clientPfd.fd
+                           << " to _clientListeners (not yet in map)\n";
     return (clientPfd.fd);
 }
 
