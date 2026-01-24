@@ -6,6 +6,7 @@
 #include <string>
 
 #include "configuration/CgiHandlerConfig.hpp"
+#include "configuration/RouteConfig.hpp"
 #include "http_methods/HttpMethodType.hpp"
 #include "request/Request.hpp"
 #include "response/Response.hpp"
@@ -31,7 +32,7 @@ CgiHandler::CgiHandler(
 CgiHandler::~CgiHandler() {
 }
 
-void CgiHandler::setupEnvironment() {
+string CgiHandler::resolveIndexPath() {
     string resolvedPath = _request.getPath();
     if (!resolvedPath.empty() && resolvedPath[resolvedPath.length() - 1] == '/') {
         const string indexFile = _route.getFolderConfig().getIndexPageFilename();
@@ -39,16 +40,23 @@ void CgiHandler::setupEnvironment() {
             resolvedPath += indexFile;
         }
     }
+    return (resolvedPath);
+}
+
+string CgiHandler::getMethod() {
     const HttpMethodType httpMethod = _request.getType();
     const string method = methodToString(httpMethod);
+    return (method);
+}
 
-    addEnvVar("REQUEST_METHOD", method);
-    addEnvVar("SCRIPT_NAME", resolvedPath);
+void CgiHandler::setupEnvironment() {
+    addEnvVar("REQUEST_METHOD", getMethod());
+    addEnvVar("SCRIPT_NAME", resolveIndexPath());
     addEnvVar("SCRIPT_FILENAME", _scriptPath);
     addEnvVar("QUERY_STRING", _request.getQuery());
-    addEnvVar("PATH_INFO", resolvedPath);
+    addEnvVar("PATH_INFO", resolveIndexPath());
     addEnvVar("REDIRECT_STATUS", "200");
-    if (method == "POST") {
+    if (getMethod() == "POST") {
         const string contentType = _request.getHeader("Content-Type");
         if (!contentType.empty()) {
             addEnvVar("CONTENT_TYPE", contentType);

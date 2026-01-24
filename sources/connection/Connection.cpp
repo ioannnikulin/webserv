@@ -189,6 +189,17 @@ const CgiHandlerConfig* Connection::resolveCgiHandler(const Endpoint& config) {
     return (iter->second);
 }
 
+string Connection::resolveScriptPath() {
+    std::string requestPath = _request.getPath();
+    if (!requestPath.empty() && requestPath[requestPath.length() - 1] == '/') {
+        const std::string indexFile = _route->getFolderConfig().getIndexPageFilename();
+        if (!indexFile.empty()) {
+            requestPath += indexFile;
+        }
+    }
+    return (_route->getFolderConfig().getResolvedPath(requestPath));
+}
+
 Connection::State Connection::executeCgi(const Endpoint& config) {
     try {
         const CgiHandlerConfig* cgiConfig = resolveCgiHandler(config);
@@ -201,15 +212,7 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
             return (WRITING_COMPLETE);
         }
 
-        string requestPath = _request.getPath();
-        if (!requestPath.empty() && requestPath[requestPath.length() - 1] == '/') {
-            const string indexFile = _route->getFolderConfig().getIndexPageFilename();
-            if (!indexFile.empty()) {
-                requestPath += indexFile;
-            }
-        }
-
-        const string scriptPath = _route->getFolderConfig().getResolvedPath(requestPath);
+        const string scriptPath = resolveScriptPath();
 
         CgiHandler handler(*cgiConfig, _request, scriptPath, _configuration.getPort(), *_route);
 
@@ -331,7 +334,7 @@ Connection::State Connection::generateResponse() {
 }
 
 const Request& Connection::getRequest() const {
-	return(_request);
+    return (_request);
 }
 
 Connection::~Connection() {

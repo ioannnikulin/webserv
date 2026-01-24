@@ -55,6 +55,10 @@ private:
     static void reapChildren();
     void cleanupCgiProcess(int clientFd, bool sendTimeoutResponse);
     void checkCgiTimeouts();
+    void handleShutdownSignal();
+    void cleanupTimedOutCgiProcesses();
+    void cleanupIdleConnections();
+    bool shouldContinueRunning() const;
 
 public:
     MasterListener();

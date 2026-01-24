@@ -26,6 +26,8 @@ private:
     char** getEnvArray() const;
     static void freeEnvArray(char** env);
 
+    std::string getMethod();
+
 public:
     CgiHandler(
         const CgiHandlerConfig& config,
@@ -40,6 +42,7 @@ public:
     std::string getExecutablePath() const;
     std::string getScriptPath() const;
     std::string getRequestBody();
+    std::string resolveIndexPath();
 };
 }  // namespace webserver
 

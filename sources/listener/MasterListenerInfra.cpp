@@ -1,39 +1,20 @@
-#include "MasterListener.hpp"
-
-#include <signal.h>
-#include <string.h>
-#include <sys/poll.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <unistd.h>
-
 #include <cerrno>
-#include <exception>
-#include <iostream>
 #include <map>
 #include <set>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
+#include "MasterListener.hpp"
 #include "configuration/AppConfig.hpp"
 #include "configuration/Endpoint.hpp"
-#include "connection/Connection.hpp"
-#include "file_system/FileSystem.hpp"
-#include "http_status/HttpStatus.hpp"
 #include "listener/Listener.hpp"
 #include "logger/Logger.hpp"
-#include "response/Response.hpp"
-#include "signals/ServerSignal.hpp"
 
 using std::map;
 using std::ostringstream;
-using std::runtime_error;
 using std::set;
 using std::string;
-using std::vector;
 
 namespace webserver {
 
