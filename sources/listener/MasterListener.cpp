@@ -230,8 +230,8 @@ void MasterListener::handlePollEvents(bool& acceptingNewConnections) {
 
             map<int, int>::iterator controlIt = _responseWorkerControls.find(_pollFds[i].fd);
             if (controlIt != _responseWorkerControls.end()) {
-                _log.stream(LOG_WARN)
-                    << "Control pipe " << _pollFds[i].fd << " closed unexpectedly\n";
+                _log.stream(LOG_DEBUG) << "Control pipe " << _pollFds[i].fd
+                                       << " closed (peer exited or closed early)\n";
                 close(_pollFds[i].fd);
                 removePollFd(_pollFds[i].fd);
                 _responseWorkerControls.erase(controlIt);
