@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "cgi_handler/CgiProcessManager.hpp"
 #include "connection/Connection.hpp"
 #include "file_system/FileSystem.hpp"
 #include "http_status/HttpStatus.hpp"
@@ -39,7 +40,7 @@ Connection::State MasterListener::callCgi(Listener* listener, int activeFd) {
     int controlPipeReadEnd = -1;
     int responsePipeReadEnd = -1;
 
-    const pid_t pid = _cgiManager.startCgiProcess(
+    const pid_t pid = CgiProcessManager::startCgiProcess(
         listener,
         activeFd,
         requestBody,
@@ -134,7 +135,7 @@ Connection::State MasterListener::isItAResponseFromAResponseGeneratorWorker(int 
     string finalResponse;
     if (_cgiManager.isWorker(clientFd)) {
         _log.stream(LOG_DEBUG) << "Parsing CGI output for client " << clientFd << "\n";
-        finalResponse = _cgiManager.parseCgiResponse(rawOutput);
+        finalResponse = CgiProcessManager::parseCgiResponse(rawOutput);
         _cgiManager.unregisterWorker(clientFd);
     } else {
         finalResponse = rawOutput;
@@ -215,7 +216,7 @@ void MasterListener::handlePollEvents(bool& acceptingNewConnections) {
                 string finalResponse;
                 if (_cgiManager.isWorker(clientFd)) {
                     _log.stream(LOG_DEBUG) << "Parsing CGI output for client " << clientFd << "\n";
-                    finalResponse = _cgiManager.parseCgiResponse(rawOutput);
+                    finalResponse = CgiProcessManager::parseCgiResponse(rawOutput);
                     _cgiManager.unregisterWorker(clientFd);
                 } else {
                     finalResponse = rawOutput;

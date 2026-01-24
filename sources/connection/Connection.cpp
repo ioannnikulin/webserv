@@ -210,7 +210,7 @@ void Connection::cgiError(const char* errorMsg) {
     char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
     char* envp[] = {NULL};
     execve("/usr/bin/false", argv, envp);
-    while (1) {
+    while (true) {
     }
 }
 
@@ -219,22 +219,12 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
         const CgiHandlerConfig* cgiConfig = resolveCgiHandler(config);
 
         if (cgiConfig == NULL) {
-            const char* errorMsg =
-                "Status: 500\r\n"
-                "Content-Type: text/html\r\n"
-                "\r\n"
-                "CGI handler configuration error\r\n";
-            cgiError(errorMsg);
+            cgiError("Status: 500\r\nContent-Type: text/html\r\n\r\nCGI handler configuration error\r\n");
         }
 
         if (_route == NULL) {
             _log.stream(LOG_ERROR) << "No route found for CGI request\n";
-            const char* errorMsg =
-                "Status: 500\r\n"
-                "Content-Type: text/html\r\n"
-                "\r\n"
-                "No route configuration found\r\n";
-            cgiError(errorMsg);
+            cgiError("Status: 500\r\nContent-Type: text/html\r\n\r\nNo route configuration found\r\n");
         }
 
         const string scriptPath = resolveScriptPath();
@@ -259,27 +249,12 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
             delete[] env[i];
         }
         delete[] env;
-
-        const char* errorMsg =
-            "Status: 500\r\n"
-            "Content-Type: text/html\r\n"
-            "\r\n"
-            "Failed to execute CGI script\r\n";
-        write(STDOUT_FILENO, errorMsg, strlen(errorMsg));
-        close(STDOUT_FILENO);
-        close(STDIN_FILENO);
-
+        cgiError("Status: 500\r\nContent-Type: text/html\r\n\r\nFailed to execute CGI script\r\n");
     } catch (const std::exception& e) {
         _log.stream(LOG_ERROR) << "Exception in executeCgi: " << e.what() << "\n";
-        const char* errorMsg =
-            "Status: 500\r\n"
-            "Content-Type: text/html\r\n"
-            "\r\n"
-            "Internal server error in CGI execution\r\n";
-        cgiError(errorMsg);
+        cgiError("Status: 500\r\nContent-Type: text/html\r\n\r\nInternal server error in CGI execution\r\n");
     }
 
-    cgiError(NULL);
     return (Connection::IGNORED);  // NOTE: not returned anyway
 }
 

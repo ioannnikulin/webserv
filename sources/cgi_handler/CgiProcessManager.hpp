@@ -26,15 +26,16 @@ public:
     CgiProcessManager();
     ~CgiProcessManager();
 
-    pid_t startCgiProcess(
+    static pid_t startCgiProcess(
         Listener* listener,
         int clientFd,
         const std::string& requestBody,
         int& controlPipeReadEnd,
         int& responsePipeReadEnd
     );
-    std::string emptyOutput();
-    std::string parseCgiResponse(const std::string& cgiOutput);
+    static std::string emptyOutput();
+    static std::string noHeaders();
+    static std::string parseCgiResponse(const std::string& cgiOutput);
     std::vector<int> checkTimeouts();
     void registerWorker(int clientFd, pid_t pid);
     bool isWorker(int clientFd) const;
@@ -55,7 +56,7 @@ private:
     static void setupParentPipes(const CgiPipes& pipes);
     static void writeRequestBodyToPipe(int pipeFd, const std::string& requestBody);
 
-    void runCgiChild(
+    static void runCgiChild(
         Listener* listener,
         int clientFd,
         int pipeToProcess[2],
