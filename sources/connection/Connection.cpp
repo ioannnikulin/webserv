@@ -200,6 +200,20 @@ string Connection::resolveScriptPath() {
     return (_route->getFolderConfig().getResolvedPath(requestPath));
 }
 
+void Connection::cgiError(const char* errorMsg) {
+    if (errorMsg != NULL) {
+        write(STDOUT_FILENO, errorMsg, strlen(errorMsg));
+        close(STDOUT_FILENO);
+        close(STDIN_FILENO);
+    }
+
+    char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
+    char* envp[] = {NULL};
+    execve("/usr/bin/false", argv, envp);
+    while (1) {
+    }
+}
+
 Connection::State Connection::executeCgi(const Endpoint& config) {
     try {
         const CgiHandlerConfig* cgiConfig = resolveCgiHandler(config);
@@ -210,15 +224,7 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
                 "Content-Type: text/html\r\n"
                 "\r\n"
                 "CGI handler configuration error\r\n";
-            write(STDOUT_FILENO, errorMsg, strlen(errorMsg));
-            close(STDOUT_FILENO);
-            close(STDIN_FILENO);
-
-            char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
-            char* envp[] = {NULL};
-            execve("/usr/bin/false", argv, envp);
-            while (1) {
-            }
+            cgiError(errorMsg);
         }
 
         if (_route == NULL) {
@@ -228,15 +234,7 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
                 "Content-Type: text/html\r\n"
                 "\r\n"
                 "No route configuration found\r\n";
-            write(STDOUT_FILENO, errorMsg, strlen(errorMsg));
-            close(STDOUT_FILENO);
-            close(STDIN_FILENO);
-
-            char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
-            char* envp[] = {NULL};
-            execve("/usr/bin/false", argv, envp);
-            while (1) {
-            }
+            cgiError(errorMsg);
         }
 
         const string scriptPath = resolveScriptPath();
@@ -278,17 +276,11 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
             "Content-Type: text/html\r\n"
             "\r\n"
             "Internal server error in CGI execution\r\n";
-        write(STDOUT_FILENO, errorMsg, strlen(errorMsg));
-        close(STDOUT_FILENO);
-        close(STDIN_FILENO);
+        cgiError(errorMsg);
     }
 
-    char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
-    char* envp[] = {NULL};
-    execve("/usr/bin/false", argv, envp);
-
-    while (1) {
-    }
+    cgiError(NULL);
+    return (Connection::IGNORED);  // NOTE: not returned anyway
 }
 
 Connection::State Connection::receiveRequestContent() {
