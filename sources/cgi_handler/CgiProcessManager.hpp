@@ -23,7 +23,7 @@ public:
         int control[2];
     };
 
-    CgiProcessManager(Logger& logger);
+    CgiProcessManager();
     ~CgiProcessManager();
 
     pid_t startCgiProcess(
@@ -33,7 +33,7 @@ public:
         int& controlPipeReadEnd,
         int& responsePipeReadEnd
     );
-
+    std::string emptyOutput();
     std::string parseCgiResponse(const std::string& cgiOutput);
     std::vector<int> checkTimeouts();
     void registerWorker(int clientFd, pid_t pid);
@@ -43,7 +43,7 @@ public:
     pid_t getProcessId(int clientFd) const;
 
 private:
-    Logger& _log;
+    static Logger _log;
     std::set<int> _cgiWorkers;
     std::map<int, pid_t> _cgiProcesses;
     std::map<int, time_t> _cgiStartTimes;

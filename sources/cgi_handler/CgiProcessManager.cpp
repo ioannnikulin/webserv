@@ -34,8 +34,9 @@ void resetSignalsForChild() {
 }
 
 void closeFdOrLog(int fileDescriptor, webserver::Logger& log, const char* msg) {
-    if (close(fileDescriptor) == -1)
+    if (close(fileDescriptor) == -1) {
         log.stream(LOG_ERROR) << msg << '\n';
+    }
 }
 
 void execFalseAndLoop() {
@@ -77,8 +78,9 @@ void dupOrFail(
 
 namespace webserver {
 
-CgiProcessManager::CgiProcessManager(Logger& logger)
-    : _log(logger) {
+Logger CgiProcessManager::_log;
+
+CgiProcessManager::CgiProcessManager() {
 }
 
 CgiProcessManager::~CgiProcessManager() {
@@ -287,21 +289,24 @@ void CgiProcessManager::parseCgiResponseLoop(
     }
 }
 
+string CgiProcessManager::emptyOutput() {
+    _log.stream(LOG_ERROR) << "CGI script produced no output\n";
+
+    const string pageLocation = HttpStatus::getPageFileLocation(HttpStatus::INTERNAL_SERVER_ERROR);
+    string errorPageContent;
+    try {
+        errorPageContent = file_system::readFile(pageLocation.c_str());
+    } catch (const std::exception& e) {
+        errorPageContent = "CGI script failed to produce output";
+    }
+
+    const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
+    return (response.serialize());
+}
+
 string CgiProcessManager::parseCgiResponse(const string& cgiOutput) {
     if (cgiOutput.empty()) {
-        _log.stream(LOG_ERROR) << "CGI script produced no output\n";
-
-        const string pageLocation =
-            HttpStatus::getPageFileLocation(HttpStatus::INTERNAL_SERVER_ERROR);
-        string errorPageContent;
-        try {
-            errorPageContent = file_system::readFile(pageLocation.c_str());
-        } catch (const std::exception& e) {
-            errorPageContent = "CGI script failed to produce output";
-        }
-
-        const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
-        return (response.serialize());
+        return (emptyOutput());
     }
 
     const string::size_type headerEnd = cgiOutput.find("\r\n\r\n");

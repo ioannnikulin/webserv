@@ -51,6 +51,7 @@ private:
     bool fullRequestReceived();
     bool itsACgiRequest();
     std::string resolveScriptPath();
+    static void cgiError(const char* errorMsg);
 
 public:
     explicit Connection(int listeningSocketFd, const Endpoint& configuration);
