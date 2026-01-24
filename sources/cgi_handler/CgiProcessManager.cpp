@@ -304,13 +304,7 @@ string CgiProcessManager::emptyOutput() {
     return (response.serialize());
 }
 
-string CgiProcessManager::parseCgiResponse(const string& cgiOutput) {
-    if (cgiOutput.empty()) {
-        return (emptyOutput());
-    }
-
-    const string::size_type headerEnd = cgiOutput.find("\r\n\r\n");
-    if (headerEnd == string::npos) {
+string CgiProcessManager::noHeaders() {
         _log.stream(LOG_ERROR) << "CGI script produced invalid output (no proper headers)\n";
 
         const string pageLocation =
@@ -324,6 +318,15 @@ string CgiProcessManager::parseCgiResponse(const string& cgiOutput) {
 
         const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
         return (response.serialize());
+}
+string CgiProcessManager::parseCgiResponse(const string& cgiOutput) {
+    if (cgiOutput.empty()) {
+        return (emptyOutput());
+    }
+
+    const string::size_type headerEnd = cgiOutput.find("\r\n\r\n");
+    if (headerEnd == string::npos) {
+        return (noHeaders());
     }
 
     const string headers = cgiOutput.substr(0, headerEnd);
