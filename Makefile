@@ -238,7 +238,7 @@ test: install-cxxtest generate-cxxtest-tests build-cxxtest-tests
 	@set -o pipefail; \
 	$(VALGRIND) ./$(TEST_EXECUTABLE) 2>&1 | tee unit_test_valgrind.log
 
-LOCAL_RUN_CONFIG=./tests/config_files/cgi_example.conf
+LOCAL_RUN_CONFIG=./tests/config_files/local_run.conf
 WEBSERV_ADDRESS=127.0.0.1:8888
 
 run: $(MAIN_EXECUTABLE)

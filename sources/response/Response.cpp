@@ -11,9 +11,6 @@
 
 using std::string;
 
-#define HTTP_PROTOCOL "HTTP/1.0"
-#define SERVER_NAME "OurWebServer/1.0.0"
-
 namespace webserver {
 
 Logger Response::_log;

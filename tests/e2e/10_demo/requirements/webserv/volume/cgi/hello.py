@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 import sys
+import datetime
 
 sys.stdout.write("Content-Type: text/html\r\n")
 sys.stdout.write("\r\n")
 
-print("""<!DOCTYPE html>
+current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+print(f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CGI Test Suite</title>
+    <title>Hello from CGI</title>
     <style>
-        body {
+        body {{
             margin: 0;
             height: 100vh;
             background: #000000;
@@ -19,47 +22,34 @@ print("""<!DOCTYPE html>
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .container {
+        }}
+        .container {{
             text-align: center;
-        }
-        h1 {
+        }}
+        h1 {{
             font-size: 6rem;
             margin: 0;
-        }
-        p {
+        }}
+        .time {{
             margin-top: 1rem;
-            font-size: 1.1rem;
+            font-size: 1.5rem;
             opacity: 0.9;
-        }
-        .test-list {
-            list-style: none;
-            padding: 0;
-            margin: 2rem 0 0 0;
-        }
-        .test-list li {
-            margin: 0.5rem 0;
-        }
-        a {
+        }}
+        a {{
             color: #ffffff;
             text-decoration: none;
             font-size: 1rem;
-        }
-        a:hover {
+        }}
+        a:hover {{
             text-decoration: underline;
-        }
+        }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>CGI</h1>
-        <p>Python CGI is running successfully</p>
-        <ul class="test-list">
-            <li><a href='/hello.py'>Hello World</a></li>
-            <li><a href='/env.py'>Environment Variables</a></li>
-            <li><a href='/form.html'>Form Test</a></li>
-            <li><a href='/slow.py'>Timeout Test (30s)</a></li>
-        </ul>
+        <h1>Hello</h1>
+        <div class="time">{current_time}</div>
+        <p><a href='/'>Back</a></p>
     </div>
 </body>
 </html>""")

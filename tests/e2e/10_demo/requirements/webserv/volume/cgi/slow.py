@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import time
 import sys
 
 sys.stdout.write("Content-Type: text/html\r\n")
@@ -8,7 +9,7 @@ print("""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CGI Test Suite</title>
+    <title>Timeout Test</title>
     <style>
         body {
             margin: 0;
@@ -22,6 +23,7 @@ print("""<!DOCTYPE html>
         }
         .container {
             text-align: center;
+            max-width: 600px;
         }
         h1 {
             font-size: 6rem;
@@ -32,34 +34,16 @@ print("""<!DOCTYPE html>
             font-size: 1.1rem;
             opacity: 0.9;
         }
-        .test-list {
-            list-style: none;
-            padding: 0;
-            margin: 2rem 0 0 0;
-        }
-        .test-list li {
-            margin: 0.5rem 0;
-        }
-        a {
-            color: #ffffff;
-            text-decoration: none;
-            font-size: 1rem;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>CGI</h1>
-        <p>Python CGI is running successfully</p>
-        <ul class="test-list">
-            <li><a href='/hello.py'>Hello World</a></li>
-            <li><a href='/env.py'>Environment Variables</a></li>
-            <li><a href='/form.html'>Form Test</a></li>
-            <li><a href='/slow.py'>Timeout Test (30s)</a></li>
-        </ul>
+        <h1>30s</h1>
+        <p>Timeout did not trigger.</p>
     </div>
 </body>
 </html>""")
+
+
+time.sleep(31)
+sys.stdout.flush()
