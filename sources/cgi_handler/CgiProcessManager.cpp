@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include <cstddef>
+#include <exception>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -24,6 +25,55 @@ using std::ostringstream;
 using std::runtime_error;
 using std::string;
 using std::vector;
+
+namespace {
+void resetSignalsForChild() {
+    signal(SIGINT, SIG_DFL);
+    signal(SIGTERM, SIG_DFL);
+    signal(SIGQUIT, SIG_DFL);
+}
+
+void closeFdOrLog(int fileDescriptor, webserver::Logger& log, const char* msg) {
+    if (close(fileDescriptor) == -1)
+        log.stream(LOG_ERROR) << msg << '\n';
+}
+
+void execFalseAndLoop() {
+    char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
+    char* envp[] = {NULL};
+
+    execve("/usr/bin/false", argv, envp);
+    while (true) {
+    }
+}
+
+void dupOrFail(
+    int fromFd,
+    int toFd,
+    int controlPipeWriteFd,
+    int cgiOutputFd,
+    webserver::Logger& log,
+    const char* logMsg
+) {
+    if (dup2(fromFd, toFd) == -1) {
+        log.stream(LOG_ERROR) << logMsg << '\n';
+
+        webserver::Connection::State errorState = webserver::Connection::WRITING_COMPLETE;
+        write(controlPipeWriteFd, &errorState, sizeof(errorState));
+
+        if (cgiOutputFd != -1) {
+            const char* errorMsg =
+                "Status: 500\r\n"
+                "Content-Type: text/html\r\n"
+                "\r\n"
+                "Failed to redirect IO for CGI\r\n";
+            write(cgiOutputFd, errorMsg, strlen(errorMsg));
+        }
+
+        execFalseAndLoop();
+    }
+}
+}  // namespace
 
 namespace webserver {
 
@@ -94,63 +144,56 @@ void CgiProcessManager::runCgiChild(
     int pipeFromProcess[2],
     int controlPipe[2]
 ) {
-    signal(SIGINT, SIG_DFL);
-    signal(SIGTERM, SIG_DFL);
-    signal(SIGQUIT, SIG_DFL);
+    resetSignalsForChild();
 
     const int READING_PIPE_END = 0;
     const int WRITING_PIPE_END = 1;
 
-    if (close(pipeToProcess[WRITING_PIPE_END]) == -1) {
-        _log.stream(LOG_ERROR) << "close() failed on child's writing pipeToProcess end\n";
-    }
-    if (close(pipeFromProcess[READING_PIPE_END]) == -1) {
-        _log.stream(LOG_ERROR) << "close() failed on child's reading pipeFromProcess end\n";
-    }
-    if (close(controlPipe[READING_PIPE_END]) == -1) {
-        _log.stream(LOG_ERROR) << "close() failed on child's reading control pipe end\n";
-    }
+    closeFdOrLog(
+        pipeToProcess[WRITING_PIPE_END],
+        _log,
+        "close() failed on child's writing pipeToProcess end"
+    );
+    closeFdOrLog(
+        pipeFromProcess[READING_PIPE_END],
+        _log,
+        "close() failed on child's reading pipeFromProcess end"
+    );
+    closeFdOrLog(
+        controlPipe[READING_PIPE_END],
+        _log,
+        "close() failed on child's reading control pipe end"
+    );
 
-    if (dup2(pipeToProcess[READING_PIPE_END], STDIN_FILENO) == -1) {
-        _log.stream(LOG_ERROR) << "dup2() failed for stdin in CGI child\n";
-        Connection::State errorState = Connection::WRITING_COMPLETE;
-        write(controlPipe[WRITING_PIPE_END], &errorState, sizeof(errorState));
-        const char* errorMsg =
-            "Status: 500\r\n"
-            "Content-Type: text/html\r\n"
-            "\r\n"
-            "Failed to redirect stdin for CGI\r\n";
-        write(pipeFromProcess[WRITING_PIPE_END], errorMsg, strlen(errorMsg));
-        close(pipeToProcess[READING_PIPE_END]);
-        close(pipeFromProcess[WRITING_PIPE_END]);
-        close(controlPipe[WRITING_PIPE_END]);
+    dupOrFail(
+        pipeToProcess[READING_PIPE_END],
+        STDIN_FILENO,
+        controlPipe[WRITING_PIPE_END],
+        pipeFromProcess[WRITING_PIPE_END],
+        _log,
+        "dup2() failed for stdin in CGI child"
+    );
 
-        char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
-        char* envp[] = {NULL};
-        execve("/usr/bin/false", argv, envp);
-        while (true) {
-        }
-    }
-    if (close(pipeToProcess[READING_PIPE_END]) == -1) {
-        _log.stream(LOG_ERROR) << "close() failed on child's pipeToProcess reading end\n";
-    }
+    closeFdOrLog(
+        pipeToProcess[READING_PIPE_END],
+        _log,
+        "close() failed on child's pipeToProcess reading end"
+    );
 
-    if (dup2(pipeFromProcess[WRITING_PIPE_END], STDOUT_FILENO) == -1) {
-        _log.stream(LOG_ERROR) << "dup2() failed for stdout in CGI child\n";
-        Connection::State errorState = Connection::WRITING_COMPLETE;
-        write(controlPipe[WRITING_PIPE_END], &errorState, sizeof(errorState));
-        close(pipeFromProcess[WRITING_PIPE_END]);
-        close(controlPipe[WRITING_PIPE_END]);
+    dupOrFail(
+        pipeFromProcess[WRITING_PIPE_END],
+        STDOUT_FILENO,
+        controlPipe[WRITING_PIPE_END],
+        -1,
+        _log,
+        "dup2() failed for stdout in CGI child"
+    );
 
-        char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
-        char* envp[] = {NULL};
-        execve("/usr/bin/false", argv, envp);
-        while (true) {
-        }
-    }
-    if (close(pipeFromProcess[WRITING_PIPE_END]) == -1) {
-        _log.stream(LOG_ERROR) << "close() failed on child's pipeFromProcess writing end\n";
-    }
+    closeFdOrLog(
+        pipeFromProcess[WRITING_PIPE_END],
+        _log,
+        "close() failed on child's pipeFromProcess writing end"
+    );
 
     Connection::State connState = listener->executeCgi(clientFd);
 
@@ -164,12 +207,7 @@ void CgiProcessManager::runCgiChild(
     close(STDOUT_FILENO);
     close(STDIN_FILENO);
 
-    char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
-    char* envp[] = {NULL};
-    execve("/usr/bin/false", argv, envp);
-
-    while (true) {
-    }
+    execFalseAndLoop();
 }
 
 pid_t CgiProcessManager::startCgiProcess(
