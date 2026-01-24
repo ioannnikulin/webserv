@@ -3,7 +3,6 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <poll.h>
-#include <signal.h>
 #include <stdint.h>
 #include <sys/socket.h>
 #include <sys/types.h>

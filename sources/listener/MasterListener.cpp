@@ -204,7 +204,7 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
 void MasterListener::handlePollEvents(bool& acceptingNewConnections) {
     for (size_t i = 0; i < _pollFds.size(); i++) {
         if ((_pollFds[i].revents & (POLLHUP | POLLERR)) > 0) {
-            map<int, int>::iterator responseIt = _responseWorkers.find(_pollFds[i].fd);
+            const map<int, int>::iterator responseIt = _responseWorkers.find(_pollFds[i].fd);
             if (responseIt != _responseWorkers.end()) {
                 const int clientFd = responseIt->second;
                 _log.stream(LOG_DEBUG) << "Response pipe " << _pollFds[i].fd
@@ -228,7 +228,7 @@ void MasterListener::handlePollEvents(bool& acceptingNewConnections) {
                 continue;
             }
 
-            map<int, int>::iterator controlIt = _responseWorkerControls.find(_pollFds[i].fd);
+            const map<int, int>::iterator controlIt = _responseWorkerControls.find(_pollFds[i].fd);
             if (controlIt != _responseWorkerControls.end()) {
                 _log.stream(LOG_DEBUG) << "Control pipe " << _pollFds[i].fd
                                        << " closed (peer exited or closed early)\n";
