@@ -134,7 +134,7 @@ Connection::State MasterListener::isItAResponseFromAResponseGeneratorWorker(int 
     string finalResponse;
     if (_cgiManager.isWorker(clientFd)) {
         _log.stream(LOG_DEBUG) << "Parsing CGI output for client " << clientFd << "\n";
-        finalResponse = CgiProcessManager::parseCgiResponse(rawOutput);
+        finalResponse = _cgiManager.parseCgiResponse(rawOutput);
         _cgiManager.unregisterWorker(clientFd);
     } else {
         finalResponse = rawOutput;
@@ -203,6 +203,46 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
 
 void MasterListener::handlePollEvents(bool& acceptingNewConnections) {
     for (size_t i = 0; i < _pollFds.size(); i++) {
+        if ((_pollFds[i].revents & (POLLHUP | POLLERR)) > 0) {
+            map<int, int>::iterator responseIt = _responseWorkers.find(_pollFds[i].fd);
+            if (responseIt != _responseWorkers.end()) {
+                const int clientFd = responseIt->second;
+                _log.stream(LOG_DEBUG) << "Response pipe " << _pollFds[i].fd
+                                       << " closed for client " << clientFd << "\n";
+
+                const string rawOutput = readStringAndClose(_pollFds[i].fd);
+
+                string finalResponse;
+                if (_cgiManager.isWorker(clientFd)) {
+                    _log.stream(LOG_DEBUG) << "Parsing CGI output for client " << clientFd << "\n";
+                    finalResponse = _cgiManager.parseCgiResponse(rawOutput);
+                    _cgiManager.unregisterWorker(clientFd);
+                } else {
+                    finalResponse = rawOutput;
+                }
+
+                _clientListeners.at(clientFd)->setResponse(clientFd, finalResponse);
+                markResponseReadyForReturn(clientFd);
+                removePollFd(_pollFds[i].fd);
+                _responseWorkers.erase(responseIt);
+                continue;
+            }
+
+            map<int, int>::iterator controlIt = _responseWorkerControls.find(_pollFds[i].fd);
+            if (controlIt != _responseWorkerControls.end()) {
+                _log.stream(LOG_WARN)
+                    << "Control pipe " << _pollFds[i].fd << " closed unexpectedly\n";
+                close(_pollFds[i].fd);
+                removePollFd(_pollFds[i].fd);
+                _responseWorkerControls.erase(controlIt);
+                continue;
+            }
+
+            close(_pollFds[i].fd);
+            removePollFd(_pollFds[i].fd);
+            continue;
+        }
+
         if ((_pollFds[i].revents & POLLIN) > 0) {
             // NOTE: something happened on that listening socket, let's dive in
             handleIncomingConnection(_pollFds[i], acceptingNewConnections);
@@ -211,11 +251,6 @@ void MasterListener::handlePollEvents(bool& acceptingNewConnections) {
         if ((_pollFds[i].revents & POLLOUT) > 0) {
             // NOTE: the response is ready to be sent back
             handleOutgoingConnection(_pollFds[i]);
-            continue;
-        }
-        if ((_pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) > 0) {
-            close(_pollFds[i].fd);
-            removePollFd(_pollFds[i].fd);
             continue;
         }
     }

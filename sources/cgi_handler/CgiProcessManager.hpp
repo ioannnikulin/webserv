@@ -34,7 +34,7 @@ public:
         int& responsePipeReadEnd
     );
 
-    static std::string parseCgiResponse(const std::string& cgiOutput);
+    std::string parseCgiResponse(const std::string& cgiOutput);
     std::vector<int> checkTimeouts();
     void registerWorker(int clientFd, pid_t pid);
     bool isWorker(int clientFd) const;

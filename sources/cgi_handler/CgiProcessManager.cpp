@@ -2,6 +2,7 @@
 
 #include <fcntl.h>
 #include <signal.h>
+#include <string.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
@@ -12,6 +13,7 @@
 #include <string>
 
 #include "connection/Connection.hpp"
+#include "file_system/FileSystem.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "listener/Listener.hpp"
 #include "logger/Logger.hpp"
@@ -111,15 +113,21 @@ void CgiProcessManager::runCgiChild(
 
     if (dup2(pipeToProcess[READING_PIPE_END], STDIN_FILENO) == -1) {
         _log.stream(LOG_ERROR) << "dup2() failed for stdin in CGI child\n";
-        char* argv[] = {
-            const_cast<char*>("/bin/sh"),
-            const_cast<char*>("-c"),
-            const_cast<char*>("exit 1"),
-            // clang-format off
-            NULL};
-        // clang-format on
+        Connection::State errorState = Connection::WRITING_COMPLETE;
+        write(controlPipe[WRITING_PIPE_END], &errorState, sizeof(errorState));
+        const char* errorMsg =
+            "Status: 500\r\n"
+            "Content-Type: text/html\r\n"
+            "\r\n"
+            "Failed to redirect stdin for CGI\r\n";
+        write(pipeFromProcess[WRITING_PIPE_END], errorMsg, strlen(errorMsg));
+        close(pipeToProcess[READING_PIPE_END]);
+        close(pipeFromProcess[WRITING_PIPE_END]);
+        close(controlPipe[WRITING_PIPE_END]);
+
+        char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
         char* envp[] = {NULL};
-        execve("/bin/sh", argv, envp);
+        execve("/usr/bin/false", argv, envp);
         while (true) {
         }
     }
@@ -129,15 +137,14 @@ void CgiProcessManager::runCgiChild(
 
     if (dup2(pipeFromProcess[WRITING_PIPE_END], STDOUT_FILENO) == -1) {
         _log.stream(LOG_ERROR) << "dup2() failed for stdout in CGI child\n";
-        char* argv[] = {
-            const_cast<char*>("/bin/sh"),
-            const_cast<char*>("-c"),
-            const_cast<char*>("exit 1"),
-            // clang-format off
-            NULL};
-        // clang-format on
+        Connection::State errorState = Connection::WRITING_COMPLETE;
+        write(controlPipe[WRITING_PIPE_END], &errorState, sizeof(errorState));
+        close(pipeFromProcess[WRITING_PIPE_END]);
+        close(controlPipe[WRITING_PIPE_END]);
+
+        char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
         char* envp[] = {NULL};
-        execve("/bin/sh", argv, envp);
+        execve("/usr/bin/false", argv, envp);
         while (true) {
         }
     }
@@ -152,6 +159,16 @@ void CgiProcessManager::runCgiChild(
     }
     if (close(controlPipe[WRITING_PIPE_END]) == -1) {
         _log.stream(LOG_ERROR) << "close() failed on child's control pipe writing end\n";
+    }
+
+    close(STDOUT_FILENO);
+    close(STDIN_FILENO);
+
+    char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
+    char* envp[] = {NULL};
+    execve("/usr/bin/false", argv, envp);
+
+    while (true) {
     }
 }
 
@@ -233,9 +250,36 @@ void CgiProcessManager::parseCgiResponseLoop(
 }
 
 string CgiProcessManager::parseCgiResponse(const string& cgiOutput) {
+    if (cgiOutput.empty()) {
+        _log.stream(LOG_ERROR) << "CGI script produced no output\n";
+
+        const string pageLocation =
+            HttpStatus::getPageFileLocation(HttpStatus::INTERNAL_SERVER_ERROR);
+        string errorPageContent;
+        try {
+            errorPageContent = file_system::readFile(pageLocation.c_str());
+        } catch (const std::exception& e) {
+            errorPageContent = "CGI script failed to produce output";
+        }
+
+        const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
+        return (response.serialize());
+    }
+
     const string::size_type headerEnd = cgiOutput.find("\r\n\r\n");
     if (headerEnd == string::npos) {
-        const Response response(HttpStatus::OK, cgiOutput, "text/html");
+        _log.stream(LOG_ERROR) << "CGI script produced invalid output (no proper headers)\n";
+
+        const string pageLocation =
+            HttpStatus::getPageFileLocation(HttpStatus::INTERNAL_SERVER_ERROR);
+        string errorPageContent;
+        try {
+            errorPageContent = file_system::readFile(pageLocation.c_str());
+        } catch (const std::exception& e) {
+            errorPageContent = "CGI script produced invalid output";
+        }
+
+        const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
         return (response.serialize());
     }
 
