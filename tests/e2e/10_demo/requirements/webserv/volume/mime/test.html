@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>MIME Test – text/html</title>
+	<style>
+		body {
+			font-family: system-ui, sans-serif;
+			background: #0f172a;
+			color: #e5e7eb;
+			padding: 2rem;
+		}
+		.card {
+			background: #020617;
+			border: 1px solid #334155;
+			border-radius: 8px;
+			padding: 1.5rem;
+			max-width: 600px;
+		}
+		code {
+			background: #1e293b;
+			padding: 0.2em 0.4em;
+			border-radius: 4px;
+		}
+	</style>
+</head>
+<body>
+
+	<div class="card">
+		<h1>✅ HTML MIME OK</h1>
+		<p>
+			This file is served as <code>text/html</code>.
+		</p>
+		<p>
+			If you see:
+		</p>
+		<ul>
+			<li>styled text</li>
+			<li>a dark background</li>
+			<li>this layout rendered normally</li>
+		</ul>
+		<p>
+			👉 then your server is correctly sending the
+			<code>Content-Type: text/html</code> header.
+		</p>
+	</div>
+
+</body>
+</html>

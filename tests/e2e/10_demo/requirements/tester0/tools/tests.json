@@ -1,0 +1,133 @@
+{
+  "tests": [
+    {
+      "name": "root net1",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200
+      }
+    },
+    {
+      "name": "root net1 no slash",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200
+      }
+    },
+    {
+      "name": "root net2",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.19.0.10:8080/",
+      "delay_before_ms": 0,
+      "expected": {
+        "error": {
+          "contains": "connection refused"
+        }
+      }
+    },
+    {
+      "name": "404 page net1",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/notfound",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 404
+      }
+    },
+    {
+      "name": "404 page net2",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.19.0.10:8080/notfound",
+      "delay_before_ms": 0,
+      "expected": {
+        "error": {
+          "contains": "connection refused"
+        }
+      }
+    },
+    {
+      "name": "folder net1 slash",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder/",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "<html>\n<body>\n\t<h1>Hello World!</h1>\n\t<div>Sample page</div>\n</body>\n</html>"
+      }
+    },
+    {
+      "name": "folder net1 no slash",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "<html>\n<body>\n\t<h1>Hello World!</h1>\n\t<div>Sample page</div>\n</body>\n</html>"
+      }
+    },
+    {
+      "name": "folder/index.html net1",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder/index.html",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "<html>\n<body>\n\t<h1>Hello World!</h1>\n\t<div>Sample page</div>\n</body>\n</html>"
+      }
+    },
+    {
+      "name": "autolisting",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/listme/",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "<html><head><title>/listme/</title></head><body>Contents of folder /listme/:\n<hr/>\n<ul><li><a href=\"/listme/.\">.</a></li><li><a href=\"/listme/..\">..</a></li><li><a href=\"/listme/listmetoo\">listmetoo</a></li><li><a href=\"/listme/stub\">stub</a></li></ul></body></html>"
+      }
+    },
+    {
+      "name": "no autolisting",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/dontlistme/",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 403
+      }
+    },
+    {
+      "name": "folder/subfolder no index.html, falling back to autoindex",
+      "tester": "tester0",
+      "method": "GET",
+      "url": "http://172.18.0.10:8080/folder/subfolder/",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 200,
+        "body": "<html><head><title>/folder/subfolder/</title></head><body>Contents of folder /folder/subfolder/:\n<hr/>\n<ul><li><a href=\"/folder/subfolder/.\">.</a></li><li><a href=\"/folder/subfolder/..\">..</a></li><li><a href=\"/folder/subfolder/stub\">stub</a></li></ul></body></html>"
+      }
+    },
+    {
+      "name": "shutdown",
+      "tester": "tester0",
+      "method": "SHUTDOWN",
+      "url": "http://172.18.0.10:8080",
+      "expected": {
+        "status_code": 503,
+        "body": "Server is shutting down"
+      }
+    }
+  ]
+}

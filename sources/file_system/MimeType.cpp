@@ -41,6 +41,7 @@ map<string, MimeType> MimeType::initMimeTypeMap() {
     map<string, MimeType> map;
 
     map["html"] = MimeType("text/html", true);
+	map["htm"] = map["html"];
     map["css"] = MimeType("text/css", true);
     map["js"] = MimeType("application/javascript", true);
     map["png"] = MimeType("image/png", false);
