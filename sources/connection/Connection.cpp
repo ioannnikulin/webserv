@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <signal.h>
 #include <stdint.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -203,19 +204,44 @@ string Connection::resolveScriptPath() {
 Connection::State Connection::executeCgi(const Endpoint& config) {
     try {
         const CgiHandlerConfig* cgiConfig = resolveCgiHandler(config);
+
         if (cgiConfig == NULL) {
-            return (WRITING_COMPLETE);
+            const char* errorMsg =
+                "Status: 500\r\n"
+                "Content-Type: text/html\r\n"
+                "\r\n"
+                "CGI handler configuration error\r\n";
+            write(STDOUT_FILENO, errorMsg, strlen(errorMsg));
+            close(STDOUT_FILENO);
+            close(STDIN_FILENO);
+
+            char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
+            char* envp[] = {NULL};
+            execve("/usr/bin/false", argv, envp);
+            while (1) {
+            }
         }
 
         if (_route == NULL) {
             _log.stream(LOG_ERROR) << "No route found for CGI request\n";
-            return (WRITING_COMPLETE);
+            const char* errorMsg =
+                "Status: 500\r\n"
+                "Content-Type: text/html\r\n"
+                "\r\n"
+                "No route configuration found\r\n";
+            write(STDOUT_FILENO, errorMsg, strlen(errorMsg));
+            close(STDOUT_FILENO);
+            close(STDIN_FILENO);
+
+            char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
+            char* envp[] = {NULL};
+            execve("/usr/bin/false", argv, envp);
+            while (1) {
+            }
         }
 
         const string scriptPath = resolveScriptPath();
-
         CgiHandler handler(*cgiConfig, _request, scriptPath, _configuration.getPort(), *_route);
-
         char** env = handler.prepareEnvironment();
 
         const string interpreterPath = handler.getExecutablePath();
@@ -224,9 +250,8 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
         char* argv[] = {
             const_cast<char*>(interpreterPath.c_str()),
             const_cast<char*>(scriptPathStr.c_str()),
-            // clang-format off
             NULL};
-        // clang-format on
+
         execve(interpreterPath.c_str(), argv, env);
 
         _log.stream(LOG_ERROR) << "execve() failed for CGI script: " << scriptPathStr << "\n";
@@ -236,11 +261,33 @@ Connection::State Connection::executeCgi(const Endpoint& config) {
         }
         delete[] env;
 
+        const char* errorMsg =
+            "Status: 500\r\n"
+            "Content-Type: text/html\r\n"
+            "\r\n"
+            "Failed to execute CGI script\r\n";
+        write(STDOUT_FILENO, errorMsg, strlen(errorMsg));
+        close(STDOUT_FILENO);
+        close(STDIN_FILENO);
+
     } catch (const std::exception& e) {
         _log.stream(LOG_ERROR) << "Exception in executeCgi: " << e.what() << "\n";
+        const char* errorMsg =
+            "Status: 500\r\n"
+            "Content-Type: text/html\r\n"
+            "\r\n"
+            "Internal server error in CGI execution\r\n";
+        write(STDOUT_FILENO, errorMsg, strlen(errorMsg));
+        close(STDOUT_FILENO);
+        close(STDIN_FILENO);
     }
 
-    return (WRITING_COMPLETE);
+    char* argv[] = {const_cast<char*>("/usr/bin/false"), NULL};
+    char* envp[] = {NULL};
+    execve("/usr/bin/false", argv, envp);
+
+    while (1) {
+    }
 }
 
 Connection::State Connection::receiveRequestContent() {
