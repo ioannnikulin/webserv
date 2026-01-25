@@ -57,6 +57,9 @@ string FolderConfig::getResolvedPath(std::string target) const {
         target = "/";
     }
 
+    if (target == "/set_light" || target == "/set_dark") {
+        return (target);
+    }
     _log.stream(LOG_DEBUG) << "[" << _storageRootPath << "] [" << target << "]\n";
     return (
         _storageRootPath + "/" +

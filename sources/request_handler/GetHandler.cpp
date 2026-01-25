@@ -59,6 +59,23 @@ Response GetHandler::handleRequest(
     string resolvedTarget,
     const RouteConfig& routeConfig
 ) {
+    if (resolvedTarget == "/set_dark") {
+        return (Response(
+            HttpStatus::OK,
+            "Preference cookie set",
+            MimeType::getMimeType("txt")
+        ).setHeader("Set-Cookie", "theme=dark; Max-Age=60; Path=/"));
+        // ).setHeader("Set-Cookie", "theme=; Max-Age=0; Path=/"));
+
+    }
+    if (resolvedTarget == "/set_light") {
+        return (Response(
+            HttpStatus::OK,
+            "Preference cookie set",
+            MimeType::getMimeType("txt")
+        ).setHeader("Set-Cookie", "theme=light; Max-Age=60; Path=/"));
+        // ).setHeader("Set-Cookie", "theme=; Max-Age=0; Path=/"));
+    }
     if (file_system::isDirectory(resolvedTarget.c_str())) {
         _log.stream(LOG_TRACE) << "Target is a directory.\n";
         if (resolvedTarget.at(resolvedTarget.size() - 1) != '/') {

@@ -7,6 +7,22 @@
 	y: window.innerHeight / 2
 };
 
+function getCookie(name) {
+    const cookies = document.cookie.split("; ");
+    for (const cookie of cookies) {
+        const [key, value] = cookie.split("=");
+        if (key === name)
+            return value;
+    }
+    return null;
+}
+
+const theme = getCookie("theme");
+console.log(theme); // "light" or null
+
+if (theme === "light") {
+    document.body.classList.add("light");
+}
 
 window.addEventListener("mousemove", (e) => {
 	mouse.x = e.clientX;

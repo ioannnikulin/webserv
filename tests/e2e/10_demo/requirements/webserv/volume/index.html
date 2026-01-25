@@ -7,10 +7,22 @@
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link rel="stylesheet" href="/assets/style.css">
 	<script src="/assets/app.js" defer></script>
+	<script>
+		function getCookie(name) {
+		return document.cookie
+			.split('; ')
+			.find(row => row.startsWith(name + '='))
+			?.split('=')[1];
+		}
+		</script>
+
 </head>
 
 <body>
-
+	<button class="corner-button" onclick=" const theme = getCookie('theme'); 
+	const url = theme === 'light' ? '/set_dark' : '/set_light'; 
+	fetch(url).then(() => location.reload()); ">🌙 Switch theme</button>
+	
 <h1 class="sticky-header">🚀 webserv v1.0.0 Showcase</h1>
 <canvas id="starfield" aria-hidden="true"></canvas>
 
