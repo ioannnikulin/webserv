@@ -62,6 +62,10 @@ string FolderConfig::getResolvedPath(std::string target) const {
         _storageRootPath + "/" +
         target.substr(_requestedLocation.length(), target.length() - _requestedLocation.length())
     );
+    /* NOTE: substrings here should be safe.
+    * Connection::fullRequestReceived calls Endpoint::selectRoute, which matches the substrings checking their lengths too.
+    * We can be pretty sure that requestedLocation indeed is a prefix of target (being request's path)
+    */
 }
 
 string FolderConfig::getIndexPageFilename() const {

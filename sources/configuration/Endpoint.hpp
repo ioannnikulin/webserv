@@ -7,6 +7,7 @@
 #include "configuration/CgiHandlerConfig.hpp"
 #include "configuration/RouteConfig.hpp"
 #include "configuration/UploadConfig.hpp"
+#include "http_status/HttpStatus.hpp"
 
 namespace webserver {
 class Endpoint {
@@ -18,6 +19,7 @@ private:
     size_t _maxClientBodySizeBytes;
     std::map<std::string, CgiHandlerConfig*> _cgiHandlers;
     std::set<RouteConfig> _routes;
+    HttpStatus _statusCatalogue;
 
     static const int MIN_PORT = 1;
     static const int MAX_PORT = 65535;
@@ -37,6 +39,9 @@ public:
     bool operator==(const Endpoint& other) const;
     ~Endpoint();
 
+    const HttpStatus& getStatusCatalogue() const;
+    Endpoint& setStatusCatalogue(const HttpStatus& statusCatalogue);
+    Endpoint& setStatusPage(int code, const std::string& pageFileLocation);
     Endpoint& setInterface(std::string interface);
     Endpoint& setPort(const int& port);
     Endpoint& setRoot(const std::string& path);
@@ -44,8 +49,7 @@ public:
     size_t getMaxClientBodySizeBytes() const;
     Endpoint& addServerName(const std::string& name);
     Endpoint& addCgiHandler(const CgiHandlerConfig& config, std::string extension);
-    Endpoint& addRoute(const RouteConfig& route);
-    Endpoint& setUploadConfig(const UploadConfig& cfg);
+    Endpoint& addRoute(RouteConfig route);
     std::string getInterface() const;
     std::string getRoot() const;
     int getPort() const;

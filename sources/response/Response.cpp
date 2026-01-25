@@ -15,17 +15,18 @@ namespace webserver {
 
 Logger Response::_log;
 
-Response::Response() {
-    _statusCode = HttpStatus::OK;
-    _body = "";
+Response::Response()
+    : _statusCode(HttpStatus::OK)
+    , _body("") {
     _headers["Content-Length"] = "0";
     _headers["Server"] = SERVER_NAME;
     _headers["Date"] = utils::getTimestamp();
     _headers["Connection"] = "close";
 }
 
-Response::Response(int status, const std::string& body, const std::string& type)
+Response::Response(int status, const string& reasonPhrase, const string& body, const string& type)
     : _statusCode(status)
+    , _reasonPhrase(reasonPhrase)
     , _body(body) {
     _headers["Content-Type"] = type;
     _headers["Content-Length"] = utils::toString(body.size());
@@ -36,6 +37,7 @@ Response::Response(int status, const std::string& body, const std::string& type)
 
 Response::Response(const Response& other)
     : _statusCode(other._statusCode)
+    , _reasonPhrase(other._reasonPhrase)
     , _headers(other._headers)
     , _body(other._body) {
 }
@@ -43,6 +45,7 @@ Response::Response(const Response& other)
 Response& Response::operator=(const Response& other) {
     if (this != &other) {
         _statusCode = other._statusCode;
+        _reasonPhrase = other._reasonPhrase;
         _body = other._body;
         _headers = other._headers;
     }
@@ -91,7 +94,7 @@ string Response::serialize(void) const {
 
     // NOTE: STATUS LINE
     resp << HTTP_PROTOCOL << " " << _statusCode << " ";
-    resp << HttpStatus::getReasonPhrase(_statusCode) << "\r\n";
+    resp << _reasonPhrase << "\r\n";
 
     // NOTE: CUSTOM HEADERS (if you store them in a map)
     for (std::map<std::string, std::string>::const_iterator it = _headers.begin();

@@ -72,17 +72,19 @@ public:
         _emptyFolders.insert("/another/empty");
         _emptyFolders.insert("/third");
         createTestFiles();
-        webserver::HttpStatus::clearStatusMap();
-        webserver::HttpStatus::initStatusMap();
-        webserver::HttpStatus::setPage(404, _rootFolder + "/folder/foo.txt");
+        webserver::HttpStatus status;
+        status.setPage(404, _rootFolder + "/folder/foo.txt");
         webserver::RouteConfig config =
-            webserver::RouteConfig().setPath("/").setFolderConfig(webserver::FolderConfig(
-                "/",
-                _rootFolder,
-                false,
-                "index.html",
-                webserver::FolderConfig::defaultMaxClientBodySizeBytes()
-            ));
+            webserver::RouteConfig()
+                .setPath("/")
+                .setFolderConfig(webserver::FolderConfig(
+                    "/",
+                    _rootFolder,
+                    false,
+                    "index.html",
+                    webserver::FolderConfig::defaultMaxClientBodySizeBytes()
+                ))
+                .setStatusCatalogue(status);
 
         string tgt = _rootFolder + "/folder/foo.txt";
         webserver::Response actual = webserver::GetHandler::handleRequest(tgt, tgt, config);

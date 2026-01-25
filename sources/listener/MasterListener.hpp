@@ -49,6 +49,8 @@ private:
     Connection::State isItAControlMessageFromAResponseGeneratorWorker(int activeFd);
     Connection::State isItAResponseFromAResponseGeneratorWorker(int activeFd);
     Connection::State handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewConnections);
+    Connection::State handleResponseWorkerContent(int activeFd);
+    Connection::State handleResponseWorkerStatusReport(int activeFd);
     void handleOutgoingConnection(const ::pollfd& activeFd);
     void resetPollEvents();
     void handlePollEvents(bool& acceptingNewConnections);

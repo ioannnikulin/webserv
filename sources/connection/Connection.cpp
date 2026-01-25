@@ -319,7 +319,8 @@ Connection::State Connection::generateResponse() {
         _request = Request(_requestBuffer.str());
         _responseBuffer = RequestHandler::handleRequest(_request, *_route);
     } catch (const HttpException& e) {
-        const string pageLocation = HttpStatus::getPageFileLocation(e.getCode());
+        const string pageLocation =
+            _configuration.getStatusCatalogue().getPageFileLocation(e.getCode());
         string errorPageContent;
         try {
             errorPageContent = file_system::readFile(pageLocation.c_str());
@@ -327,11 +328,17 @@ Connection::State Connection::generateResponse() {
             // NOTE: fallback if custom error page cannot be loaded
             errorPageContent = e.what();
         }
-        const Response response(e.getCode(), errorPageContent, "text/html");
+        const Response response(
+            e.getCode(),
+            _configuration.getStatusCatalogue().getReasonPhrase(e.getCode()),
+            errorPageContent,
+            "text/html"
+        );
         _responseBuffer = response.serialize();
     } catch (const exception& e) {
-        const string pageLocation =
-            HttpStatus::getPageFileLocation(HttpStatus::INTERNAL_SERVER_ERROR);
+        const string pageLocation = _configuration.getStatusCatalogue().getPageFileLocation(
+            HttpStatus::INTERNAL_SERVER_ERROR
+        );
         string errorPageContent;
         try {
             errorPageContent = file_system::readFile(pageLocation.c_str());
@@ -339,7 +346,12 @@ Connection::State Connection::generateResponse() {
             // NOTE: fallback if error page cannot be loaded
             errorPageContent = e.what();
         }
-        const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
+        const Response response(
+            HttpStatus::INTERNAL_SERVER_ERROR,
+            _configuration.getStatusCatalogue().getReasonPhrase(HttpStatus::INTERNAL_SERVER_ERROR),
+            errorPageContent,
+            "text/html"
+        );
         _responseBuffer = response.serialize();
     }
     if (_request.getType() == SHUTDOWN) {

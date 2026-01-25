@@ -3,7 +3,6 @@
 #include <string>
 
 #include "configuration/RouteConfig.hpp"
-#include "file_system/FileSystem.hpp"
 #include "file_system/MimeType.hpp"
 #include "http_methods/HttpMethodType.hpp"
 #include "http_status/HttpException.hpp"
@@ -32,6 +31,8 @@ string RequestHandler::handleRequest(Request& request, const RouteConfig& config
     if (request.getType() == SHUTDOWN) {
         const Response resp = Response(
             HttpStatus::HTTP_SERVICE_UNAVAILABLE,
+            configuration.getStatusCatalogue().getReasonPhrase(HttpStatus::HTTP_SERVICE_UNAVAILABLE
+            ),
             "Server is shutting down",
             MimeType::getMimeType("txt")
         );
@@ -40,12 +41,19 @@ string RequestHandler::handleRequest(Request& request, const RouteConfig& config
     if (configuration.isRedirection()) {
         // NOTE: yes, redirects are checked before allowed methods
         return (serializeAndPrint(
-            Response(HttpStatus::MOVED_PERMANENTLY, "", MimeType::getMimeType("txt"))
+            Response(
+                HttpStatus::MOVED_PERMANENTLY,
+                configuration.getStatusCatalogue().getReasonPhrase(HttpStatus::MOVED_PERMANENTLY),
+                configuration.getStatusCatalogue().getReasonPhrase(HttpStatus::MOVED_PERMANENTLY),
+                MimeType::getMimeType("txt")
+            )
                 .setHeader("Location", configuration.getRedirection())
         ));
     }
     if (request.getType() != SHUTDOWN && !configuration.isMethodAllowed(request.getType())) {
-        return (serializeAndPrint(file_system::serveStatusPage(HttpStatus::METHOD_NOT_ALLOWED)));
+        return (serializeAndPrint(
+            configuration.getStatusCatalogue().serveStatusPage(HttpStatus::METHOD_NOT_ALLOWED)
+        ));
     }
     string body;
     request.setMaxClientBodySizeBytes(configuration.getFolderConfig().getMaxClientBodySizeBytes());
@@ -53,7 +61,7 @@ string RequestHandler::handleRequest(Request& request, const RouteConfig& config
         body = request.getBody();
     } catch (const HttpException& e) {
         // NOTE: BadRequest, PayloadTooLarge
-        return (serializeAndPrint(file_system::serveStatusPage(e.getCode())));
+        return (serializeAndPrint(configuration.getStatusCatalogue().serveStatusPage(e.getCode())));
     }
     const string resolvedTarget =
         configuration.getFolderConfig().getResolvedPath(request.getPath());
@@ -71,11 +79,12 @@ string RequestHandler::handleRequest(Request& request, const RouteConfig& config
         }
         case DELETE: {
             _log.stream(LOG_TRACE) << "Preresolved path: " << resolvedTarget << "\n";
-            response = DeleteHandler::handleRequest(resolvedTarget);
+            response = DeleteHandler::handleRequest(resolvedTarget, configuration);
             break;
         }
         default: {
-            response = file_system::serveStatusPage(HttpStatus::NOT_IMPLEMENTED);
+            response =
+                configuration.getStatusCatalogue().serveStatusPage(HttpStatus::NOT_IMPLEMENTED);
             break;
         }
     }

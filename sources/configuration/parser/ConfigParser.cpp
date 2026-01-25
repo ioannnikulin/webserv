@@ -9,6 +9,7 @@
 #include "configuration/Endpoint.hpp"
 #include "configuration/parser/ConfigChecker.hpp"
 #include "configuration/parser/ConfigParsingException.hpp"
+#include "logger/Logger.hpp"
 
 using std::string;
 
@@ -42,6 +43,7 @@ AppConfig ConfigParser::buildConfigTree() {
 }
 
 void ConfigParser::parseServer(AppConfig& appConfig) {
+    Logger log;
     Endpoint server;
     if (_tokens[_index] != "{") {
         throw ConfigParsingException("Unexpected token: " + _tokens[_index]);
@@ -50,6 +52,7 @@ void ConfigParser::parseServer(AppConfig& appConfig) {
 
     while (!isEnd(_tokens, _index)) {
         const string token = _tokens[_index];
+        log.stream(LOG_TRACE) << "checking token " << token << "\n";
 
         if (token == "listen") {
             parseListen(server);
@@ -62,7 +65,7 @@ void ConfigParser::parseServer(AppConfig& appConfig) {
         } else if (token == "client_max_body_size") {
             parseBodySize(server);
         } else if (token == "error_page") {
-            parseErrorPage();
+            parseErrorPage(server);
         } else if (token == "cgi") {
             parseCgi(server);
         } else if (token != "}") {

@@ -21,6 +21,7 @@
 #include "configuration/parser/ConfigParser.hpp"
 #include "configuration/parser/ConfigParsingException.hpp"
 #include "http_methods/HttpMethodType.hpp"
+#include "logger/LoggerConfig.hpp"
 #include "request_handler/GetHandler.hpp"
 
 using std::map;
@@ -64,6 +65,8 @@ public:
         // Remove read permissions from the files
         setFilePermissions(NO_PERMISSION_FILE, 0000);
         setFilePermissions(STATUS_500_FILE, 0000);
+
+        webserver::LoggerConfig::setGlobalLevel(LOG_SILENT);
     }
 
     void tearDown() {

@@ -17,7 +17,7 @@ private:
     ~DeleteHandler();
 
 public:
-    static Response handleRequest(std::string target);
+    static Response handleRequest(std::string target, const RouteConfig& configuration);
 };
 }  // namespace webserver
 #endif

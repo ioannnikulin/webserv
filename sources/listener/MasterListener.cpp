@@ -7,7 +7,6 @@
 #include <unistd.h>
 
 #include <cerrno>
-#include <exception>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -17,7 +16,6 @@
 
 #include "cgi_handler/CgiProcessManager.hpp"
 #include "connection/Connection.hpp"
-#include "file_system/FileSystem.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "listener/Listener.hpp"
 #include "logger/Logger.hpp"
@@ -83,8 +81,8 @@ Connection::State MasterListener::isItADataRequestOnAClientSocketFromARegistered
     if (listener == NULL) {
         return (Connection::IGNORED);
     }
-    _log.stream(LOG_TRACE) << "Existing client on socket fd " << activeFd.fd << " has sent data\n";
-    _log.stream(LOG_TRACE) << "CONN_TRACK: Processing data for fd " << activeFd.fd << "\n";
+    _log.stream(LOG_TRACE) << "Existing client on socket fd " << activeFd.fd << " has sent data\n"
+                           << "CONN_TRACK: Processing data for fd " << activeFd.fd << "\n";
     const Connection::State connState = listener->receiveRequest(activeFd.fd);
     if (connState == Connection::CLOSED_BY_CLIENT) {
         _log.stream(LOG_TRACE) << "Client on socket fd " << activeFd.fd
@@ -135,7 +133,16 @@ Connection::State MasterListener::isItAResponseFromAResponseGeneratorWorker(int 
     string finalResponse;
     if (_cgiManager.isWorker(clientFd)) {
         _log.stream(LOG_DEBUG) << "Parsing CGI output for client " << clientFd << "\n";
-        finalResponse = CgiProcessManager::parseCgiResponse(rawOutput);
+        Listener* client = findListener(_clientListeners, clientFd);
+        if (client == NULL) {
+            _log.stream(LOG_ERROR) << "Couldn't find client listener for client " << clientFd
+                                   << ", cannot validate original request, cannot form a response, "
+                                      "aborting connection\n";
+            finalResponse = HttpStatus::ultimateInternalServerError().serialize();
+        } else {
+            finalResponse =
+                CgiProcessManager::parseCgiResponse(rawOutput, client->getConfiguration());
+        }
         _cgiManager.unregisterWorker(clientFd);
     } else {
         finalResponse = rawOutput;
@@ -202,43 +209,67 @@ void MasterListener::handleOutgoingConnection(const ::pollfd& activeFd) {
     removePollFd(activeFd.fd);
 }
 
+Connection::State MasterListener::handleResponseWorkerContent(int activeFd) {
+    const map<int, int>::iterator responseIt = _responseWorkers.find(activeFd);
+    if (responseIt == _responseWorkers.end()) {
+        return (Connection::IGNORED);
+    }
+    const int clientFd = responseIt->second;
+    _log.stream(LOG_DEBUG) << "Response pipe " << activeFd << " closed for client " << clientFd
+                           << "\n";
+
+    const string rawOutput = readStringAndClose(activeFd);
+
+    string finalResponse;
+    if (_cgiManager.isWorker(clientFd)) {
+        _log.stream(LOG_DEBUG) << "Parsing CGI output for client " << clientFd << "\n";
+        Listener* client = findListener(_clientListeners, clientFd);
+        if (client == NULL) {
+            _log.stream(LOG_ERROR) << "Couldn't find client listener for client " << clientFd
+                                   << ", cannot validate original request, cannot form a response, "
+                                      "aborting connection\n";
+            finalResponse = HttpStatus::ultimateInternalServerError().serialize();
+            markResponseReadyForReturn(clientFd);
+            removePollFd(activeFd);
+            _responseWorkers.erase(responseIt);
+        }
+        finalResponse = CgiProcessManager::parseCgiResponse(rawOutput, client->getConfiguration());
+        _cgiManager.unregisterWorker(clientFd);
+    } else {
+        finalResponse = rawOutput;
+    }
+
+    _clientListeners.at(clientFd)->setResponse(clientFd, finalResponse);
+    markResponseReadyForReturn(clientFd);
+    removePollFd(activeFd);
+    _responseWorkers.erase(responseIt);
+    return (Connection::RECEIVED_RESPONSE_FROM_WORKER);
+}
+
+Connection::State MasterListener::handleResponseWorkerStatusReport(int activeFd) {
+    const map<int, int>::iterator controlIt = _responseWorkerControls.find(activeFd);
+    if (controlIt == _responseWorkerControls.end()) {
+        return (Connection::IGNORED);
+    }
+    _log.stream(LOG_DEBUG) << "Control pipe " << activeFd
+                           << " closed (peer exited or closed early)\n";
+    close(activeFd);
+    removePollFd(activeFd);
+    _responseWorkerControls.erase(controlIt);
+    return (Connection::RECEIVED_STATUS_FROM_WORKER);
+}
+
 void MasterListener::handlePollEvents(bool& acceptingNewConnections) {
     for (size_t i = 0; i < _pollFds.size(); i++) {
         if ((_pollFds[i].revents & (POLLHUP | POLLERR)) > 0) {
-            const map<int, int>::iterator responseIt = _responseWorkers.find(_pollFds[i].fd);
-            if (responseIt != _responseWorkers.end()) {
-                const int clientFd = responseIt->second;
-                _log.stream(LOG_DEBUG) << "Response pipe " << _pollFds[i].fd
-                                       << " closed for client " << clientFd << "\n";
-
-                const string rawOutput = readStringAndClose(_pollFds[i].fd);
-
-                string finalResponse;
-                if (_cgiManager.isWorker(clientFd)) {
-                    _log.stream(LOG_DEBUG) << "Parsing CGI output for client " << clientFd << "\n";
-                    finalResponse = CgiProcessManager::parseCgiResponse(rawOutput);
-                    _cgiManager.unregisterWorker(clientFd);
-                } else {
-                    finalResponse = rawOutput;
-                }
-
-                _clientListeners.at(clientFd)->setResponse(clientFd, finalResponse);
-                markResponseReadyForReturn(clientFd);
-                removePollFd(_pollFds[i].fd);
-                _responseWorkers.erase(responseIt);
+            if (handleResponseWorkerContent(_pollFds[i].fd) ==
+                Connection::RECEIVED_RESPONSE_FROM_WORKER) {
                 continue;
             }
-
-            const map<int, int>::iterator controlIt = _responseWorkerControls.find(_pollFds[i].fd);
-            if (controlIt != _responseWorkerControls.end()) {
-                _log.stream(LOG_DEBUG) << "Control pipe " << _pollFds[i].fd
-                                       << " closed (peer exited or closed early)\n";
-                close(_pollFds[i].fd);
-                removePollFd(_pollFds[i].fd);
-                _responseWorkerControls.erase(controlIt);
+            if (handleResponseWorkerStatusReport(_pollFds[i].fd) ==
+                Connection::RECEIVED_STATUS_FROM_WORKER) {
                 continue;
             }
-
             close(_pollFds[i].fd);
             removePollFd(_pollFds[i].fd);
             continue;
@@ -386,19 +417,13 @@ void MasterListener::cleanupCgiProcess(int clientFd, bool sendTimeoutResponse) {
         if (listenerIt != _clientListeners.end()) {
             Listener* listener = listenerIt->second;
 
-            const string pageLocation =
-                HttpStatus::getPageFileLocation(HttpStatus::GATEWAY_TIMEOUT);
-            string errorPageContent;
-
-            try {
-                errorPageContent = file_system::readFile(pageLocation.c_str());
-            } catch (const std::exception& e) {
-                errorPageContent = "CGI script execution timed out";
-            }
-
-            Response timeoutResponse(HttpStatus::GATEWAY_TIMEOUT, errorPageContent, "text/html");
-            timeoutResponse.setHeader("Connection", "close");
-            listener->setResponse(clientFd, timeoutResponse.serialize());
+            listener->setResponse(
+                clientFd,
+                listenerIt->second->getConfiguration()
+                    .getStatusCatalogue()
+                    .serveStatusPage(HttpStatus::GATEWAY_TIMEOUT)
+                    .serialize()
+            );
             markResponseReadyForReturn(clientFd);
         }
     }

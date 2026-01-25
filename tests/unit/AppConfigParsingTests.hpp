@@ -13,6 +13,7 @@
 #include "configuration/RouteConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
 #include "http_status/HttpStatus.hpp"
+#include "logger/LoggerConfig.hpp"
 #include "utils/utils.hpp"
 
 using std::cout;
@@ -24,35 +25,35 @@ using std::vector;
 
 class AppConfigParsingTests : public CxxTest::TestSuite {
 private:
-    set<string> _configFilenames;
+    set<string> _filenames;
 
     void printDebugInfo(const webserver::AppConfig& expected, const webserver::AppConfig& actual) {
-        const set<webserver::Endpoint>& epActual =
+        const set<webserver::Endpoint*>& epActual =
             const_cast<webserver::AppConfig&>(actual).getEndpoints();
-        const set<webserver::Endpoint>& epExpected =
+        const set<webserver::Endpoint*>& epExpected =
             const_cast<webserver::AppConfig&>(expected).getEndpoints();
 
         cout << "\n=== Configuration Comparison ===" << endl;
         cout << "Actual endpoints count:   " << epActual.size() << endl;
         cout << "Expected endpoints count: " << epExpected.size() << endl;
 
-        set<webserver::Endpoint>::const_iterator itA = epActual.begin();
-        set<webserver::Endpoint>::const_iterator itE = epExpected.begin();
+        set<webserver::Endpoint*>::const_iterator itA = epActual.begin();
+        set<webserver::Endpoint*>::const_iterator itE = epExpected.begin();
 
         int endpointNum = 0;
         while (itA != epActual.end() && itE != epExpected.end()) {
             cout << "\n--- Endpoint " << endpointNum << " Comparison ---" << endl;
-            cout << "Actual interface:   '" << itA->getInterface() << "'" << endl;
-            cout << "Expected interface: '" << itE->getInterface() << "'" << endl;
-            cout << "Match: " << (itA->getInterface() == itE->getInterface() ? "YES" : "NO")
+            cout << "Actual interface:   '" << (*itA)->getInterface() << "'" << endl;
+            cout << "Expected interface: '" << (*itE)->getInterface() << "'" << endl;
+            cout << "Match: " << ((*itA)->getInterface() == (*itE)->getInterface() ? "YES" : "NO")
                  << endl;
 
-            cout << "\nActual port:   " << itA->getPort() << endl;
-            cout << "Expected port: " << itE->getPort() << endl;
-            cout << "Match: " << (itA->getPort() == itE->getPort() ? "YES" : "NO") << endl;
+            cout << "\nActual port:   " << (*itA)->getPort() << endl;
+            cout << "Expected port: " << (*itE)->getPort() << endl;
+            cout << "Match: " << ((*itA)->getPort() == (*itE)->getPort() ? "YES" : "NO") << endl;
 
-            const set<webserver::RouteConfig>& routesActual = itA->getRoutes();
-            const set<webserver::RouteConfig>& routesExpected = itE->getRoutes();
+            const set<webserver::RouteConfig>& routesActual = (*itA)->getRoutes();
+            const set<webserver::RouteConfig>& routesExpected = (*itE)->getRoutes();
 
             cout << "\n--- Routes Comparison ---" << endl;
             cout << "Actual routes count:   " << routesActual.size() << endl;
@@ -69,6 +70,15 @@ private:
                 cout << "Actual path:   '" << itRA->getPath() << "'" << endl;
                 cout << "Expected path: '" << itRE->getPath() << "'" << endl;
                 cout << "Match: " << (itRA->getPath() == itRE->getPath() ? "YES" : "NO") << endl;
+                cout << "expected status catalogue:" << endl;
+                cout << itRE->getStatusCatalogue() << endl;
+                cout << "actual status catalogue:" << endl;
+                cout << itRA->getStatusCatalogue() << endl;
+                cout << "status catalogue match: "
+                     << (itRE->getStatusCatalogue() == itRA->getStatusCatalogue()) << endl;
+                cout << "expected folder config: " << itRE->getFolderConfig() << endl;
+                cout << "actual folder config: " << itRA->getFolderConfig() << endl;
+                cout << "match: " << (itRE->getFolderConfig() == itRA->getFolderConfig()) << endl;
                 try {
                     bool routesEqual = (*itRA == *itRE);
                     cout << "Routes equal: " << (routesEqual ? "YES" : "NO") << endl;
@@ -77,8 +87,15 @@ private:
                 }
             }
 
+            cout << "endpoint level" << endl;
+            cout << "expected status catalogue:" << endl;
+            cout << (*itE)->getStatusCatalogue() << endl;
+            cout << "actual status catalogue:" << endl;
+            cout << (*itA)->getStatusCatalogue() << endl;
+            cout << "status catalogue match: "
+                 << ((*itE)->getStatusCatalogue() == (*itA)->getStatusCatalogue()) << endl;
             cout << "\n--- Endpoint Equality Check ---" << endl;
-            cout << "Endpoints equal: " << (*itA == *itE ? "YES" : "NO") << endl;
+            cout << "Endpoints equal: " << ((**itA) == (**itE) ? "YES" : "NO") << endl;
 
             ++itA;
             ++itE;
@@ -92,7 +109,7 @@ private:
 
 public:
     void setUp() {
-        webserver::HttpStatus::initStatusMap();
+        webserver::LoggerConfig::setGlobalLevel(LOG_SILENT);
     }
 
     void testConfig0_BasicServer() {
@@ -268,12 +285,26 @@ public:
     void testConfig4_Advanced() {
         const string fname = "tests/config_files/advanced.conf";
 
-        webserver::ConfigParser parser;
-        webserver::AppConfig actual = parser.parse(fname);
-
         webserver::AppConfig expected;
         webserver::Endpoint ep("0.0.0.0", 443);
         string serverName = "secure.example.com";
+
+        webserver::HttpStatus status;
+        {
+            string fname1 = "./status_pages/custom_404.html";
+            _filenames.insert(fname1);
+            ofstream f(fname1.c_str());
+            f << endl;  // just to have a readable file
+            f.close();
+            status.setPage(404, fname1);
+            string fname2 = "./status_pages/custom_500.html";
+            _filenames.insert(fname2);
+            ofstream f1(fname2.c_str());
+            f1 << endl;
+            f1.close();
+            status.setPage(500, fname2);
+        }
+        ep.setStatusCatalogue(status);
 
         ep.addServerName(serverName);
         ep.setMaxClientBodySizeBytes(1 * utils::MIB);
@@ -315,8 +346,22 @@ public:
 
         expected.addEndpoint(ep);
 
+        webserver::ConfigParser parser;
+        webserver::AppConfig actual = parser.parse(fname);
+
         //printDebugInfo(expected, actual);
         TS_ASSERT_EQUALS(expected, actual);
+    }
+
+    void tearDown() {
+        for (set<string>::iterator it = _filenames.begin(); it != _filenames.end(); it++) {
+            if (remove(it->c_str()) != 0) {
+                // Only print error if file should exist but deletion failed
+                // Ignore "file not found" errors
+                // cerr << "Failed to remove file " << it->c_str() << "\n";
+            }
+        }
+        _filenames.clear();
     }
 };
 

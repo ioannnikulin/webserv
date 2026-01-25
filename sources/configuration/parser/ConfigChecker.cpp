@@ -11,6 +11,7 @@
 #include "configuration/UploadConfig.hpp"
 #include "configuration/parser/ConfigParsingException.hpp"
 #include "file_system/FileSystem.hpp"
+#include "logger/Logger.hpp"
 
 using std::string;
 
@@ -22,12 +23,14 @@ ConfigChecker::~ConfigChecker() {
 }
 
 void ConfigChecker::checkLocationRootIsSetOrInherit(Endpoint& endpoint) {
+    Logger log;
     const std::string& serverRoot = endpoint.getRoot();
     const std::set<RouteConfig> routes = endpoint.getRoutes();
 
     for (std::set<RouteConfig>::iterator it = routes.begin(); it != routes.end(); ++it) {
         const RouteConfig& route = const_cast<RouteConfig&>(*it);
         FolderConfig folder = route.getFolderConfig();
+        log.stream(LOG_TRACE) << "checking route " << route.getFolderConfig().getRootPath() << "\n";
 
         if (folder.doesLocationBlockServeFiles()) {
             const std::string& locationRoot = folder.getRootPath();

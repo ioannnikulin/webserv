@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "configuration/Endpoint.hpp"
 #include "listener/Listener.hpp"
 #include "logger/Logger.hpp"
 
@@ -35,7 +36,8 @@ public:
     );
     static std::string emptyOutput();
     static std::string noHeaders();
-    static std::string parseCgiResponse(const std::string& cgiOutput);
+    static std::string
+    parseCgiResponse(const std::string& cgiOutput, const Endpoint& configuration);
     std::vector<int> checkTimeouts();
     void registerWorker(int clientFd, pid_t pid);
     bool isWorker(int clientFd) const;

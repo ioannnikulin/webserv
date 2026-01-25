@@ -18,8 +18,7 @@ bool isReadableFile(const char* path);
 bool isExecutableFile(const char* path);
 bool isWritableDirectory(const char* path);
 bool canCreateDirectory(const char* path);
-webserver::Response serveFile(const std::string& path, int statusCode);
-webserver::Response serveStatusPage(int statusCode);
+webserver::Response serveFile(const std::string& path, int statusCode, std::string reasonPhrase);
 }  // namespace file_system
 
 #endif

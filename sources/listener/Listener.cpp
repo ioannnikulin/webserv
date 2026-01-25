@@ -163,6 +163,10 @@ void Listener::sendResponse(int clientSocketFd) {
     _clientConnections.at(clientSocketFd)->sendResponse();
 }
 
+const Endpoint& Listener::getConfiguration() const {
+    return (_configuration);
+}
+
 void Listener::killConnection(int clientSocketFd) {
     _log.stream(LOG_INFO) << "Killing connection\n";
     _log.stream(LOG_TRACE) << "CONN_TRACK: Killing connection for fd " << clientSocketFd << "\n";

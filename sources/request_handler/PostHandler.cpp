@@ -17,25 +17,33 @@ Logger PostHandler::_log;
 
 Response PostHandler::handleRequest(string target, string body, const RouteConfig& configuration) {
     if (!configuration.getUploadConfigSection().isUploadEnabled()) {
-        return (file_system::serveStatusPage(HttpStatus::METHOD_NOT_ALLOWED));
+        return (configuration.getStatusCatalogue().serveStatusPage(HttpStatus::METHOD_NOT_ALLOWED));
     }
     target = target.substr(
         configuration.getPath().length(),
         target.length() - configuration.getPath().length()
     );
-    if (target.find_last_of('/') != 0) {
-        // NOTE: we don't have to create subfolders
-        return (file_system::serveStatusPage(HttpStatus::BAD_REQUEST));
+    if (target.empty()) {
+        // NOTE: cannot create without filename
+        return (configuration.getStatusCatalogue().serveStatusPage(HttpStatus::BAD_REQUEST));
     }
-    target = configuration.getUploadConfigSection().getUploadRootFolder() + target;
+    const string targetFilename = target.substr(target.find_last_of('/', string::npos));
+    const string targetFolder = configuration.getUploadConfigSection().getUploadRootFolder() +
+                                target.substr(0, target.find_last_of('/'));
+    if (!file_system::fileExists(targetFolder.c_str())) {
+        // NOTE: we don't have to create subfolders
+        return (configuration.getStatusCatalogue().serveStatusPage(HttpStatus::BAD_REQUEST));
+    }
+    target = targetFolder + targetFilename;
+    // NOTE: no, it's not the original argument value, it had route removed
     _log.stream(LOG_DEBUG) << "Preresolved path: " << target << "\n";
     if (file_system::isDirectory(target.c_str())) {
-        return (file_system::serveStatusPage(HttpStatus::BAD_REQUEST));
+        return (configuration.getStatusCatalogue().serveStatusPage(HttpStatus::BAD_REQUEST));
     }
     std::ofstream file(target.c_str(), std::ios::binary);
     file.write(body.data(), static_cast<std::streamsize>(body.size()));
     file.close();
-    return (file_system::serveStatusPage(HttpStatus::CREATED));
+    return (configuration.getStatusCatalogue().serveStatusPage(HttpStatus::CREATED));
 }
 
 }  // namespace webserver

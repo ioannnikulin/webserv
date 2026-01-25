@@ -27,7 +27,11 @@ private:
     GetHandler(const GetHandler& other);
     GetHandler& operator=(const GetHandler& other);
     ~GetHandler();
-    static Response listDirectory(std::string originalTarget, std::string resolvedTarget);
+    static Response listDirectory(
+        std::string originalTarget,
+        std::string resolvedTarget,
+        const RouteConfig& configuration
+    );
 
 public:
     static Response handleRequest(

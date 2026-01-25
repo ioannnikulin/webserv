@@ -12,6 +12,17 @@
       }
     },
     {
+      "name": "upload into existing subfoler",
+      "tester": "tester0",
+      "method": "POST",
+      "url": "http://172.18.0.10:8080/folder/subfolder/file.tst",
+      "body": "file content",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 201
+      }
+    },
+    {
       "name": "download",
       "tester": "tester0",
       "method": "GET",
@@ -103,6 +114,16 @@
       "tester": "tester0",
       "method": "DELETE",
       "url": "http://172.18.0.10:8080/files/file.tst",
+      "delay_before_ms": 0,
+      "expected": {
+        "status_code": 204
+      }
+    },
+    {
+      "name": "deleting from subfolder",
+      "tester": "tester0",
+      "method": "DELETE",
+      "url": "http://172.18.0.10:8080/files/subfolder/file.tst",
       "delay_before_ms": 0,
       "expected": {
         "status_code": 204

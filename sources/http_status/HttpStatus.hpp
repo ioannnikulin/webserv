@@ -4,47 +4,65 @@
 #include <map>
 #include <string>
 
-namespace webserver {
+#include "response/Response.hpp"
 
+namespace webserver {
 class HttpStatus {
 private:
+    class Item {
+    private:
+        int _code;
+        std::string _reasonPhrase;
+        // NOTE: custom page that can be set via config. actually used; taken from config if present, else set to default
+        std::string _pageFileLocation;
+        static std::string defaultFolder();
+
+    public:
+        Item();
+        Item(int code, const std::string& reasonPhrase);
+        Item(int code, const std::string& reasonPhrase, const std::string& page);
+        Item(const Item& other);
+        ~Item();
+        const std::string& getReasonPhrase() const;
+        bool operator<(const Item& other) const;
+        Item& operator=(const Item& other);
+        bool operator==(const Item& other) const;
+        std::string getDefaultPageFileLocation() const;
+        const std::string& getPageFileLocation() const;
+        Item& setPageFileLocation(std::string location);
+        void print(std::ostream& oss) const;
+    };
     static const int MIN_CODE;
     static const int MAX_CODE;
-    static const std::string DEFAULT_STATUS_PAGE_DIR;
-
-    HttpStatus();
 
     // NOTE: subject suggests we have same pages for all endpoints, so static for now
-    static std::map<int, HttpStatus> _statusMap;
+    std::map<int, Item> _statusMap;
+    static const std::map<int, HttpStatus::Item>& defaultStatusMap();
 
-    int _code;
-    std::string _reasonPhrase;
-    // NOTE: default page. hardcoded in initStatusMap(); no accessors
-    std::string _defaultPageFileLocation;
-    // NOTE: custom page that can be set via config. actually used; taken from config if present, else set to default
-    std::string _pageFileLocation;
-    static void addStatus(int code, const std::string& reasonPhrase);
-    static std::string getDefaultPageLocation(int code);
+    static void addStatus(std::map<int, Item>& map, int code, const std::string& reasonPhrase);
+    static std::map<int, Item> createDefaultStatusMap();
+    static Response serveStatusPage(int code, std::string reasonPhrase, std::string uncheckedPath);
 
 public:
-    HttpStatus(int code, const std::string& reasonPhrase);
-    HttpStatus(int code, const std::string& reasonPhrase, const std::string& page);
+    HttpStatus();
     HttpStatus(const HttpStatus& other);
-    HttpStatus& operator=(const HttpStatus& other);
     ~HttpStatus();
-
-    static void initStatusMap();
-    static void clearStatusMap();
+    HttpStatus& operator=(const HttpStatus& other);
+    bool operator==(const HttpStatus& other) const;
+    bool operator!=(const HttpStatus& other) const;
 
     static const std::string UNKNOWN_STATUS;
 
     // NOTE: these three methods should throw different exceptions if status code not found or status code map is empty
-    static std::string getReasonPhrase(int code);
+    std::string getReasonPhrase(int code) const;
     static bool isAValidHttpStatusCode(int code);
 
-    static void setPage(int code, const std::string& pageFileLocation);
+    HttpStatus& setPage(int code, const std::string& pageFileLocation);
 
-    static std::string getPageFileLocation(int code);
+    const std::string& getPageFileLocation(int code) const;
+    Response serveStatusPage(int statusCode) const;
+    static Response ultimateInternalServerError();
+    // NOTE: uncustomized, as default as possible, static. use in emergency.
 
     enum CODE {
         OK = 200,
@@ -66,6 +84,7 @@ public:
         GATEWAY_TIMEOUT = 504,
         HTTP_VERSION_NOT_SUPPORTED = 505
     };
+    friend std::ostream& operator<<(std::ostream& oss, const HttpStatus& catalogue);
 };
 }  // namespace webserver
 

@@ -23,14 +23,19 @@ Logger GetHandler::_log;
 
 string listingItem(string prefix, string name) {
     ostringstream oss;
-    oss << "<li><a href=\"" << prefix << name << "\">" << name << "</a></li>";
+    oss << "\n<li><a href=\"" << prefix << name << "\">" << name << "</a></li>";
     return (oss.str());
 }
 
-Response GetHandler::listDirectory(string originalTarget, string resolvedTarget) {
+Response GetHandler::listDirectory(
+    string originalTarget,
+    string resolvedTarget,
+    const RouteConfig& configuration
+) {
     DIR* dir = opendir(resolvedTarget.c_str());
     if (dir == NULL) {
-        return (file_system::serveStatusPage(HttpStatus::INTERNAL_SERVER_ERROR));
+        return (configuration.getStatusCatalogue().serveStatusPage(HttpStatus::INTERNAL_SERVER_ERROR
+        ));
     }
     set<string> files;
     struct dirent* entry;
@@ -50,8 +55,13 @@ Response GetHandler::listDirectory(string originalTarget, string resolvedTarget)
     for (set<string>::const_iterator itr = files.begin(); itr != files.end(); itr++) {
         oss << listingItem(originalTarget, *itr);
     }
-    oss << "</ul></body></html>";
-    return (Response(HttpStatus::OK, oss.str(), MimeType::getMimeType("html")));
+    oss << "\n</ul></body></html>";
+    return (Response(
+        HttpStatus::OK,
+        configuration.getStatusCatalogue().getReasonPhrase(HttpStatus::OK),
+        oss.str(),
+        MimeType::getMimeType("html")
+    ));
 }
 
 Response GetHandler::handleRequest(
@@ -79,29 +89,33 @@ Response GetHandler::handleRequest(
             _log.stream(LOG_TRACE) << "index file unavailable, trying to autolist if possible\n";
             _log.stream(LOG_TRACE) << "GET " << resolvedTarget << "\n";
             if (routeConfig.getFolderConfig().isListingEnabled()) {
-                return (listDirectory(originalTarget, resolvedTarget));
+                return (listDirectory(originalTarget, resolvedTarget, routeConfig));
             }
-            return (file_system::serveStatusPage(HttpStatus::FORBIDDEN));
+            return (routeConfig.getStatusCatalogue().serveStatusPage(HttpStatus::FORBIDDEN));
         }
     } else if (file_system::isFile(resolvedTarget.c_str())) {
         _log.stream(LOG_DEBUG) << "Target is a file.\n";
         // NOTE: file exists as is
     } else {
-        return (file_system::serveStatusPage(HttpStatus::NOT_FOUND));
+        return (routeConfig.getStatusCatalogue().serveStatusPage(HttpStatus::NOT_FOUND));
     }
 
     _log.stream(LOG_TRACE) << "GET " << resolvedTarget << "\n";
 
     if (resolvedTarget.find("..") != std::string::npos) {
         _log.stream(LOG_WARN) << "Directory traversal attempt: " << resolvedTarget << "\n";
-        return (file_system::serveStatusPage(HttpStatus::FORBIDDEN));
+        return (routeConfig.getStatusCatalogue().serveStatusPage(HttpStatus::FORBIDDEN));
     }
 
     if (file_system::fileExists(resolvedTarget.c_str())) {
-        return (file_system::serveFile(resolvedTarget, HttpStatus::OK));
+        return (file_system::serveFile(
+            resolvedTarget,
+            HttpStatus::OK,
+            routeConfig.getStatusCatalogue().getReasonPhrase(HttpStatus::OK)
+        ));
     }
 
-    return (file_system::serveStatusPage(HttpStatus::NOT_FOUND));
+    return (routeConfig.getStatusCatalogue().serveStatusPage(HttpStatus::NOT_FOUND));
 }
 
 }  // namespace webserver

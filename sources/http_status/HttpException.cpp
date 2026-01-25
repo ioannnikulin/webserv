@@ -16,7 +16,7 @@ using std::string;
 namespace webserver {
 const char* HttpException::what() const throw() {
     ostringstream oss;
-    oss << HttpStatus::getReasonPhrase(_code) << ": " << _message;
+    oss << _code << ": " << _message;
     _resultBuffer = oss.str();
     return (_resultBuffer.c_str());
 }
