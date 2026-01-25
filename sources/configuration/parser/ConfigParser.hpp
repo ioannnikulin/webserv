@@ -24,7 +24,7 @@ private:
     void parseServerName(Endpoint& server);
     void parseRoot(Endpoint& server);
     void parseBodySize(Endpoint& server);
-    void parseErrorPage();
+    void parseErrorPage(Endpoint& server);
     void parseCgi(Endpoint& server);
     void parseLocation(Endpoint& server);
 

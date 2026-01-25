@@ -11,6 +11,8 @@
 #include "configuration/FolderConfig.hpp"
 #include "configuration/UploadConfig.hpp"
 #include "http_methods/HttpMethodType.hpp"
+#include "http_status/HttpStatus.hpp"
+#include "logger/Logger.hpp"
 
 using std::map;
 using std::ostream;
@@ -25,7 +27,8 @@ RouteConfig::RouteConfig()
     , _redirectTo("")
     , _folderConfigSection()
     , _uploadConfigSection()
-    , _cgiHandlers() {
+    , _cgiHandlers()
+    , _statusCatalogue() {
 }
 
 RouteConfig::RouteConfig(const RouteConfig& other)
@@ -34,11 +37,12 @@ RouteConfig::RouteConfig(const RouteConfig& other)
     , _isRedirection(other._isRedirection)
     , _redirectTo(other._redirectTo)
     , _folderConfigSection(other._folderConfigSection)
-    , _uploadConfigSection(other._uploadConfigSection) {
+    , _uploadConfigSection(other._uploadConfigSection)
+    , _statusCatalogue(other._statusCatalogue) {
     for (std::map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
          ++it) {
-        _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
+        _cgiHandlers[it->first] = (it->second == NULL ? NULL : new CgiHandlerConfig(*it->second));
     }
 }
 
@@ -52,7 +56,7 @@ RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
     _redirectTo = other._redirectTo;
     _folderConfigSection = other._folderConfigSection;
     _uploadConfigSection = other._uploadConfigSection;
-    _cgiHandlers = other._cgiHandlers;
+    _statusCatalogue = other._statusCatalogue;
 
     for (std::map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
          it != _cgiHandlers.end();
@@ -60,13 +64,11 @@ RouteConfig& RouteConfig::operator=(const RouteConfig& other) {
         delete it->second;
     }
     _cgiHandlers.clear();
-    _folderConfigSection = FolderConfig(other._folderConfigSection);
-    _uploadConfigSection = UploadConfig(other._uploadConfigSection);
 
     for (std::map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
          ++it) {
-        _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
+        _cgiHandlers[it->first] = (it->second == NULL ? NULL : new CgiHandlerConfig(*it->second));
     }
     return (*this);
 }
@@ -127,6 +129,9 @@ bool RouteConfig::operator==(const RouteConfig& other) const {
         return (false);
     }
     if (!compareCgiHandlers(other)) {
+        return (false);
+    }
+    if (_statusCatalogue != other._statusCatalogue) {
         return (false);
     }
     return (true);
@@ -192,6 +197,22 @@ const std::map<std::string, CgiHandlerConfig*>& RouteConfig::getCgiHandlers() co
 
 string RouteConfig::getPath() const {
     return (_path);
+}
+
+RouteConfig& RouteConfig::setStatusCatalogue(const HttpStatus& statusCatalogue) {
+    Logger log;
+    log.stream(LOG_TRACE) << "RouteConfig " << this << " set statusCatalogue = " << &statusCatalogue
+                          << "\n";
+    _statusCatalogue = statusCatalogue;
+    return (*this);
+}
+
+const HttpStatus& RouteConfig::getStatusCatalogue() const {
+    return (_statusCatalogue);
+}
+
+const std::string& RouteConfig::getStatusPageFileLocation(HttpStatus::CODE code) const {
+    return (_statusCatalogue.getPageFileLocation(code));
 }
 
 ostream& operator<<(ostream& oss, const RouteConfig& route) {

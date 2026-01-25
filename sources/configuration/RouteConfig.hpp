@@ -9,6 +9,7 @@
 #include "configuration/FolderConfig.hpp"
 #include "configuration/UploadConfig.hpp"
 #include "http_methods/HttpMethodType.hpp"
+#include "http_status/HttpStatus.hpp"
 
 namespace webserver {
 class RouteConfig {
@@ -21,6 +22,8 @@ private:
     UploadConfig _uploadConfigSection;
     std::map<std::string, CgiHandlerConfig*> _cgiHandlers;  // NOTE: extension:config
     bool compareCgiHandlers(const RouteConfig& other) const;
+    HttpStatus _statusCatalogue;
+    // NOTE: yes, this is a duplicate from Endpoint, I spent too much time trying to optimize this
 
 public:
     RouteConfig();
@@ -44,6 +47,9 @@ public:
     RouteConfig& addCgiHandler(const CgiHandlerConfig& cfg, std::string extension);
     std::string getPath() const;
     const std::map<std::string, CgiHandlerConfig*>& getCgiHandlers() const;
+    const HttpStatus& getStatusCatalogue() const;
+    RouteConfig& setStatusCatalogue(const HttpStatus& statusCatalogue);
+    const std::string& getStatusPageFileLocation(HttpStatus::CODE code) const;
     friend std::ostream& operator<<(std::ostream& oss, const RouteConfig& route);
 };
 }  // namespace webserver

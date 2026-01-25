@@ -1,123 +1,245 @@
 #include "HttpStatus.hpp"
 
+#include <stdlib.h>
+
+#include <cstring>
+#include <iostream>
 #include <map>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
+#include "file_system/FileSystem.hpp"
+#include "file_system/MimeType.hpp"
+#include "logger/Logger.hpp"
+#include "response/Response.hpp"
+
 using std::map;
+using std::ostream;
 using std::string;
 
 namespace webserver {
 
 const int HttpStatus::MIN_CODE = 100;
 const int HttpStatus::MAX_CODE = 599;
-const std::string HttpStatus::DEFAULT_STATUS_PAGE_DIR = "status_pages";
-
-HttpStatus::HttpStatus(int code, const std::string& reasonPhrase)
-    : _code(code)
-    , _reasonPhrase(reasonPhrase)
-    , _defaultPageFileLocation(getDefaultPageLocation(code))
-    , _pageFileLocation(_defaultPageFileLocation) {
+std::string HttpStatus::Item::defaultFolder() {
+    return ("status_pages");
+    // NOTE: cannot be static constant because of initialization order issues
 }
 
-HttpStatus::HttpStatus(int code, const std::string& reasonPhrase, const std::string& page)
+HttpStatus::Item::Item()
+    : _code(0)
+    , _reasonPhrase("")
+    , _pageFileLocation(getDefaultPageFileLocation()) {
+}
+
+HttpStatus::Item::Item(int code, const string& reasonPhrase)
     : _code(code)
     , _reasonPhrase(reasonPhrase)
-    , _defaultPageFileLocation(getDefaultPageLocation(code))
+    , _pageFileLocation(getDefaultPageFileLocation()) {
+}
+
+HttpStatus::Item::Item(int code, const string& reasonPhrase, const string& page)
+    : _code(code)
+    , _reasonPhrase(reasonPhrase)
     , _pageFileLocation(page) {
 }
 
-HttpStatus::HttpStatus(const HttpStatus& other)
+HttpStatus::Item::Item(const Item& other)
     : _code(other._code)
     , _reasonPhrase(other._reasonPhrase)
-    , _defaultPageFileLocation(other._defaultPageFileLocation)
     , _pageFileLocation(other._pageFileLocation) {
 }
 
-HttpStatus& HttpStatus::operator=(const HttpStatus& other) {
+HttpStatus::Item& HttpStatus::Item::operator=(const HttpStatus::Item& other) {
+    if (this == &other) {
+        return (*this);
+    }
     _code = other._code;
     _reasonPhrase = other._reasonPhrase;
-    _defaultPageFileLocation = other._defaultPageFileLocation;
     _pageFileLocation = other._pageFileLocation;
     return (*this);
+}
+
+bool HttpStatus::Item::operator==(const Item& other) const {
+    return (
+        _code == other._code && _reasonPhrase == other._reasonPhrase &&
+        _pageFileLocation == other._pageFileLocation
+    );
+}
+
+bool HttpStatus::Item::operator<(const Item& other) const {
+    return (_code < other._code);
+}
+
+HttpStatus::Item::~Item() {
+}
+
+HttpStatus::HttpStatus(const HttpStatus& other)
+    : _statusMap(other._statusMap) {
+    Logger log;
+    log.stream(LOG_TRACE) << "copying\n";
+}
+
+HttpStatus& HttpStatus::operator=(const HttpStatus& other) {
+    if (this == &other) {
+        return (*this);
+    }
+    _statusMap = other._statusMap;
+    Logger log;
+    log.stream(LOG_TRACE) << "assigning\n";
+    return (*this);
+}
+
+bool HttpStatus::operator==(const HttpStatus& other) const {
+    return (_statusMap == other._statusMap);
+}
+
+bool HttpStatus::operator!=(const HttpStatus& other) const {
+    return (!(*this == other));
 }
 
 HttpStatus::~HttpStatus() {
 }
 
-std::string HttpStatus::getDefaultPageLocation(int code) {
+const string& HttpStatus::Item::getPageFileLocation() const {
+    return (_pageFileLocation);
+}
+
+string HttpStatus::Item::getDefaultPageFileLocation() const {
     std::ostringstream oss;
-    oss << "./" << DEFAULT_STATUS_PAGE_DIR << "/" << code << ".html";
-    return (oss.str());
+    oss << "./" << defaultFolder() << "/" << _code << ".html";
+    const string res = oss.str();
+    return (res);
 }
 
-std::string HttpStatus::getPageFileLocation(int code) {
-    const std::map<int, HttpStatus>::const_iterator itr = _statusMap.find(code);
-    if (itr == _statusMap.end() || itr->second._pageFileLocation.empty()) {
-        return (getDefaultPageLocation(code));
+const string& HttpStatus::Item::getReasonPhrase() const {
+    return (_reasonPhrase);
+}
+
+const string& HttpStatus::getPageFileLocation(int code) const {
+    Logger log;
+    log.stream(LOG_TRACE) << "searching " << _statusMap.size() << " entries\n";
+    const std::map<int, Item>::const_iterator itr = _statusMap.find(code);
+    if (itr == _statusMap.end()) {
+        throw std::out_of_range("no such code");
     }
-    return (itr->second._pageFileLocation);
+    return (itr->second.getPageFileLocation());
 }
 
-std::map<int, HttpStatus> HttpStatus::_statusMap;
-
-void HttpStatus::addStatus(int code, const std::string& reasonPhrase) {
-    _statusMap.insert(
-        std::make_pair(code, HttpStatus(code, reasonPhrase, getDefaultPageLocation(code)))
-    );
+void HttpStatus::addStatus(map<int, Item>& map, int code, const string& reasonPhrase) {
+    map.insert(std::make_pair(code, Item(code, reasonPhrase)));
 }
 
-void HttpStatus::initStatusMap() {
-    addStatus(OK, "OK");
-    addStatus(CREATED, "Created");
-    addStatus(ACCEPTED, "Accepted");
-    addStatus(NO_CONTENT, "No Content");
-    addStatus(MOVED_PERMANENTLY, "Moved permanently");
-    addStatus(BAD_REQUEST, "Bad Request");
-    addStatus(FORBIDDEN, "Forbidden");
-    addStatus(NOT_FOUND, "Not Found");
-    addStatus(METHOD_NOT_ALLOWED, "Method Not Allowed");
-    addStatus(PAYLOAD_TOO_LARGE, "Payload Too Large");
-    addStatus(I_AM_A_TEAPOT, "I am a teapot");
-    addStatus(REQUEST_HEADER_FIELDS_TOO_LARGE, "Request Header Fields Too Large");
-    addStatus(INTERNAL_SERVER_ERROR, "Internal Server Error");
-    addStatus(NOT_IMPLEMENTED, "Not Implemented");
-    addStatus(BAD_GATEWAY, "Bad Gateway");
-    addStatus(HTTP_SERVICE_UNAVAILABLE, "Service Unavailable");
-    addStatus(GATEWAY_TIMEOUT, "Gateway Timeout");
-    addStatus(HTTP_VERSION_NOT_SUPPORTED, "HTTP Version Not Supported");
+const map<int, HttpStatus::Item>& HttpStatus::defaultStatusMap() {
+    static const map<int, HttpStatus::Item> map = createDefaultStatusMap();
+    return (map);
 }
 
-void HttpStatus::clearStatusMap() {
-    _statusMap.clear();
+map<int, HttpStatus::Item> HttpStatus::createDefaultStatusMap() {
+    map<int, HttpStatus::Item> res;
+    addStatus(res, OK, "OK");
+    addStatus(res, CREATED, "Created");
+    addStatus(res, ACCEPTED, "Accepted");
+    addStatus(res, NO_CONTENT, "No Content");
+    addStatus(res, MOVED_PERMANENTLY, "Moved permanently");
+    addStatus(res, BAD_REQUEST, "Bad Request");
+    addStatus(res, FORBIDDEN, "Forbidden");
+    addStatus(res, NOT_FOUND, "Not Found");
+    addStatus(res, METHOD_NOT_ALLOWED, "Method Not Allowed");
+    addStatus(res, PAYLOAD_TOO_LARGE, "Payload Too Large");
+    addStatus(res, I_AM_A_TEAPOT, "I am a teapot");
+    addStatus(res, REQUEST_HEADER_FIELDS_TOO_LARGE, "Request Header Fields Too Large");
+    addStatus(res, INTERNAL_SERVER_ERROR, "Internal Server Error");
+    addStatus(res, NOT_IMPLEMENTED, "Not Implemented");
+    addStatus(res, BAD_GATEWAY, "Bad Gateway");
+    addStatus(res, HTTP_SERVICE_UNAVAILABLE, "Service Unavailable");
+    addStatus(res, GATEWAY_TIMEOUT, "Gateway Timeout");
+    addStatus(res, HTTP_VERSION_NOT_SUPPORTED, "HTTP Version Not Supported");
+    return (res);
 }
 
-const std::string HttpStatus::UNKNOWN_STATUS = "SERVER RESPONSE UNDEFINED";
+HttpStatus::HttpStatus()
+    : _statusMap(defaultStatusMap()) {
+    Logger log;
+    log.stream(LOG_TRACE) << "init " << _statusMap.size() << "\n";
+}
 
-std::string HttpStatus::getReasonPhrase(const int code) {
-    const std::map<int, HttpStatus>::const_iterator itr = _statusMap.find(code);
+const string HttpStatus::UNKNOWN_STATUS = "SERVER RESPONSE UNDEFINED";
+
+string HttpStatus::getReasonPhrase(int code) const {
+    Logger log;
+    log.stream(LOG_TRACE) << "searching " << _statusMap.size() << " entries in " << &_statusMap
+                          << "\n";
+    const std::map<int, Item>::const_iterator itr = _statusMap.find(code);
     if (itr == _statusMap.end()) {
         return (UNKNOWN_STATUS);
     }
-    return (itr->second._reasonPhrase);
+    return (itr->second.getReasonPhrase());
 }
 
-void HttpStatus::setPage(int code, const std::string& pageFileLocation) {
-    const std::map<int, HttpStatus>::iterator itr = _statusMap.find(code);
+HttpStatus& HttpStatus::setPage(int code, const string& pageFileLocation) {
+    const std::map<int, Item>::iterator itr = _statusMap.find(code);
     if (itr == _statusMap.end()) {
-        throw std::runtime_error("Trying to set a status page for an unknown status code");
+        throw std::out_of_range("Trying to set a status page for an unknown status code");
     }
 
     if (pageFileLocation.empty()) {
         throw std::runtime_error("Provided status page location is empty");
     }
 
-    itr->second._pageFileLocation = pageFileLocation;
+    itr->second.setPageFileLocation(pageFileLocation);
+    return (*this);
+}
+
+HttpStatus::Item& HttpStatus::Item::setPageFileLocation(string location) {
+    _pageFileLocation = location;
+    return (*this);
 }
 
 bool HttpStatus::isAValidHttpStatusCode(int code) {
-    return (_statusMap.find(code) != _statusMap.end());
+    map<int, HttpStatus::Item> local = createDefaultStatusMap();
+    return (local.find(code) != local.end());
 }
 
+Response HttpStatus::serveStatusPage(int statusCode, string reasonPhrase, string uncheckedPath) {
+    const Logger log;
+    if (!file_system::fileExists(uncheckedPath.c_str())) {
+        webserver::Logger log;
+        log.stream(LOG_WARN) << "Status page file not found: " << uncheckedPath
+                             << ". Serving default message.\n";
+        return (Response(statusCode, reasonPhrase, reasonPhrase, MimeType::getMimeType("html")));
+    }
+    return (file_system::serveFile(uncheckedPath, statusCode, reasonPhrase));
+}
+
+Response HttpStatus::serveStatusPage(int statusCode) const {
+    return (
+        serveStatusPage(statusCode, getReasonPhrase(statusCode), getPageFileLocation(statusCode))
+    );
+}
+
+Response HttpStatus::ultimateInternalServerError() {
+    const Item status = defaultStatusMap().at(INTERNAL_SERVER_ERROR);
+    return (serveStatusPage(
+        INTERNAL_SERVER_ERROR,
+        status.getReasonPhrase(),
+        status.getPageFileLocation()
+    ));
+}
+
+ostream& operator<<(ostream& oss, const HttpStatus& catalogue) {
+    for (map<int, HttpStatus::Item>::const_iterator itr = catalogue._statusMap.begin();
+         itr != catalogue._statusMap.end();
+         itr++) {
+        oss << itr->first << ": ";
+        itr->second.print(oss);
+    }
+    return (oss);
+}
+
+void HttpStatus::Item::print(ostream& oss) const {
+    oss << _code << " " << _reasonPhrase << " " << _pageFileLocation << "\n";
+}
 }  // namespace webserver

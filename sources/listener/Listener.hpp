@@ -44,6 +44,7 @@ public:
     Connection::State generateResponse(int clientSocketFd);
     std::string getResponse(int clientSocketFd) const;
     Listener& setResponse(int clientSocketFd, std::string response);
+    const Endpoint& getConfiguration() const;
     Request getRequestFor(int clientSocketFd) const;
     void sendResponse(int clientSocketFd);
     void killConnection(int clientSocketFd);

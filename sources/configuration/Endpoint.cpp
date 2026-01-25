@@ -10,6 +10,8 @@
 
 #include "configuration/CgiHandlerConfig.hpp"
 #include "configuration/RouteConfig.hpp"
+#include "http_status/HttpStatus.hpp"
+#include "logger/Logger.hpp"
 
 using std::map;
 using std::ostream;
@@ -17,7 +19,7 @@ using std::set;
 using std::string;
 
 namespace webserver {
-const string Endpoint::DEFAULT_ROOT;
+const string Endpoint::DEFAULT_ROOT = "";
 const string Endpoint::DEFAULT_INTERFACE = "127.0.0.1";
 const int Endpoint::DEFAULT_PORT = 8888;
 
@@ -33,14 +35,19 @@ Endpoint::Endpoint()
     , _rootDirectory(DEFAULT_ROOT)
     , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes())
     , _cgiHandlers()
-    , _routes() {
+    , _routes()
+    , _statusCatalogue() {
 }
 
 Endpoint::Endpoint(const std::string& interface, int port)
     : _interface(interface)
     , _port(port)
+    , _serverName("")
     , _rootDirectory(DEFAULT_ROOT)
-    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes()) {
+    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes())
+    , _cgiHandlers()
+    , _routes()
+    , _statusCatalogue() {
 }
 
 Endpoint::Endpoint(const Endpoint& other)
@@ -49,11 +56,13 @@ Endpoint::Endpoint(const Endpoint& other)
     , _serverName(other._serverName)
     , _rootDirectory(other._rootDirectory)
     , _maxClientBodySizeBytes(other._maxClientBodySizeBytes)
-    , _routes(other._routes) {
+    , _cgiHandlers()
+    , _routes(other._routes)
+    , _statusCatalogue(other._statusCatalogue) {
     for (map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
          ++it) {
-        _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
+        _cgiHandlers[it->first] = (it->second == NULL ? NULL : new CgiHandlerConfig(*it->second));
     }
 }
 
@@ -76,7 +85,7 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
     for (map<std::string, CgiHandlerConfig*>::const_iterator it = other._cgiHandlers.begin();
          it != other._cgiHandlers.end();
          ++it) {
-        _cgiHandlers[it->first] = new CgiHandlerConfig(*it->second);
+        _cgiHandlers[it->first] = (it->second == NULL ? NULL : new CgiHandlerConfig(*it->second));
     }
 
     _interface = other._interface;
@@ -85,6 +94,7 @@ Endpoint& Endpoint::operator=(const Endpoint& other) {
     _rootDirectory = other._rootDirectory;
     _maxClientBodySizeBytes = other._maxClientBodySizeBytes;
     _routes = other._routes;
+    _statusCatalogue = other._statusCatalogue;
 
     return (*this);
 }
@@ -151,11 +161,16 @@ bool Endpoint::operator==(const Endpoint& other) const {
     if (_routes != other._routes) {
         return (false);
     }
+    if (_statusCatalogue != other._statusCatalogue) {
+        return (false);
+    }
 
     return (true);
 }
 
 Endpoint::~Endpoint() {
+    Logger log;
+    log.stream(LOG_TRACE) << "Endpoint destroyed at " << this << "\n";
     for (map<std::string, CgiHandlerConfig*>::iterator it = _cgiHandlers.begin();
          it != _cgiHandlers.end();
          ++it) {
@@ -198,7 +213,8 @@ Endpoint& Endpoint::addCgiHandler(const CgiHandlerConfig& config, string extensi
     return (*this);
 }
 
-Endpoint& Endpoint::addRoute(const RouteConfig& route) {
+Endpoint& Endpoint::addRoute(RouteConfig route) {
+    route.setStatusCatalogue(_statusCatalogue);
     _routes.insert(route);
     return (*this);
 }
@@ -249,6 +265,20 @@ const std::map<std::string, CgiHandlerConfig*>& Endpoint::getCgiHandlers() const
     return (_cgiHandlers);
 }
 
+const HttpStatus& Endpoint::getStatusCatalogue() const {
+    return (_statusCatalogue);
+}
+
+Endpoint& Endpoint::setStatusCatalogue(const HttpStatus& statusCatalogue) {
+    _statusCatalogue = statusCatalogue;
+    return (*this);
+}
+
+Endpoint& Endpoint::setStatusPage(int code, const std::string& pageFileLocation) {
+    _statusCatalogue.setPage(code, pageFileLocation);
+    return (*this);
+}
+
 bool Endpoint::isAValidPort(int port) {
     return (port >= MIN_PORT && port <= MAX_PORT);
 }
@@ -271,7 +301,8 @@ ostream& operator<<(ostream& oss, const Endpoint& endpoint) {
          itr++) {
         oss << "{" << *itr << "}\n";
     }
-    oss << "\n";
+    oss << "\nstatus catalogue:\n";
+    oss << endpoint._statusCatalogue << "\n";
     return (oss);
 }
 }  // namespace webserver

@@ -21,9 +21,9 @@ namespace webserver {
 Logger MasterListener::_log;
 
 MasterListener::MasterListener(const AppConfig& configuration) {
-    const set<Endpoint>& endpoints = configuration.getEndpoints();
-    for (set<Endpoint>::const_iterator itr = endpoints.begin(); itr != endpoints.end(); ++itr) {
-        Listener* newListener = new Listener(*itr);
+    const set<Endpoint*>& endpoints = configuration.getEndpoints();
+    for (set<Endpoint*>::const_iterator itr = endpoints.begin(); itr != endpoints.end(); ++itr) {
+        Listener* newListener = new Listener(**itr);
         _listeners[newListener->getListeningSocketFd()] = newListener;
     }
 }

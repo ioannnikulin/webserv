@@ -7,7 +7,6 @@
 
 #include "configuration/AppConfig.hpp"
 #include "configuration/parser/ConfigParser.hpp"
-#include "http_status/HttpStatus.hpp"
 #include "listener/MasterListener.hpp"
 #include "logger/Logger.hpp"
 #include "signals/ServerSignal.hpp"
@@ -61,7 +60,6 @@ WebServer::WebServer(const std::string& configFilePath)
 }
 
 WebServer& WebServer::getInstance(const string& configFilePath) {
-    HttpStatus::initStatusMap();
     static WebServer instance = WebServer(configFilePath);
     return (instance);
 }

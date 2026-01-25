@@ -5,8 +5,9 @@ CXX = ${CPP}
 COMPILE_FLAGS = -Wall -Wextra -Werror	\
 				-std=c++98	\
 				-g	\
-				-O0 \
+				-O0	\
 				-pedantic -Wold-style-cast -Wdeprecated-declarations \
+				#-rdynamic -fno-pie -no-pie \
 
 PREPROC_DEFINES =
 
@@ -165,6 +166,8 @@ LINK_FLAGS = \
 	-I$(TEST_F) \
 	-I$(SOURCE_F) \
 
+#	-fno-pie -no-pie -rdynamic -fsanitize=address -fno-omit-frame-pointer
+
 
 # for makefile only: where to look for cpps mentioned in rules
 vpath %.cpp \
@@ -263,6 +266,9 @@ siege: 	# local_run.conf
 
 shutdown:
 	@curl -X SHUTDOWN $(WEBSERV_ADDRESS)
+
+post:
+	@curl -X POST -d "hello" $(WEBSERV_ADDRESS)/folder/subfolder/file.txt
 
 # ------------------------------------------------------------
 

@@ -131,7 +131,7 @@ def checkAST(file, index, roots):
         if not ns_stack and not isMain(node):
             issues.append(f"{file}: {node.spelling} is not inside any namespace\n")
 
-        if safe_kind(node) == cindex.CursorKind.CLASS_DECL:
+        if safe_kind(node) == cindex.CursorKind.CLASS_DECL and node.is_definition():
             cls_name = node.spelling
             has_ctor = False
             has_dtor = False

@@ -95,7 +95,7 @@
       "delay_before_ms": 0,
       "expected": {
         "status_code": 200,
-        "body": "<html><head><title>/listme/</title></head><body>Contents of folder /listme/:\n<hr/>\n<ul><li><a href=\"/listme/.\">.</a></li><li><a href=\"/listme/..\">..</a></li><li><a href=\"/listme/listmetoo\">listmetoo</a></li><li><a href=\"/listme/stub\">stub</a></li></ul></body></html>"
+        "body": "<html><head><title>/listme/</title></head><body>Contents of folder /listme/:\n<hr/>\n<ul>\n<li><a href=\"/listme/.\">.</a></li>\n<li><a href=\"/listme/..\">..</a></li>\n<li><a href=\"/listme/listmetoo\">listmetoo</a></li>\n<li><a href=\"/listme/stub\">stub</a></li>\n</ul></body></html>"
       }
     },
     {
@@ -116,7 +116,7 @@
       "delay_before_ms": 0,
       "expected": {
         "status_code": 200,
-        "body": "<html><head><title>/folder/subfolder/</title></head><body>Contents of folder /folder/subfolder/:\n<hr/>\n<ul><li><a href=\"/folder/subfolder/.\">.</a></li><li><a href=\"/folder/subfolder/..\">..</a></li><li><a href=\"/folder/subfolder/stub\">stub</a></li></ul></body></html>"
+        "body": "<html><head><title>/folder/subfolder/</title></head><body>Contents of folder /folder/subfolder/:\n<hr/>\n<ul>\n<li><a href=\"/folder/subfolder/.\">.</a></li>\n<li><a href=\"/folder/subfolder/..\">..</a></li>\n<li><a href=\"/folder/subfolder/stub\">stub</a></li>\n</ul></body></html>"
       }
     },
     {

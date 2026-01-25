@@ -11,6 +11,7 @@
 #include "configuration/parser/ConfigParser.hpp"
 #include "configuration/parser/ConfigParsingException.hpp"
 #include "http_methods/HttpMethodType.hpp"
+#include "logger/Logger.hpp"
 
 using std::string;
 
@@ -27,6 +28,9 @@ void ConfigParser::setupLocationFolder(
     const Endpoint& server,
     RouteConfig& route
 ) {
+    Logger log;
+    log.stream(LOG_TRACE) << "\n{{" << _tmp.rootSet() << " " << _tmp.rootPath() << " "
+                          << server.getRoot() << "}}\n";
     const FolderConfig folder(
         locationPath,
         _tmp.rootSet() ? _tmp.rootPath() : server.getRoot(),
@@ -38,6 +42,7 @@ void ConfigParser::setupLocationFolder(
 }
 
 void ConfigParser::parseLocation(Endpoint& server) {
+    Logger log;
     _index++;
 
     if (isEnd(_tokens, _index)) {
@@ -96,6 +101,8 @@ void ConfigParser::parseLocation(Endpoint& server) {
 
     route.setPath(locationPath);
 
+    log.stream(LOG_TRACE) << "setupLocationFolder " << locationPath << " [" << server << "] {"
+                          << route << "}\n";
     setupLocationFolder(locationPath, server, route);
 
     setupLocationUpload(route);

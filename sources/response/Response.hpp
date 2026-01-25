@@ -15,12 +15,18 @@ class Response {
 private:
     static Logger _log;
     int _statusCode;
+    std::string _reasonPhrase;
     std::map<std::string, std::string> _headers;
     std::string _body;
 
 public:
     Response();
-    Response(int status, const std::string& body, const std::string& type);
+    Response(
+        int status,
+        const std::string& reasonPhrase,
+        const std::string& body,
+        const std::string& type
+    );
     Response& operator=(const Response& other);
     Response(const Response& other);
     ~Response();

@@ -8,13 +8,12 @@
 #include <unistd.h>
 
 #include <cstddef>
-#include <exception>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
+#include "configuration/Endpoint.hpp"
 #include "connection/Connection.hpp"
-#include "file_system/FileSystem.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "listener/Listener.hpp"
 #include "logger/Logger.hpp"
@@ -289,43 +288,20 @@ void CgiProcessManager::parseCgiResponseLoop(
     }
 }
 
-string CgiProcessManager::emptyOutput() {
-    _log.stream(LOG_ERROR) << "CGI script produced no output\n";
-
-    const string pageLocation = HttpStatus::getPageFileLocation(HttpStatus::INTERNAL_SERVER_ERROR);
-    string errorPageContent;
-    try {
-        errorPageContent = file_system::readFile(pageLocation.c_str());
-    } catch (const std::exception& e) {
-        errorPageContent = "CGI script failed to produce output";
-    }
-
-    const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
-    return (response.serialize());
-}
-
-string CgiProcessManager::noHeaders() {
-    _log.stream(LOG_ERROR) << "CGI script produced invalid output (no proper headers)\n";
-
-    const string pageLocation = HttpStatus::getPageFileLocation(HttpStatus::INTERNAL_SERVER_ERROR);
-    string errorPageContent;
-    try {
-        errorPageContent = file_system::readFile(pageLocation.c_str());
-    } catch (const std::exception& e) {
-        errorPageContent = "CGI script produced invalid output";
-    }
-
-    const Response response(HttpStatus::INTERNAL_SERVER_ERROR, errorPageContent, "text/html");
-    return (response.serialize());
-}
-string CgiProcessManager::parseCgiResponse(const string& cgiOutput) {
+string CgiProcessManager::parseCgiResponse(const string& cgiOutput, const Endpoint& configuration) {
     if (cgiOutput.empty()) {
-        return (emptyOutput());
+        _log.stream(LOG_ERROR) << "CGI script produced no output\n";
+        return (configuration.getStatusCatalogue()
+                    .serveStatusPage(HttpStatus::INTERNAL_SERVER_ERROR)
+                    .serialize());
     }
 
     const string::size_type headerEnd = cgiOutput.find("\r\n\r\n");
     if (headerEnd == string::npos) {
-        return (noHeaders());
+        _log.stream(LOG_ERROR) << "CGI script produced invalid output (no proper headers)\n";
+        return (configuration.getStatusCatalogue()
+                    .serveStatusPage(HttpStatus::INTERNAL_SERVER_ERROR)
+                    .serialize());
     }
 
     const string headers = cgiOutput.substr(0, headerEnd);
@@ -337,7 +313,12 @@ string CgiProcessManager::parseCgiResponse(const string& cgiOutput) {
 
     parseCgiResponseLoop(headers, statusCode, contentType, customHeaders);
 
-    Response response(statusCode, body, contentType);
+    Response response(
+        statusCode,
+        configuration.getStatusCatalogue().getReasonPhrase(statusCode),
+        body,
+        contentType
+    );
 
     for (map<string, string>::const_iterator iter = customHeaders.begin();
          iter != customHeaders.end();

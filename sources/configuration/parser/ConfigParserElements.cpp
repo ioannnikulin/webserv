@@ -150,7 +150,7 @@ void ConfigParser::parseBodySize(Endpoint& server) {
     server.setMaxClientBodySizeBytes(size);
 }
 
-void ConfigParser::parseErrorPage() {
+void ConfigParser::parseErrorPage(Endpoint& server) {
     _index++;
 
     if (isEnd(_tokens, _index)) {
@@ -198,7 +198,7 @@ void ConfigParser::parseErrorPage() {
         return;
     }
     for (size_t i = 0; i < codes.size(); i++) {
-        HttpStatus::setPage(codes[i], pagePath);
+        server.setStatusPage(codes[i], pagePath);
     }
 }
 

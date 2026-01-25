@@ -52,7 +52,7 @@ check() {
 	for f in "${TUS[@]}"; do
 		out=$(mktemp)
 		"$CLANG_TIDY" $f "$SETTINGS_FILE_FLAG" -- "${COMPILE_FLAGS[@]}" "${LINK_FLAGS_ARRAY[@]}" >$out 2>&1 || true
-		filtered=$(grep -n -E 'warning:|error:' "$out" | grep -v -E "$CLANG_TIDY_IGNORED_REGEX" | grep -v -E TEST_SIMPLER_STRUCTURE || true)
+		filtered=$(grep -n -E 'warning:|error:' "$out" | grep -v -E "$CLANG_TIDY_IGNORED_REGEX" | grep -v -E "$TEST_SIMPLER_STRUCTURE" || true)
 		if [ -n "$filtered" ]; then
 			printf "%s\n" "$filtered"
 			errs=1

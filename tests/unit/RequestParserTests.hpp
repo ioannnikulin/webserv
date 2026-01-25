@@ -13,6 +13,7 @@
 #include "http_status/BadRequest.hpp"
 #include "http_status/IncompleteRequest.hpp"
 #include "http_status/PayloadTooLarge.hpp"
+#include "logger/LoggerConfig.hpp"
 
 using std::cout;
 using std::endl;
@@ -22,6 +23,10 @@ using webserver::Request;
 
 class RequestParserTests : public CxxTest::TestSuite {
 public:
+    void setUp() {
+        webserver::LoggerConfig::setGlobalLevel(LOG_SILENT);
+    }
+
     void testCurlGet() {
         const string raw =
             "GET / HTTP/1.1\r\nHost:   127.10.0.1:8888 \r\nUser-Agent: curl/8.5.0\r\n"
