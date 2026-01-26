@@ -38,7 +38,8 @@ Request::Request()
     , _headers()
     , _isBodyRaw(true)
     , _body("")
-    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes()) {
+    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes())
+    , _isCgiRequest(false) {
 }
 
 Request::Request(const Request& other)
@@ -51,7 +52,8 @@ Request::Request(const Request& other)
     , _headers(other._headers)
     , _isBodyRaw(other._isBodyRaw)
     , _body(other._body)
-    , _maxClientBodySizeBytes(other._maxClientBodySizeBytes) {
+    , _maxClientBodySizeBytes(other._maxClientBodySizeBytes)
+    , _isCgiRequest(other._isCgiRequest) {
 }
 
 const std::string Request::MALFORMED_FIRST_LINE =
@@ -101,7 +103,8 @@ Request::Request(string raw)
     , _protocolVersion(DEFAULT_HTTP_VERSION)
     , _isBodyRaw(true)
     , _body("")
-    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes()) {
+    , _maxClientBodySizeBytes(defaultMaxClientBodySizeBytes())
+    , _isCgiRequest(false) {
     if (raw.empty()) {
         throw IncompleteRequest("empty request");
     }
@@ -207,6 +210,7 @@ Request& Request::operator=(const Request& other) {
     _headers = other._headers;
     _body = other._body;
     _isBodyRaw = other._isBodyRaw;
+    _isCgiRequest = other._isCgiRequest;
     return (*this);
 }
 
@@ -219,7 +223,9 @@ bool Request::operator==(const Request& other) {
         _isRequestTargetReceived == other._isRequestTargetReceived &&
         _protocolVersion == other._protocolVersion && _headers == other._headers &&
         _body == other._body && _path == other._path && _query == other._query &&
-        _isBodyRaw == other._isBodyRaw && _maxClientBodySizeBytes == other._maxClientBodySizeBytes
+        _isBodyRaw == other._isBodyRaw &&
+        _maxClientBodySizeBytes == other._maxClientBodySizeBytes &&
+        _isCgiRequest == other._isCgiRequest
     );
 }
 
@@ -317,6 +323,15 @@ void Request::setMaxClientBodySizeBytes(size_t maxClientBodySizeBytes) {
 
 size_t Request::getMaxClientBodySizeBytes() const {
     return (_maxClientBodySizeBytes);
+}
+
+bool Request::isCgiRequest() const {
+    return (_isCgiRequest);
+}
+
+Request& Request::markAsCgiRequest() {
+    _isCgiRequest = true;
+    return (*this);
 }
 
 std::ostream& operator<<(std::ostream& oss, const Request& request) {

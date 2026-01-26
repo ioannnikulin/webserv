@@ -54,7 +54,7 @@ void CgiHandler::setupEnvironment() {
     addEnvVar("SCRIPT_NAME", resolveIndexPath());
     addEnvVar("SCRIPT_FILENAME", _scriptPath);
     addEnvVar("QUERY_STRING", _request.getQuery());
-    addEnvVar("PATH_INFO", resolveIndexPath());
+    addEnvVar("PATH_INFO", "");
     addEnvVar("REDIRECT_STATUS", "200");
     if (getMethod() == "POST") {
         const string contentType = _request.getHeader("Content-Type");

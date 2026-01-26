@@ -19,7 +19,9 @@ public:
         NEWBORN,
         READING,
         READING_COMPLETE,
-        READING_CGI_REQUEST_COMPLETE,
+        BAD_REQUEST_READ,
+        METHOD_NOT_ALLOWED,
+        REROUTING_BACK_TO_CGI,
         RECEIVED_RESPONSE_FROM_WORKER,
         RECEIVED_STATUS_FROM_WORKER,
         WRITING,
@@ -41,6 +43,7 @@ private:
     */
     std::ostringstream _requestBuffer;
     Request _request;
+    bool _isRequestValid;
     uint32_t _clientIp;
     uint16_t _clientPort;
     const Endpoint& _configuration;

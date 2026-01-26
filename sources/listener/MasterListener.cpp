@@ -54,10 +54,13 @@ Connection::State MasterListener::callCgi(Listener* listener, int activeFd) {
 Connection::State MasterListener::generateResponse(Listener* listener, int activeFd) {
     const Connection::State connState = listener->generateResponse(activeFd);
     if (connState != Connection::WRITING_COMPLETE &&
-        connState != Connection::SERVER_SHUTTING_DOWN) {
+        connState != Connection::SERVER_SHUTTING_DOWN &&
+        connState != Connection::REROUTING_BACK_TO_CGI) {
         _log.stream(LOG_WARN) << "Connection in unexpected state " << connState << "\n";
     }
-    markResponseReadyForReturn(activeFd);
+    if (connState != Connection::REROUTING_BACK_TO_CGI) {
+        markResponseReadyForReturn(activeFd);
+    }
     return (connState);
 }
 
@@ -83,7 +86,7 @@ Connection::State MasterListener::isItADataRequestOnAClientSocketFromARegistered
     }
     _log.stream(LOG_TRACE) << "Existing client on socket fd " << activeFd.fd << " has sent data\n"
                            << "CONN_TRACK: Processing data for fd " << activeFd.fd << "\n";
-    const Connection::State connState = listener->receiveRequest(activeFd.fd);
+    Connection::State connState = listener->receiveRequest(activeFd.fd);
     if (connState == Connection::CLOSED_BY_CLIENT) {
         _log.stream(LOG_TRACE) << "Client on socket fd " << activeFd.fd
                                << " closed the connection before completing the request\n";
@@ -93,13 +96,13 @@ Connection::State MasterListener::isItADataRequestOnAClientSocketFromARegistered
         removePollFd(activeFd.fd);
         return (connState);
     }
-    if (connState == Connection::READING_COMPLETE) {
+    if (connState == Connection::READING_COMPLETE || connState == Connection::METHOD_NOT_ALLOWED ||
+        connState == Connection::BAD_REQUEST_READ) {
         markConnectionClosedToAvoidRequestOverlapping(activeFd);
-        return (generateResponse(listener, activeFd.fd));
-    }
-    if (connState == Connection::READING_CGI_REQUEST_COMPLETE) {
-        markConnectionClosedToAvoidRequestOverlapping(activeFd);
-        return (callCgi(listener, activeFd.fd));
+        connState = generateResponse(listener, activeFd.fd);
+        if (connState == Connection::REROUTING_BACK_TO_CGI) {
+            return (callCgi(listener, activeFd.fd));
+        }
     }
     return (connState);  // NOTE: READING
 }

@@ -19,14 +19,14 @@ private:
     std::map<std::string, std::string> _headers;
     bool _isBodyRaw;
     std::string _body;
+    size_t _maxClientBodySizeBytes;
+    bool _isCgiRequest;
 
     static const HttpMethodType DEFAULT_TYPE;
     static const std::string DEFAULT_REQUEST_TARGET;
     static const std::string DEFAULT_HTTP_VERSION;
 
     static const std::string MALFORMED_FIRST_LINE;
-
-    size_t _maxClientBodySizeBytes;
 
     void parseFirstLine(const std::string& firstLine);
     void parseHeaders(const std::string& rawHeaders);
@@ -58,6 +58,8 @@ public:
     std::string getBody();
     Request& setBody(std::string body);
     Request& setIsBodyRaw(bool isBodyRaw);
+    bool isCgiRequest() const;
+    Request& markAsCgiRequest();
 
     std::string getVersion() const;
     Request& setVersion(std::string version);
