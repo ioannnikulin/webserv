@@ -20,7 +20,7 @@ using std::string;
 namespace webserver {
 void ConfigParser::parseListen(Endpoint& server) {
     _index++;
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected value after 'listen'");
     }
 
@@ -65,7 +65,7 @@ void ConfigParser::parseListen(Endpoint& server) {
 void ConfigParser::parseServerName(Endpoint& server) {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected a name after 'server_name'");
     }
 
@@ -84,12 +84,20 @@ void ConfigParser::parseServerName(Endpoint& server) {
     if (name.empty()) {
         throw ConfigParsingException("No server_name value provided");
     }
+
+    const string existingName = server.getServerName();
+    if (!existingName.empty()) {
+        throw ConfigParsingException(
+            "Duplicate server_name directive (only one allowed per server block)"
+        );
+    }
+
     server.addServerName(name);
 }
 
 void ConfigParser::parseRoot(Endpoint& server) {
     _index++;
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected path after 'root'");
     }
 
@@ -124,7 +132,7 @@ size_t ConfigParser::parseSizeValue(const string& value) {
     long num;
     istringstream iss(numbers);
     iss >> num;
-    if (num < 0) {
+    if (num <= 0) {
         throw ConfigParsingException("Invalid size: " + value);
     }
 
@@ -133,7 +141,7 @@ size_t ConfigParser::parseSizeValue(const string& value) {
 
 void ConfigParser::parseBodySize(Endpoint& server) {
     _index++;
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected value after 'client_max_body_size'");
     }
 
@@ -153,7 +161,7 @@ void ConfigParser::parseBodySize(Endpoint& server) {
 void ConfigParser::parseErrorPage(Endpoint& server) {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected status code or URL after 'error_page'");
     }
 
@@ -170,9 +178,13 @@ void ConfigParser::parseErrorPage(Endpoint& server) {
         istringstream iss(_tokens[_index]);
         iss >> code;
         if (!HttpStatus::isAValidHttpStatusCode(code)) {
-            throw ConfigParsingException(
-                "Invalid HTTP status code in error_page: " + _tokens[_index]
-            );
+            _index++;
+            _index++;
+            if (isEnd(_tokens, _index) || _tokens[_index] != ";") {
+                throw ConfigParsingException("Missing ';' after error_page directive");
+            }
+            _index++;
+            return;
         }
         codes.push_back(code);
         _index++;
@@ -205,16 +217,18 @@ void ConfigParser::parseErrorPage(Endpoint& server) {
 void ConfigParser::parseCgi(Endpoint& server) {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected CGI extension after 'cgi'");
     }
 
-    string extension = _tokens[_index];
+    const string extension = _tokens[_index];
 
     _index++;
 
-    if (extension[0] != '.') {
-        throw ConfigParsingException("Invalid CGI extension: " + extension);
+    if (extension != ".py" && extension != ".php") {
+        throw ConfigParsingException(
+            "Invalid CGI extension '" + extension + "' (only .py and .php are supported)"
+        );
     }
 
     if (isEnd(_tokens, _index)) {
@@ -235,5 +249,4 @@ void ConfigParser::parseCgi(Endpoint& server) {
 
     server.addCgiHandler(config, extension);
 }
-
 }  // namespace webserver

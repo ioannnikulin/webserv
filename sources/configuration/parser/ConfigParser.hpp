@@ -27,6 +27,7 @@ private:
     void parseErrorPage(Endpoint& server);
     void parseCgi(Endpoint& server);
     void parseLocation(Endpoint& server);
+    void checkIfBodySizeSetAndParse(bool& bodySizeSet);
 
     void setupLocationFolder(
         const std::string& locationPath,

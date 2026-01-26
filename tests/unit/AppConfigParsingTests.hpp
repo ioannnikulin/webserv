@@ -286,7 +286,7 @@ public:
         const string fname = "tests/config_files/advanced.conf";
 
         webserver::AppConfig expected;
-        webserver::Endpoint ep("0.0.0.0", 443);
+        webserver::Endpoint ep("0.0.0.0", 8000);
         string serverName = "secure.example.com";
 
         webserver::HttpStatus status;
@@ -314,7 +314,7 @@ public:
         route1.setPath("/");
         route1.setFolderConfig(webserver::FolderConfig(
             "/",
-            "tests/e2e/4/requirements/webserv/volume/secure",
+            "tests/e2e/4_advanced_config/requirements/webserv/volume/secure",
             false,
             "index.html",
             1 * utils::MIB
@@ -326,15 +326,16 @@ public:
         route2.setPath("/upload");
         route2.setFolderConfig(webserver::FolderConfig(
             "/upload",
-            "tests/e2e/4/requirements/webserv/volume/uploads",
+            "tests/e2e/4_advanced_config/requirements/webserv/volume/uploads",
             false,
             "",
             1 * utils::MIB
         ));
         route2.addAllowedMethod(webserver::POST);
-        route2.setUploadConfig(
-            webserver::UploadConfig(true, "tests/e2e/4/requirements/webserv/volume/uploads/tmp")
-        );
+        route2.setUploadConfig(webserver::UploadConfig(
+            true,
+            "tests/e2e/4_advanced_config/requirements/webserv/volume/uploads/tmp"
+        ));
         ep.addRoute(route2);
 
         // Location /redirect

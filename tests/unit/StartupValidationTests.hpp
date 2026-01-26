@@ -79,25 +79,67 @@ public:
         vector<string> badConfigs;
 
         // List all bad config files explicitly
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/2_empty_file.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/10_missing_curly_brace.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/11_extra_curly_brace.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/12_unclosed_block.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/13_empty_block.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/14_directive_outside_allowed_context.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/15_missing_semicolon.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/16_extra_semicolon.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/18_unknown_directive.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/19_wrong_number_of_arguments.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/20_invalid_value_type.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/21_case-sensitive_directive_names.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/29_no_listen.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/30_invalid_port.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/31_port_too_large.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/33_duplicate_ip_port_exact_match.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/34_listen_in_wrong_scope.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/35_empty_server_name.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/36_duplicate_names_in_same_server.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/40_location_outside_server.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/41_location_inside_location.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/42_duplicate_location_paths.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/43_empty_location_block.conf");
         badConfigs.push_back(BAD_CONFIGS_DIR + "/45_root_does_not_exist.conf");
         badConfigs.push_back(BAD_CONFIGS_DIR + "/46_root_is_file.conf");
         badConfigs.push_back(BAD_CONFIGS_DIR + "/47_no_read_permission.conf");
-        //badConfigs.push_back(BAD_CONFIGS_DIR + "/48_index_missing.conf");
-        //badConfigs.push_back(BAD_CONFIGS_DIR + "/49_error_page_missing.conf");
         badConfigs.push_back(BAD_CONFIGS_DIR + "/50_upload_dir_missing.conf");
         badConfigs.push_back(BAD_CONFIGS_DIR + "/51_cgi_missing.conf");
-        //badConfigs.push_back(BAD_CONFIGS_DIR + "/63_invalid_http_code.conf");
-        //badConfigs.push_back(BAD_CONFIGS_DIR + "/64_duplicate_same_code.conf");
-        //badConfigs.push_back(BAD_CONFIGS_DIR + "/65_path_missing.conf");
-        //badConfigs.push_back(BAD_CONFIGS_DIR + "/66_path_directory.conf");
-        //badConfigs.push_back(BAD_CONFIGS_DIR + "/67_permission_denied.conf");
-
-        //TS_ASSERT_EQUALS(12, badConfigs.size());
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/59_duplicate_methods.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/69_client_body_size_zero.conf");
+        badConfigs.push_back(BAD_CONFIGS_DIR + "/70_client_body_size_negative.conf");
+        badConfigs.push_back(
+            BAD_CONFIGS_DIR + "/71_client_body_size_multiple_definitions_same_scope.conf"
+        );
 
         webserver::ConfigParser parser;
 
         for (size_t i = 0; i < badConfigs.size(); ++i) {
             TS_ASSERT_THROWS(parser.parse(badConfigs[i]), const webserver::ConfigParsingException&);
+        }
+    }
+
+    void testGoodConfigFilesDontThrowExceptions() {
+        vector<string> goodConfigs;
+
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/9_tabs_spaces_mix.conf");
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/17_comment_handling.conf");
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/48_index_missing.conf");
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/49_error_page_missing.conf");
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/60_no_methods_allowed.conf");
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/63_invalid_http_code.conf");
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/64_duplicate_same_code.conf");
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/65_path_missing.conf");
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/66_path_directory.conf");
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/67_permission_denied.conf");
+        goodConfigs.push_back(BAD_CONFIGS_DIR + "/68_client_body_size_missing.conf");
+
+        webserver::ConfigParser parser;
+
+        for (size_t i = 0; i < goodConfigs.size(); ++i) {
+            TS_ASSERT_THROWS_NOTHING(parser.parse(goodConfigs[i]));
         }
     }
 };

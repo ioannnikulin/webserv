@@ -52,6 +52,7 @@ public:
     Endpoint& addRoute(RouteConfig route);
     std::string getInterface() const;
     std::string getRoot() const;
+    std::string getServerName() const;
     int getPort() const;
     const RouteConfig& getRoute(std::string route) const;
     const RouteConfig& selectRoute(std::string route) const;
