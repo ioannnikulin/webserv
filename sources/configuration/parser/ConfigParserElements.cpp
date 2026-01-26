@@ -225,12 +225,6 @@ void ConfigParser::parseCgi(Endpoint& server) {
 
     _index++;
 
-    if (extension != ".py" && extension != ".php") {
-        throw ConfigParsingException(
-            "Invalid CGI extension '" + extension + "' (only .py and .php are supported)"
-        );
-    }
-
     if (isEnd(_tokens, _index)) {
         throw ConfigParsingException("Expected CGI executable path after extension");
     }
