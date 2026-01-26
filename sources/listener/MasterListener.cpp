@@ -167,6 +167,7 @@ MasterListener::handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewC
     ret = isItADataRequestOnAClientSocketFromARegisteredClient(activeFd);
     if (ret != Connection::IGNORED) {
         if (ret == Connection::SERVER_SHUTTING_DOWN) {
+            handleShutdownSignal();
             acceptingNewConnections = false;
         }
         return (ret);
@@ -174,6 +175,7 @@ MasterListener::handleIncomingConnection(::pollfd& activeFd, bool& acceptingNewC
     ret = isItAControlMessageFromAResponseGeneratorWorker(activeFd.fd);
     if (ret != Connection::IGNORED) {
         if (ret == Connection::SERVER_SHUTTING_DOWN) {
+            handleShutdownSignal();
             acceptingNewConnections = false;
         }
         return (ret);
