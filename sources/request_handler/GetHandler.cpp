@@ -23,7 +23,7 @@ Logger GetHandler::_log;
 
 string listingItem(string prefix, string name) {
     ostringstream oss;
-    oss << "\n<li><a href=\"" << prefix << name << "\">" << name << "</a></li>";
+    oss << "\n<li><a href=\"" << prefix << (prefix.at(prefix.size() - 1) == '/' ? "" : "/") << name << "\">" << name << "</a></li>";
     return (oss.str());
 }
 
