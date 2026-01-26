@@ -67,20 +67,16 @@ Response GetHandler::listDirectory(
 Response GetHandler::handleRequest(
     string originalTarget,
     string resolvedTarget,
+    bool isCgiRequest,
     const RouteConfig& routeConfig
 ) {
     if (file_system::isDirectory(resolvedTarget.c_str())) {
         _log.stream(LOG_TRACE) << "Target is a directory.\n";
-        if (resolvedTarget.at(resolvedTarget.size() - 1) != '/') {
-            resolvedTarget = resolvedTarget + "/";
-        }
-        if (originalTarget.at(originalTarget.size() - 1) != '/') {
-            originalTarget = originalTarget + "/";
-        }
         string existingIndexFile;
         if (!routeConfig.getFolderConfig().getIndexPageFilename().empty()) {
-            existingIndexFile =
-                resolvedTarget + routeConfig.getFolderConfig().getIndexPageFilename();
+            existingIndexFile = resolvedTarget +
+                                (resolvedTarget.at(resolvedTarget.size() - 1) == '/' ? "" : "/") +
+                                routeConfig.getFolderConfig().getIndexPageFilename();
         }
         if (file_system::fileExists(existingIndexFile.c_str())) {
             _log.stream(LOG_TRACE) << "index file available\n";
@@ -91,7 +87,7 @@ Response GetHandler::handleRequest(
             if (routeConfig.getFolderConfig().isListingEnabled()) {
                 return (listDirectory(originalTarget, resolvedTarget, routeConfig));
             }
-            return (routeConfig.getStatusCatalogue().serveStatusPage(HttpStatus::FORBIDDEN));
+            return (routeConfig.getStatusCatalogue().serveStatusPage(HttpStatus::NOT_FOUND));
         }
     } else if (file_system::isFile(resolvedTarget.c_str())) {
         _log.stream(LOG_DEBUG) << "Target is a file.\n";
@@ -105,6 +101,10 @@ Response GetHandler::handleRequest(
     if (resolvedTarget.find("..") != std::string::npos) {
         _log.stream(LOG_WARN) << "Directory traversal attempt: " << resolvedTarget << "\n";
         return (routeConfig.getStatusCatalogue().serveStatusPage(HttpStatus::FORBIDDEN));
+    }
+
+    if (isCgiRequest) {
+        return (Response(-1, "", "", ""));
     }
 
     if (file_system::fileExists(resolvedTarget.c_str())) {

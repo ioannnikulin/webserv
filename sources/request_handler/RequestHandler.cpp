@@ -50,7 +50,7 @@ string RequestHandler::handleRequest(Request& request, const RouteConfig& config
                 .setHeader("Location", configuration.getRedirection())
         ));
     }
-    if (request.getType() != SHUTDOWN && !configuration.isMethodAllowed(request.getType())) {
+    if (!configuration.isMethodAllowed(request.getType())) {
         return (serializeAndPrint(
             configuration.getStatusCatalogue().serveStatusPage(HttpStatus::METHOD_NOT_ALLOWED)
         ));
@@ -65,20 +65,29 @@ string RequestHandler::handleRequest(Request& request, const RouteConfig& config
     }
     const string resolvedTarget =
         configuration.getFolderConfig().getResolvedPath(request.getPath());
-    Response response;
+    Response response(-1, "", "", "");
     switch (request.getType()) {
         case GET: {
             _log.stream(LOG_TRACE) << "Preresolved path: " << resolvedTarget << "\n";
-            response = GetHandler::handleRequest(request.getPath(), resolvedTarget, configuration);
+            response = GetHandler::handleRequest(
+                request.getPath(),
+                resolvedTarget,
+                request.isCgiRequest(),
+                configuration
+            );
             break;
         }
         case POST: {
             // NOTE: path will be reresolved later inside
-            response = PostHandler::handleRequest(request.getPath(), body, configuration);
+            if (!request.isCgiRequest()) {
+                response = PostHandler::handleRequest(request.getPath(), body, configuration);
+            }
             break;
         }
         case DELETE: {
-            _log.stream(LOG_TRACE) << "Preresolved path: " << resolvedTarget << "\n";
+            if (!request.isCgiRequest()) {
+                _log.stream(LOG_TRACE) << "Preresolved path: " << resolvedTarget << "\n";
+            }
             response = DeleteHandler::handleRequest(resolvedTarget, configuration);
             break;
         }
@@ -87,6 +96,9 @@ string RequestHandler::handleRequest(Request& request, const RouteConfig& config
                 configuration.getStatusCatalogue().serveStatusPage(HttpStatus::NOT_IMPLEMENTED);
             break;
         }
+    }
+    if (response.getStatus() == -1) {
+        return ("CGI");
     }
     return (serializeAndPrint(response));
 }

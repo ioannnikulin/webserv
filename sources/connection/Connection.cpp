@@ -24,6 +24,7 @@
 #include "http_status/HttpException.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "http_status/IncompleteRequest.hpp"
+#include "http_status/MethodNotAllowed.hpp"
 #include "logger/Logger.hpp"
 #include "request/Request.hpp"
 #include "request_handler/RequestHandler.hpp"
@@ -49,6 +50,7 @@ Logger Connection::_log;
 
 Connection::Connection(int listeningSocketFd, const Endpoint& configuration)
     : _state(NEWBORN)
+    , _isRequestValid(false)
     , _clientIp(0)
     , _clientPort(0)
     , _configuration(configuration)
@@ -90,7 +92,7 @@ int Connection::getClientSocketFd() const {
 
 bool Connection::fullRequestReceived() {
     const string requestBuffer = _requestBuffer.str();
-    _log.stream(LOG_TRACE) << "checking [" + requestBuffer + "]\n";
+    _log.stream(LOG_SILENT) << "checking [" << requestBuffer << "]\n";
     try {
         webserver::Request tmp(requestBuffer);
         if (!tmp.isRequestTargetReceived()) {
@@ -103,6 +105,7 @@ bool Connection::fullRequestReceived() {
             */
             try {
                 _route = &(_configuration.selectRoute(tmp.getPath()));
+                _log.stream(LOG_TRACE) << *_route << " matched\n";
             } catch (const std::out_of_range& e) {
                 return (true);
             }
@@ -113,6 +116,10 @@ bool Connection::fullRequestReceived() {
         tmp.getBody();  // NOTE: lazy body init
 
         _request = tmp;
+        if (itsACgiRequest()) {
+            _request.markAsCgiRequest();
+        }
+        _isRequestValid = true;
         return (true);
     } catch (const IncompleteRequest& e) {
         return (false);
@@ -144,7 +151,11 @@ bool Connection::itsACgiRequest() {
         const string extension = path.substr(dotPos);
         const std::map<string, CgiHandlerConfig*>& handlers = _configuration.getCgiHandlers();
 
-        return (handlers.find(extension) != handlers.end());
+        const bool res = handlers.find(extension) != handlers.end();
+        if (res) {
+            _request.markAsCgiRequest();
+        }
+        return (res);
     } catch (...) {
         return (false);
     }
@@ -270,7 +281,14 @@ Connection::State Connection::receiveRequestContent() {
         if (bytesRead > 0) {
             _requestBuffer << string(readBuffer, bytesRead);
             if (fullRequestReceived()) {
-                _state = itsACgiRequest() ? READING_CGI_REQUEST_COMPLETE : READING_COMPLETE;
+                _state = READING_COMPLETE;
+                try {
+                    const Request tmp(_requestBuffer.str());
+                } catch (const MethodNotAllowed&) {
+                    _state = METHOD_NOT_ALLOWED;
+                } catch (const BadRequest&) {
+                    _state = BAD_REQUEST_READ;
+                }
                 return (_state);
             }
             continue;
@@ -308,15 +326,29 @@ void Connection::sendResponse() {
 
 Connection::State Connection::generateResponse() {
     // NOTE: called only in child process
-    if (_state != READING_COMPLETE) {
+    if (_state != READING_COMPLETE && _state != METHOD_NOT_ALLOWED && _state != BAD_REQUEST_READ) {
         // NOTE: how did you call this? this is a wrong time to call response generator
         return (_state);
+    }
+    if (_state == METHOD_NOT_ALLOWED) {
+        _responseBuffer = _configuration.getStatusCatalogue()
+                              .serveStatusPage(HttpStatus::METHOD_NOT_ALLOWED)
+                              .serialize();
+        return (WRITING_COMPLETE);
+    }
+    if (_state == BAD_REQUEST_READ) {
+        _responseBuffer = _configuration.getStatusCatalogue()
+                              .serveStatusPage(HttpStatus::BAD_REQUEST)
+                              .serialize();
+        return (WRITING_COMPLETE);
     }
     try {
         _log.stream(LOG_TRACE) << "Received HTTP request on socket " << _clientSocketFd << ":\n"
                                << _requestBuffer.str();
-        _request = Request(_requestBuffer.str());
         _responseBuffer = RequestHandler::handleRequest(_request, *_route);
+        if (_responseBuffer == "CGI") {
+            return (REROUTING_BACK_TO_CGI);
+        }
     } catch (const HttpException& e) {
         _log.stream(LOG_ERROR) << e.what() << "\n";
         _responseBuffer =

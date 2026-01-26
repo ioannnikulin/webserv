@@ -37,6 +37,7 @@ public:
     static Response handleRequest(
         std::string originalTarget,
         std::string resolvedTarget,
+        bool isCgiRequest,
         const RouteConfig& routeConfig
     );
 };

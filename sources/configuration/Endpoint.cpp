@@ -239,6 +239,7 @@ const RouteConfig& Endpoint::getRoute(std::string route) const {
 const RouteConfig& Endpoint::selectRoute(std::string route) const {
     set<RouteConfig>::const_iterator bestMatch = _routes.end();
     size_t bestLength = 0;
+    Logger log;
     for (set<RouteConfig>::const_iterator itr = _routes.begin(); itr != _routes.end(); ++itr) {
         const string candidate = itr->getPath();
         if (candidate == "/" && bestLength == 0) {
@@ -246,6 +247,7 @@ const RouteConfig& Endpoint::selectRoute(std::string route) const {
             bestLength = 1;
             continue;
         }
+        log.stream(LOG_TRACE) << "matching " << candidate << "\n";
         if (route == candidate ||
             (route.substr(0, candidate.length()) == candidate &&
              route.length() > candidate.length() && route.at(candidate.length()) == '/')) {
