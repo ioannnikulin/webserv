@@ -7,9 +7,11 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include "configuration/CgiHandlerConfig.hpp"
 #include "configuration/RouteConfig.hpp"
+#include "configuration/parser/ConfigParsingException.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "logger/Logger.hpp"
 
@@ -215,7 +217,12 @@ Endpoint& Endpoint::addCgiHandler(const CgiHandlerConfig& config, string extensi
 
 Endpoint& Endpoint::addRoute(RouteConfig route) {
     route.setStatusCatalogue(_statusCatalogue);
-    _routes.insert(route);
+    const std::pair<std::set<RouteConfig>::iterator, bool> result = _routes.insert(route);
+    if (!result.second) {
+        throw ConfigParsingException(
+            "Duplicate location path '" + route.getPath() + "' in server block"
+        );
+    }
     return (*this);
 }
 
@@ -225,6 +232,10 @@ const set<RouteConfig>& Endpoint::getRoutes() const {
 
 string Endpoint::getRoot() const {
     return (_rootDirectory);
+}
+
+string Endpoint::getServerName() const {
+    return (_serverName);
 }
 
 const RouteConfig& Endpoint::getRoute(std::string route) const {

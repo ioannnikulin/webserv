@@ -20,7 +20,7 @@ HttpMethodType stringToMethod(const string& str) {
         return (SHUTDOWN);
     }
 
-    throw std::out_of_range("Invalid HTTP method in limit_except: " + str);
+    throw std::out_of_range("Invalid HTTP method: " + str);
 }
 
 std::string methodToString(const HttpMethodType& method) {

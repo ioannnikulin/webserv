@@ -32,6 +32,17 @@ void ConfigParser::tokenize(const string& filename) {
             continue;
         }
 
+        if (currentChar == '#') {
+            if (!token.empty()) {
+                _tokens.push_back(token);
+                token.clear();
+            }
+            while (i < content.size() && content[i] != '\n' && content[i] != '\r') {
+                ++i;
+            }
+            continue;
+        }
+
         if (currentChar == '{' || currentChar == '}' || currentChar == ';') {
             if (!token.empty()) {
                 _tokens.push_back(token);

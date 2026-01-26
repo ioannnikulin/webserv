@@ -41,11 +41,22 @@ void ConfigParser::setupLocationFolder(
     route.setFolderConfig(folder);
 }
 
+void ConfigParser::checkIfBodySizeSetAndParse(bool& bodySizeSet) {
+    if (bodySizeSet) {
+        throw ConfigParsingException(
+            "Duplicate 'client_max_body_size' directive (only one allowed per scope)"
+        );
+    }
+    parseLocationMaxBodySize();
+    bodySizeSet = true;
+}
+
 void ConfigParser::parseLocation(Endpoint& server) {
     Logger log;
     _index++;
+    bool bodySizeSet = false;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";" || _tokens[_index] == "{") {
         throw ConfigParsingException("Expected path after 'location'");
     }
 
@@ -63,7 +74,9 @@ void ConfigParser::parseLocation(Endpoint& server) {
         throw ConfigParsingException("Expected '{' after location path '" + locationPath + "'");
     }
     _index++;
-
+    if (_tokens[_index] == "}") {
+        throw ConfigParsingException("Empty block");
+    }
     RouteConfig route;
 
     while (!isEnd(_tokens, _index)) {
@@ -72,7 +85,7 @@ void ConfigParser::parseLocation(Endpoint& server) {
         if (token == "root") {
             parseLocationRoot();
         } else if (token == "client_max_body_size") {
-            parseLocationMaxBodySize();
+            checkIfBodySizeSetAndParse(bodySizeSet);
         } else if (token == "autoindex") {
             parseLocationAutoindex();
         } else if (token == "index") {
@@ -132,7 +145,7 @@ void ConfigParser::parseLocationMaxBodySize() {
 void ConfigParser::parseLocationRoot() {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected path after 'root' in location");
     }
 
@@ -149,7 +162,7 @@ void ConfigParser::parseLocationRoot() {
 void ConfigParser::parseLocationAutoindex() {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected 'on' or 'off' after autoindex");
     }
 
@@ -173,7 +186,7 @@ void ConfigParser::parseLocationAutoindex() {
 void ConfigParser::parseLocationIndex() {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected filename after index");
     }
 
@@ -191,7 +204,7 @@ void ConfigParser::parseLocationIndex() {
 void ConfigParser::parseLocationMethods(RouteConfig& route) {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected methods after 'methods'");
     }
 
@@ -211,7 +224,7 @@ void ConfigParser::parseLocationMethods(RouteConfig& route) {
 void ConfigParser::parseLocationLimitExcept(RouteConfig& route) {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected methods after 'limit_except'");
     }
 
@@ -231,7 +244,7 @@ void ConfigParser::parseLocationLimitExcept(RouteConfig& route) {
 void ConfigParser::parseLocationReturn(RouteConfig& route) {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected target after 'return' in location");
     }
 
@@ -251,7 +264,7 @@ void ConfigParser::parseLocationReturn(RouteConfig& route) {
 void ConfigParser::parseLocationUpload() {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected on/off after upload");
     }
 
@@ -285,7 +298,7 @@ void ConfigParser::parseLocationUpload() {
 void ConfigParser::parseLocationCgi(RouteConfig& route) {
     _index++;
 
-    if (isEnd(_tokens, _index)) {
+    if (isEnd(_tokens, _index) || _tokens[_index] == ";") {
         throw ConfigParsingException("Expected extension after 'cgi'");
     }
 

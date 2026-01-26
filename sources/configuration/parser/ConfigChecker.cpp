@@ -1,8 +1,11 @@
 #include "configuration/parser/ConfigChecker.hpp"
 
+#include <cstddef>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
+#include <utility>
 
 #include "configuration/CgiHandlerConfig.hpp"
 #include "configuration/Endpoint.hpp"
@@ -14,6 +17,57 @@
 #include "logger/Logger.hpp"
 
 using std::string;
+
+namespace {
+
+bool isValidIpv4(const string& str) {
+    if (str.empty()) {
+        return (false);
+    }
+
+    std::istringstream iss(str);
+    string segment;
+    int segmentCount = 0;
+
+    while (static_cast<bool>(std::getline(iss, segment, '.'))) {
+        segmentCount++;
+
+        if (segment.empty() || segment.length() > 3) {
+            return (false);
+        }
+
+        for (size_t i = 0; i < segment.length(); ++i) {
+            if (segment[i] < '0' || segment[i] > '9') {
+                return (false);
+            }
+        }
+
+        if (segment.length() > 1 && segment[0] == '0') {
+            return (false);
+        }
+
+        std::istringstream segIss(segment);
+        int value;
+        segIss >> value;
+
+        if (value < webserver::ConfigChecker::MIN_IPV4 ||
+            value > webserver::ConfigChecker::MAX_IPV4) {
+            return (false);
+        }
+    }
+
+    return (segmentCount == 4);
+}
+
+bool isValidInterface(const string& str) {
+    if (str.empty()) {
+        return (false);
+    }
+
+    return (str == "0.0.0.0" || isValidIpv4(str));
+}
+
+}  // namespace
 
 namespace webserver {
 ConfigChecker::ConfigChecker() {
@@ -129,11 +183,40 @@ void ConfigChecker::checkUploadDirectories(const Endpoint& endpoint) {
     }
 }
 
+void ConfigChecker::checkValueTypes(const Endpoint& endpoint) {
+    const string& interface = endpoint.getInterface();
+    if (!interface.empty() && !isValidInterface(interface)) {
+        throw ConfigParsingException(
+            "Invalid interface value in listen directive: '" + interface +
+            "' (must be a valid IPv4 address or hostname)"
+        );
+    }
+}
+
+void ConfigChecker::checkNoDuplicateEndpoints(const std::set<Endpoint*>& endpoints) {
+    std::set<std::pair<std::string, int> > seenBindings;
+
+    for (std::set<Endpoint*>::const_iterator it = endpoints.begin(); it != endpoints.end(); ++it) {
+        const std::string& interface = (*it)->getInterface();
+        const int port = (*it)->getPort();
+        const std::pair<std::string, int> binding(interface, port);
+
+        if (seenBindings.find(binding) != seenBindings.end()) {
+            std::ostringstream oss;
+            oss << "Duplicate server block with listen directive '" << interface << ":" << port
+                << "'";
+            throw ConfigParsingException(oss.str());
+        }
+        seenBindings.insert(binding);
+    }
+}
+
 void ConfigChecker::checkEndpoint(Endpoint& endpoint) {
     checkLocationRootIsSetOrInherit(endpoint);
     checkRootExistsOnDiskAndIsAFolder(endpoint);
     checkFilesCanBeOpened(endpoint);
     checkUploadDirectories(endpoint);
+    checkValueTypes(endpoint);
 }
 
 }  // namespace webserver

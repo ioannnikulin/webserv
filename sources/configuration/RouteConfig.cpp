@@ -6,10 +6,12 @@
 #include <map>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "configuration/CgiHandlerConfig.hpp"
 #include "configuration/FolderConfig.hpp"
 #include "configuration/UploadConfig.hpp"
+#include "configuration/parser/ConfigParsingException.hpp"
 #include "http_methods/HttpMethodType.hpp"
 #include "http_status/HttpStatus.hpp"
 #include "logger/Logger.hpp"
@@ -168,7 +170,11 @@ RouteConfig& RouteConfig::setUploadConfig(const UploadConfig& upload) {
 }
 
 RouteConfig& RouteConfig::addAllowedMethod(HttpMethodType method) {
-    _allowedMethods.insert(method);
+    const std::pair<std::set<HttpMethodType>::iterator, bool> result =
+        _allowedMethods.insert(method);
+    if (!result.second) {
+        throw ConfigParsingException("Duplicate HTTP method in location block");
+    }
     return (*this);
 }
 

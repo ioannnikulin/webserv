@@ -17,11 +17,16 @@ private:
     static void checkFilesCanBeOpened(const Endpoint& endpoint);
     static void checkCgiExecutable(const std::map<std::string, CgiHandlerConfig*>& cgiHandlers);
     static void checkUploadDirectories(const Endpoint& endpoint);
+    static void checkValueTypes(const Endpoint& endpoint);
 
 public:
+    static const int MIN_IPV4 = 0;
+    static const int MAX_IPV4 = 255;
+
     ~ConfigChecker();
 
     static void checkEndpoint(Endpoint& endpoint);
+    static void checkNoDuplicateEndpoints(const std::set<Endpoint*>& endpoints);
 };
 }  // namespace webserver
 
