@@ -381,7 +381,7 @@ docker-cleanup:
 # automated e2e docker tests
 
 E2E_SCENARIOS = $(shell find tests/e2e -maxdepth 1 -mindepth 1 -type d \
-	! -name "webserv" ! -name "tester" ! -name "2_42_checker")
+	! -name "tester" ! -name "webserv" ! -name "2_42_checker" ! -name "10_demo")
 
 docker-build-images: $(MAIN_EXECUTABLE)
 	@cp $(MAIN_EXECUTABLE) tests/e2e/webserv/tools/$(MAIN_EXECUTABLE)

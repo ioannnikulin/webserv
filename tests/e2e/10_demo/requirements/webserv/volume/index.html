@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>webserv v1.0.0 Showcase</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="/assets/style.css">
+	<script src="/assets/app.js" defer></script>
+</head>
+
+<body>
+
+<h1 class="sticky-header">🚀 webserv v1.0.0 Showcase</h1>
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<div class="page-content">
+	<details class="section">
+		<summary><h2>📝 Project description</h2></summary>
+		<p class="intro">
+			A <code>web server</code> is a program that receives <code>HTTP requests</code> from clients — usually browsers — and sends
+			back <code>HTTP responses</code>, often including web content such as HTML pages,
+			images, or other resources.
+		</p>
+		<p class="intro">
+			<a href="https://en.wikipedia.org/wiki/HTTP"><code>HTTP</code></a> stands for HyperText Transfer Protocol. It is the foundational protocol
+			used for transmitting data on the World Wide Web. HTTP defines how messages
+			are formatted and transmitted, and how web servers and browsers should
+			respond to various commands.
+		</p>
+		<p class="intro">
+			There have been several versions of HTTP over the years. The most widely used versions
+			are HTTP/1.0, HTTP/1.1 and HTTP/2. Each version introduces improvements in performance,
+			security, and capabilities. This demo focuses on <code>HTTP/1.0</code>, which is the simplest version
+			and serves as a solid foundation for understanding the protocol.
+		</p>
+		<p class="intro">Furthermore, it explores the networking aspects of web servers, including how they handle connections, manage resources, and communicate with clients. This includes
+			understanding <code>sockets, ports, and the TCP/IP protocol suite</code> that underpins internet communication.
+		</p>
+		<img
+			class="intro-image"
+			src="https://media.licdn.com/dms/image/v2/D5612AQFh1flQPPNZkQ/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1692020125880?e=2147483647&v=beta&t=HaVSHL9lSV69BBVoAALjAS9a1MqeHMEvJSkrsMLA_ck"
+			alt="Web server illustration"
+		>
+		<p class="intro">
+			An <code>HTTP request</code> is a message sent by a client to a server, asking for a
+			resource or performing an action on the server.
+		</p>
+		<p class="intro">
+			An <code>HTTP response</code> is a message sent by the server back to the client after
+			receiving and processing an HTTP request. It includes a status line,
+			headers, and an optional body containing the requested resource or error
+			information.
+		</p>
+		<p class="intro">
+		A request identifies a method (sometimes informally called verb) to classify the desired action to be performed on a resource. 
+		</p>
+
+		<p class="intro">
+			This demo covers the core HTTP methods: <code>GET</code>, <code>POST</code>,
+			and <code>DELETE</code>.
+		</p>
+	</details>
+
+	<details class="section section--left">
+		<summary><h2>📦 GET method</h2></summary>
+		<p class="intro">
+			A <code>GET</code> request is used to retrieve data from a server. It should
+			not change server state and is commonly used for fetching pages, files,
+			or other readable resources.
+		</p>
+		<p class="intro bold">curl command:</p>
+		<pre class="copy-block" title="Click to copy"><code>curl -i http://localhost:8888/pages/demo1.html</code></pre>
+		<h3>HTML pages</h3>
+		<ul class="test_route">
+			<li><a href="/pages/demo1.html" target="_blank" rel="noopener">/pages/demo1.html (HTML)</a></li>
+			<li><a href="/pages/demo2.html" target="_blank" rel="noopener">/pages/demo2.html (HTML)</a></li>
+			<li><a href="/pages/demos/demo3.html" target="_blank" rel="noopener">/pages/demos/demo3.html (HTML + CSS)</a></li>
+			<li><a href="/pages/demos/demo4.html" target="_blank" rel="noopener">/pages/demos/demo4.html (HTML + CSS)</a></li>
+		</ul>
+		<h3>Files (different MIME types)</h3>
+		<ul class="test_route">
+			<li><a href="/mime/test.html" target="_blank" rel="noopener">text/html (.html)</a></li>
+			<li><a href="/mime/test.css" target="_blank" rel="noopener">text/css (.css)</a></li>
+			<li><a href="/mime/test.js" target="_blank" rel="noopener">application/javascript (.js)</a></li>
+			<li><a href="/mime/test.json" target="_blank" rel="noopener">application/json (.json)</a></li>
+			<li><a href="/mime/test.txt" target="_blank" rel="noopener">text/plain (.txt)</a></li>
+			<li><a href="/mime/test.csv" target="_blank" rel="noopener">text/csv (.csv)</a></li>
+			<li><a href="/mime/test.xml" target="_blank" rel="noopener">application/xml (.xml)</a></li>
+			<li><a href="/mime/test.png" target="_blank" rel="noopener">image/png (.png)</a></li>
+			<li><a href="/mime/test.jpg" target="_blank" rel="noopener">image/jpeg (.jpg)</a></li>
+			<li><a href="/mime/test.jpeg" target="_blank" rel="noopener">image/jpeg (.jpeg)</a></li>
+			<li><a href="/mime/test.gif" target="_blank" rel="noopener">image/gif (.gif)</a></li>
+			<li><a href="/mime/test.webp" target="_blank" rel="noopener">image/webp (.webp)</a></li>
+			<li><a href="/mime/test.ico" target="_blank" rel="noopener">image/x-icon (.ico)</a></li>
+			<li><a href="/mime/test.svg" target="_blank" rel="noopener">image/svg+xml (.svg)</a></li>
+			<li><a href="/mime/test.mp3" target="_blank" rel="noopener">audio/mpeg (.mp3)</a></li>
+			<li><a href="/mime/test.mp4" target="_blank" rel="noopener">video/mp4 (.mp4)</a></li>
+			<li><a href="/mime/test.pdf" target="_blank" rel="noopener">application/pdf (.pdf)</a></li>
+			<li><a href="/mime/test.wasm" target="_blank" rel="noopener">application/wasm (.wasm)</a></li>
+			<li><a href="/mime/test.woff" target="_blank" rel="noopener">font/woff (.woff)</a></li>
+			<li><a href="/mime/test.woff2" target="_blank" rel="noopener">font/woff2 (.woff2)</a></li>
+		</ul>
+	</details>
+
+
+
+
+
+	<details class="section">
+		<summary><h2>✉️ POST method</h2></summary>
+		<p class="intro">
+			A <code>POST</code> request is used to send data to a server to create or
+			process a resource. It often changes server state, such as uploading a
+			file or submitting a form.
+		</p>
+		<p class="intro bold">curl command to send form-encoded data:</p>
+		<pre class="copy-block" title="Click to copy"><code>curl -i -X POST -d "hello" localhost:8888/folder/[filename.ext]</code></pre>
+
+		<p class="intro bold">curl command to send file:</p>
+		<pre class="copy-block" title="Click to copy"><code>curl -i -X POST --data-binary @[/path/to/file] localhost:8888/folder/[filename.ext]</code></pre>
+
+		<!-- Raw binary upload (fetch / curl equivalent) -->
+		<div class="test_route">
+			<p><strong>Raw binary upload (fetch / curl equivalent)</strong></p>
+
+			<div class="drop-zone" id="rawDropZone">
+				<p>Drag & drop a file here or click to browse</p>
+				<input type="file" id="rawFile">
+			</div>
+
+			<button id="rawUploadBtn" disabled>
+				Start raw upload
+			</button>
+
+			<small>
+				Sends file as <code>application/octet-stream</code> to
+				<code>/folder/&lt;filename&gt;</code>
+			</small>
+		</div>
+
+	</details>
+
+	<details class="section">
+		<summary><h2>🗑️ DELETE method</h2></summary>
+		<p class="intro">
+			A <code>DELETE</code> request asks the server to remove a resource identified
+			by the URL. It is used for cleanup actions like removing uploaded files.
+		</p>
+		<p class="intro bold">curl command:</p>
+		<pre class="copy-block" title="Click to copy"><code>curl -i -X DELETE http://localhost:8888/folder/[path/to/file.ext]</code></pre>
+
+		<p>
+			This section tests the <code>DELETE</code> HTTP method and verifies file removal
+			from the server.
+		</p>
+
+		<h3>📂 Uploaded files (current session)</h3>
+
+		<ul id="uploadedFiles" class="test_route">
+			<li><em>No files uploaded yet</em></li>
+		</ul>
+
+		<div class="test_route">
+			<p><strong>Delete uploaded file</strong></p>
+
+			<input
+				type="text"
+				id="deleteFileName"
+				placeholder="filename.ext"
+			>
+
+			<button id="deleteBtn" class="btn-danger">
+				Delete /folder/&lt;filename&gt;
+			</button>
+
+			<small>
+				Sends a <code>DELETE</code> request to
+				<code>/folder/&lt;filename&gt;</code>
+			</small>
+		</div>
+	</details>
+
+	<details class="section" id="cgi-section">
+		<summary><h2>🧪 CGI (Common Gateway Interface)</h2></summary>
+		<p class="intro">
+			CGI (Common Gateway Interface) lets webserv run server-side scripts when a
+			request targets a CGI-enabled route. In our setup, it supports Python and
+			PHP scripts.
+		</p>
+		<div class="test_route cgi-buttons">
+			<a class="cgi-btn" href="/cgi/hello.py"><img class="cgi-icon" src="/python.png" alt="Python">hello.py</a>
+			<a class="cgi-btn" href="/cgi/hello.php"><img class="cgi-icon" src="/php.png" alt="PHP">hello.php</a>
+			<a class="cgi-btn" href="/cgi/env.py"><img class="cgi-icon" src="/python.png" alt="Python">env.py</a>
+			<a class="cgi-btn" href="/cgi/form.html"><img class="cgi-icon" src="/python.png" alt="Python">form.html + form.py</a>
+			<a class="cgi-btn" href="/cgi/slow.py"><img class="cgi-icon" src="/python.png" alt="Python">slow.py: Timeout Test (30s)</a>
+			<a class="cgi-btn" href="/cgi/broken.py"><img class="cgi-icon" src="/python.png" alt="Python">broken.py</a>
+		</div>
+
+	</details>
+
+	<details class="section">
+		<summary><h2>🏰 Siege tests</h2></summary>
+		<p class="intro">
+			Siege helps simulate concurrent traffic and sustained load to verify
+			stability, throughput, and error handling under stress.
+		</p>
+		<p class="intro">
+			Click a command to copy it.
+		</p>
+		<p class="intro bold">Quick HTML page check with a light concurrent load.</p>
+		<pre class="copy-block" title="Click to copy"><code>siege -c 10 -r 3 http://localhost:8888/pages/demo1.html</code></pre>
+		<p class="intro bold">Baseline load: 25 concurrent users, 5 repetitions on the homepage.</p>
+		<pre class="copy-block" title="Click to copy"><code>siege -c 25 -r 5 http://localhost:8888/</code></pre>
+		<p class="intro bold">Heavy burst traffic against the root endpoint.</p>
+		<pre class="copy-block" title="Click to copy"><code>siege -c 150 -r 10 http://localhost:8888/</code></pre>
+		<p class="intro bold">Longer sustained run to observe throughput and errors.</p>
+		<pre class="copy-block" title="Click to copy"><code>siege -c 100 -t 30S http://localhost:8888/pages/demo3.html</code></pre>
+		<p class="intro bold">Sustained 30s run to watch stability under high concurrency.</p>
+		<pre class="copy-block" title="Click to copy"><code>siege -c 200 -t 30S http://localhost:8888/pages/demo2.html</code></pre>
+	</details>
+
+
+	<details class="section section--left">
+		<summary><h2>📍 .conf file and available routes</h2></summary>
+		<p class="intro">
+			This section demonstrates each <code>location</code> block of the server.
+		</p>
+
+		<ul>
+			<li class="test_route">
+				<a href="/">GET /</a>
+				<small>root</small>
+				<pre><code>
+location / {
+	methods GET;
+	root tests/e2e/10_demo/requirements/webserv/volume;
+	index index.html;
+}
+				</code></pre></li>
+
+
+			<li class="test_route">
+				<a href="/listme">GET /listme</a>
+				<small>autoindex enabled: will show index if file exists OR throw 403 or 404</small>
+				<pre><code>
+location /listme {
+	methods GET;
+	root tests/e2e/10_demo/requirements/webserv/volume;
+	autoindex on;
+}
+				</code></pre></li>
+
+			<li class="test_route">
+				<a href="/dontlistme">GET /dontlistme</a>
+				<small>autoindex disabled: will show index if file exists OR throw 403 or 404</small>
+				<pre><code>
+location /dontlistme {
+	methods GET;
+	root tests/e2e/10_demo/requirements/webserv/volume/dontlistme;
+}
+				</code></pre></li>
+
+			<li class="test_route">
+				<a href="/folder">GET /folder</a>
+				<small>endpoint that allows GET, POST, DELETE methods</small>
+				<pre><code>
+location /folder {
+	methods GET POST DELETE;
+	root tests/e2e/10_demo/requirements/webserv/volume/folder;
+	index index.html;
+	autoindex on;
+	client_max_body_size 1M;
+	upload on tests/e2e/10_demo/requirements/webserv/volume/folder;
+}
+				</code></pre></li>
+
+			<li class="test_route">
+				<a href="/internal_redirect">/internal_redirect</a>
+				<small>Internal redirect to a page on our server (status 301)</small>
+				<pre><code>
+location /internal_redirect {
+	return http://127.0.0.1:8888/listme;
+}
+				</code></pre></li>
+
+			<li class="test_route">
+				<a href="/relative_redirect">/relative_redirect</a>
+				<small>Relative internal redirect to a page on our server (status 301)</small>
+				<pre><code>
+location /relative_redirect {
+	return /listme;
+}
+				</code></pre></li>
+
+			<li class="test_route">
+				<a href="/nowhere">/nowhere</a>
+				<small>Internal redirect to a non-existing location (status 404)</small>
+				<pre><code>
+location /nowhere {
+	return /doesntexist;
+}
+				</code></pre></li>
+		</ul>
+	</details>
+
+	<!--<details class="section">
+		<summary><h2>🚨 Error Pages</h2></summary>
+		<p>
+			This section intentionally triggers different HTTP errors to verify that
+			custom error pages are correctly configured and served.
+		</p>
+
+		<ul class="error_tests">
+			<li class="test_route">
+				<a href="/definitely-not-existing">404 Not Found</a><br>
+				<small>Requests a non-existent resource.</small><br>
+				<code>Expected:</code> 404 – Custom Not Found page
+			</li>
+
+			<li class="test_route">
+				<a href="/dontlistme">403 Forbidden</a><br>
+				<small>Directory exists but autoindex is disabled and no index file.</small><br>
+				<code>Expected:</code> 403 – Custom Forbidden page
+			</li>
+
+			<li class="test_route">
+				<a href="/folder" onclick="return false;">405 Method Not Allowed</a><br>
+				<small>Try sending a PUT or PATCH request manually.</small><br>
+				<code>Expected:</code> 405 – Method Not Allowed
+			</li>
+
+			<li class="test_route">
+				<a href="/external">POST → 301 / 302 Redirect</a><br>
+				<small>Use the POST button below to trigger redirect.</small><br>
+				<code>Expected:</code> Redirect status with Location header
+			</li>
+
+			<li class="test_route">
+				<a href="/nowhere">Invalid redirect target</a><br>
+				<small>Redirects to a missing location.</small><br>
+				<code>Expected:</code> 404 – Custom error page after redirect
+			</li>
+		</ul>
+	</details>-->
+
+<footer class="page-footer">
+	<p>webserv | 2026</p>
+</footer>
+
+</body>
+</html>

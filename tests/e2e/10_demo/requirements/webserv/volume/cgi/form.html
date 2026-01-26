@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Form Test</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000000;
+            color: #ffffff;
+            font-family: Helvetica, Arial, sans-serif;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 3rem;
+            margin: 0 0 2rem 0;
+            text-align: center;
+        }
+        .form-section {
+            margin-bottom: 3rem;
+        }
+        h2 {
+            font-size: 1.5rem;
+            margin: 0 0 1rem 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 0.5rem;
+            background: #000000;
+            border: 1px solid #ffffff;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        input[type="submit"] {
+            padding: 0.5rem 2rem;
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        a {
+            color: #ffffff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Form Test</h1>
+        
+        <div class="form-section">
+            <h2>POST Request</h2>
+            <form action="/cgi/form.py" method="POST">
+                <label>Name:</label>
+                <input type="text" name="name" value="John Doe">
+                
+                <label>Email:</label>
+                <input type="text" name="email" value="john@example.com">
+                
+                <label>Message:</label>
+                <textarea name="message">Hello from CGI form!</textarea>
+                
+                <input type="submit" value="Submit POST">
+            </form>
+        </div>
+        
+        <div class="form-section">
+            <h2>GET Request</h2>
+            <form action="/cgi/form.py" method="GET">
+                <label>Search:</label>
+                <input type="text" name="q" value="test query">
+                
+                <label>Page:</label>
+                <input type="text" name="page" value="1">
+                
+                <input type="submit" value="Submit GET">
+            </form>
+        </div>
+        
+        <div class="back-link">
+            <a href="/">Back</a>
+        </div>
+    </div>
+</body>
+</html>
