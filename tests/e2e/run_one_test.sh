@@ -20,3 +20,5 @@ UID="$(id -u)" GID="$(id -g)" docker compose -p "$PROJECT_NAME" -f "tests/e2e/$T
     --abort-on-container-exit tester0
 
 docker compose -p "$PROJECT_NAME" -f "tests/e2e/$TESTDIR/docker-compose.yml" down -v > /dev/null 2>&1 || true
+
+printf '%*s\n' 80 '' | tr ' ' '-'

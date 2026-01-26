@@ -1,0 +1,43 @@
+networks:
+  net1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+  net2:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16
+
+services:
+  webserv:
+    image: webserv:latest
+    volumes:
+      - ./requirements/webserv/conf/config.conf:/usr/local/bin/config.conf:ro
+      - ./requirements/webserv/volume:/srv
+      - ./requirements/webserv/logs:/var/logs/webserv
+    environment:
+      FILE_PERMISSIONS: |
+        /srv:0755
+    networks:
+      net1:
+        ipv4_address: 172.18.0.10
+      net2:
+        ipv4_address: 172.19.0.10
+    ports:
+      - "8080:8080"
+    command: ["valgrind"]
+      
+  tester0:
+    image: tester:latest
+    networks:
+      - net1
+      - net2
+    volumes:
+      - ./requirements/tester0/tools/tests.json:/tests/tests.json:ro
+      - ./requirements/tester0/results:/out
+      - ./requirements/tester0/logs:/logs
+    depends_on:
+      - webserv
+    command: ["--id=tester0"]

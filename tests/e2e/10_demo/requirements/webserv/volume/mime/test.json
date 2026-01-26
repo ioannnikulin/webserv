@@ -1,0 +1,10 @@
+{
+	"status": "ok",
+	"mime": "application/json",
+	"message": "If this file is displayed as formatted JSON and not downloaded, MIME is correct.",
+	"tests": {
+		"browser_render": "iframe / direct open",
+		"content_type": "application/json",
+		"encoding": "utf-8"
+	}
+}

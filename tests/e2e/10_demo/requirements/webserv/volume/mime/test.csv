@@ -1,0 +1,3 @@
+name,method,status
+index,GET,200
+upload,POST,201
